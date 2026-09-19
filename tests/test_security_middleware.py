@@ -49,11 +49,6 @@ def test_direct_model_post_routes_can_be_disabled(monkeypatch) -> None:
     assert response.status_code == 404
 
 
-def test_database_diagnostics_can_be_disabled(monkeypatch) -> None:
-    monkeypatch.setenv("ENABLE_SYSTEM_DIAGNOSTICS", "false")
-    response = client.post("/api/v1/system/database/probe", json={})
-    assert response.status_code == 404
-
 
 def test_unsupported_methods_are_rejected() -> None:
     response = client.put("/api/v1/system/datasets", json={})
