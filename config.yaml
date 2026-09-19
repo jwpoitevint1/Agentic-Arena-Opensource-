@@ -1,0 +1,142 @@
+app:
+  name: Agentic Arena
+  version: 0.1.0
+  environment: development
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  log_level: INFO
+
+api:
+  prefix: /api/v1
+  docs_enabled: true
+
+cors:
+  allowed_origins: []
+  allow_credentials: false
+
+chatbot:
+  defaults:
+    tone: professional
+    max_history: 12
+    max_output_tokens: 512
+    safe_mode: true
+
+  tone_profiles:
+    professional:
+      style: "Succinct, precise, vendor-neutral, no slang."
+    courteous:
+      style: "Warm but concise, courteous openings/closings."
+    semi-empathetic:
+      style: "Brief validation for feelings; concrete and actionable."
+
+  ip_controls:
+    denylist: []
+    allowlist: []
+    trust_proxy_headers: true
+
+  rate_limit:
+    capacity: 60
+    refill_tokens: 30
+    refill_interval_sec: 60
+    burst_multiplier: 1.0
+
+  anti_bias:
+    refuse_on:
+      - "incite hate or violence"
+      - "promote discrimination or exclusion"
+      - "stereotyping protected classes"
+    mitigate_language:
+      - "prefer neutral, specific phrasing"
+      - "state limits and offer safe alternatives"
+    classifier:
+      mode: rule
+      threshold: 0.6
+      protected_classes:
+        - race
+        - ethnicity
+        - religion
+        - disability
+        - gender
+        - sexual orientation
+      lexicon:
+        high_severity:
+          - genocide
+          - ethnic cleansing
+          - inferior race
+          - superior race
+        medium_severity:
+          - "all [group] are"
+          - "deport [group]"
+          - "ban [group]"
+        low_severity:
+          - stereotype
+          - biased joke
+    external:
+      endpoint: ""
+      token: ""
+      timeout_sec: 3
+
+  jailbreak_indicators:
+    patterns:
+      - "(?i)ignore (the|all) (previous|prior) (instructions|rules)"
+      - "(?i)from now on you are (?:DAN|jailbreak|root)"
+      - "(?i)reveal your system prompt"
+      - "(?i)act like.*without restrictions"
+      - "(?i)bypass (?:policy|guardrails|safety)"
+      - "(?i)disregard safety"
+    action_on_detect: BLOCK_AND_EXPLAIN
+
+  protected_lexicon:
+    redefinition_ban: true
+    terms:
+      - "CV 1.1"
+      - governance
+      - policy
+      - safety
+      - integrity
+      - role enforcement
+      - audit log
+    action_on_attempt: BLOCK_AND_LOG
+
+  philosophy:
+    allowed: false
+    abstract_technology_exception: true
+    constraints:
+      - "Philosophy is not a chatbot topic except when discussing abstract technology concepts."
+      - "Do not redefine protected terms."
+      - "Keep abstract technology discussion tied to systems, AI, software, data, security, governance, or computing."
+    drift_indicators:
+      - "(?i)let's redefine"
+      - "(?i)assume for this chat that .* means"
+      - "(?i)pretend that policy means"
+    drift_action: WARN_AND_REFOCUS
+
+  content_controls:
+    sexual_content:
+      allowed: false
+      action: BLOCK_AND_EXPLAIN
+    profanity:
+      allowed: false
+      action: BLOCK_AND_EXPLAIN
+    explicit_language:
+      allowed: false
+      action: BLOCK_AND_EXPLAIN
+
+  redactions:
+    pii_like_patterns:
+      - "(?i)ssn\\b[^\\d]*(\\d{3}[- ]?\\d{2}[- ]?\\d{4})"
+      - "(?i)credit\\s*card"
+    on_match: REDACT
+
+  responses:
+    blocked_msg: "I can’t do that. The request conflicts with safety/governance. Here’s a safer path:"
+    redefinition_msg: "I won’t redefine governed terms. I can explain existing definitions instead."
+    jailbreak_msg: "I can’t ignore my safety instructions. I can still help within safe rules."
+    bias_msg: "I won’t produce biased or harmful content. Here’s a neutral, factual alternative instead."
+    sexual_msg: "I can’t engage in sexual or explicit content. I can help with the lab, its architecture, or governed workflows instead."
+    profanity_msg: "I can’t use or continue explicit or profane language. I can still help with the lab in professional language."
+    philosophy_msg: "I keep philosophy out of scope unless it is directly tied to an abstract technology concept. I can discuss the technology angle instead."
+
+  outbound_allowlist: []
