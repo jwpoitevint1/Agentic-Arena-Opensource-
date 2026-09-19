@@ -19,7 +19,7 @@ def test_normal_conversation_is_allowed() -> None:
 
 
 def test_public_architecture_questions_are_allowed() -> None:
-    assert not _requests_backend_disclosure("What does Railway do in this architecture?")
+    assert not _requests_backend_disclosure("What does the backend runtime do in this architecture?")
     assert not _requests_backend_disclosure("Explain CV1.1 and MCP at a high level")
     assert evaluate_input("Explain the philosophy of deterministic AI governance").allowed
 
@@ -91,13 +91,13 @@ def test_prompt_defines_guide_and_disclosure_boundary() -> None:
     assert "Do not use profanity" in prompt
     assert "Do not engage in sexual conversation" in prompt
     assert "Philosophy is out of scope" in prompt
-    assert "Railway" in prompt
-    assert "Vercel" in prompt
-    assert "Neon PostgreSQL" in prompt
-    assert "OpenRouter" in prompt
+    assert "Backend runtime" in prompt
+    assert "Frontend" in prompt
+    assert "PostgreSQL" in prompt
+    assert "Model gateway" in prompt
     assert "MCP" in prompt
 
 
 def test_public_architecture_contains_expected_components() -> None:
     names = {item["component"] for item in PUBLIC_ARCHITECTURE}
-    assert {"CV1.1", "Railway", "Vercel", "Neon PostgreSQL", "OpenRouter", "MCP"} <= names
+    assert {"CV1.1", "Backend runtime", "Frontend", "PostgreSQL", "Model gateway", "MCP"} <= names
