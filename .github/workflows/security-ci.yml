@@ -19,7 +19,6 @@ jobs:
     timeout-minutes: 15
     env:
       ALLOW_DIRECT_MODEL_ROUTES: "true"
-      ENABLE_SYSTEM_DIAGNOSTICS: "true"
       API_AUTH_REQUIRED: "false"
       API_DOCS_ENABLED: "false"
       MAX_REQUEST_BYTES: "1048576"
