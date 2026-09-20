@@ -20,7 +20,7 @@ chatbot:
   defaults:
     tone: professional
     max_history: 12
-    max_output_tokens: 512
+    max_output_tokens: 10000
     safe_mode: true
 
   tone_profiles:
