@@ -3,13 +3,14 @@ import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agentic_run_store import audit_integrity_ready, token_usage_by_model, verify_agentic_run_chain
+from app.agentic_run_store import audit_integrity_ready, comparison_runs, token_usage_by_model, verify_agentic_run_chain
 from app.analytics_routes import router as analytics_router
 from app.chatbot_routes import router as chatbot_router
 from app.config import settings
 from app.cv11 import opa_healthy
-from app.database import all_databases_configured
+from app.database import all_databases_configured, database_url, probe_database, registrations
 from app.datasets import dataset_for_system, datasets
+from app.execution import ExecutionContext, WorkloadType, resolve_database_target
 from app.governed_routes import router as governed_router
 from app.mcp.routes import router as mcp_router
 from app.middleware import RequestContextMiddleware, RequestSizeLimitMiddleware
@@ -116,6 +117,20 @@ def telemetry_tokens_by_model() -> dict[str, object]:
     return token_usage_by_model()
 
 
+@app.get(f"{settings.api.prefix}/system/telemetry/comparison-runs", tags=["system"])
+def telemetry_comparison_runs(limit: int = 1000) -> dict[str, object]:
+    return comparison_runs(limit)
+
+
+@app.get(f"{settings.api.prefix}/system/databases", tags=["database"])
+def list_database_targets() -> dict[str, object]:
+    items = registrations()
+    return {
+        "count": len(items),
+        "configured": sum(1 for item in items if item.configured),
+        "targets": [{"target": item.target.value, "configured": item.configured} for item in items],
+    }
+
 
 @app.get(f"{settings.api.prefix}/system/datasets", tags=["datasets"])
 def list_datasets() -> dict[str, object]:
@@ -131,3 +146,20 @@ def get_dataset(system_id: int) -> dict[str, int | str]:
         raise HTTPException(status_code=404, detail="unknown system_id") from exc
 
 
+@app.post(f"{settings.api.prefix}/system/database/resolve", tags=["database"])
+def resolve_database(context: ExecutionContext) -> dict[str, object]:
+    target = resolve_database_target(context)
+    result: dict[str, object] = {"target": target.value, "configured": bool(database_url(target))}
+    if context.workload is WorkloadType.AGENTIC and context.system_id is not None:
+        result["dataset"] = dataset_for_system(context.system_id).to_dict()
+    return result
+
+
+@app.post(f"{settings.api.prefix}/system/database/probe", tags=["database"])
+def database_probe(context: ExecutionContext) -> dict[str, str | bool]:
+    target = resolve_database_target(context)
+    if not database_url(target):
+        raise HTTPException(status_code=503, detail="database target is not configured")
+    if not probe_database(target):
+        raise HTTPException(status_code=503, detail="database target is unreachable")
+    return {"target": target.value, "healthy": True}
