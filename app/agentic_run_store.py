@@ -17,6 +17,7 @@ from app.integrity import (
     integrity_self_test,
     verify_integrity_record,
 )
+from app.model_registry import model_for_key
 
 
 logger = logging.getLogger("agentic_arena.agentic_runs")
@@ -124,6 +125,28 @@ _MODEL_TOKEN_SQL = """
     FROM telemetry.agentic_runs
     WHERE model_key IS NOT NULL
     GROUP BY model_key
+"""
+
+_COMPARISON_RUN_SQL = """
+    SELECT
+        run_id,
+        governance,
+        function_key,
+        model_key,
+        requested_model_id,
+        prompt_tokens,
+        completion_tokens,
+        total_tokens,
+        selected_cost_usd,
+        recorded_at,
+        latency_ms,
+        coalesce((record #>> '{usage,reasoning_tokens}')::bigint, 0) AS reasoning_tokens,
+        operation
+    FROM telemetry.agentic_runs
+    WHERE model_key IS NOT NULL
+      AND function_key IS NOT NULL
+    ORDER BY recorded_at DESC
+    LIMIT %s
 """
 
 
@@ -375,12 +398,21 @@ def token_usage_by_model() -> dict[str, object]:
         database_status[governance] = "ok"
         for row in rows:
             model_key = str(row[0])
+            try:
+                definition = model_for_key(model_key)
+            except KeyError:
+                definition = None
+
             item = combined.setdefault(
                 model_key,
                 {
                     "model_key": model_key,
                     "requested_model_id": row[1],
                     "vendor": row[2],
+                    "access_class": definition.access_class if definition else "unknown",
+                    "parameter_size": definition.parameter_size if definition else "Unknown",
+                    "parameter_total_b": definition.parameter_total_b if definition else None,
+                    "parameter_active_b": definition.parameter_active_b if definition else None,
                     "runs": 0,
                     "total_tokens": 0,
                     "prompt_tokens": 0,
@@ -406,6 +438,49 @@ def token_usage_by_model() -> dict[str, object]:
         "runs": sum(int(item["runs"]) for item in models),
         "database_status": database_status,
     }
+
+
+
+def comparison_runs(limit: int = 1000) -> dict[str, object]:
+    safe_limit = max(1, min(int(limit), 2000))
+    runs: list[dict[str, object]] = []
+    database_status: dict[str, str] = {}
+
+    for governance, env_var in _ENV_BY_GOVERNANCE.items():
+        url = os.getenv(env_var)
+        if not url:
+            database_status[governance] = "unconfigured"
+            continue
+        try:
+            with psycopg.connect(url, connect_timeout=3) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(_COMPARISON_RUN_SQL, (safe_limit,))
+                    rows = cursor.fetchall()
+        except psycopg.Error:
+            logger.exception("comparison_runs_failed governance=%s", governance)
+            database_status[governance] = "database_error"
+            continue
+
+        database_status[governance] = "ok"
+        for row in rows:
+            runs.append({
+                "run_id": row[0],
+                "governance": row[1],
+                "function_key": row[2],
+                "model_key": row[3],
+                "requested_model_id": row[4],
+                "prompt_tokens": int(row[5] or 0),
+                "completion_tokens": int(row[6] or 0),
+                "total_tokens": int(row[7] or 0),
+                "selected_cost_usd": float(row[8]) if row[8] is not None else None,
+                "recorded_at": row[9].isoformat() if row[9] is not None else None,
+                "latency_ms": float(row[10]) if row[10] is not None else None,
+                "reasoning_tokens": int(row[11] or 0),
+                "operation": row[12],
+            })
+
+    runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
+    return {"runs": runs[:safe_limit], "database_status": database_status}
 
 
 def verify_agentic_run_chain(governance: str) -> dict[str, object]:
