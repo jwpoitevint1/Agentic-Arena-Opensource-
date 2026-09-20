@@ -13,10 +13,12 @@ COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+# One-dataset ingestion utilities are copied for controlled pre-deploy runs.
+COPY scripts ./scripts
 COPY policies ./policies
 COPY config.yaml ./config.yaml
 
-RUN python -m compileall -q app \
+RUN python -m compileall -q app scripts \
     && opa check --strict /app/policies \
     && opa test /app/policies \
     && useradd --create-home --uid 10001 arena \
