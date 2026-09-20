@@ -137,7 +137,7 @@ def list_models() -> dict[str, object]:
 
 
 @router.get("/{model_key}")
-def get_model(model_key: str) -> dict[str, str | bool]:
+def get_model(model_key: str) -> dict[str, object]:
     try:
         return model_for_key(model_key).to_dict()
     except KeyError as exc:
