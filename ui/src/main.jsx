@@ -12,11 +12,95 @@ const DOMAINS = [
 ];
 
 const FALLBACK_MODELS = [
-  { key: "ling_3_0_flash_vl_free", display_name: "Ling 3.0 Flash VL (free)", vendor: "inclusionAI", kind: "agent" },
-  { key: "gpt_sol_latest", display_name: "GPT Sol Latest", vendor: "OpenAI", kind: "agent" },
-  { key: "deepseek_v4_1_flash", display_name: "DeepSeek V4.1 Flash", vendor: "DeepSeek", kind: "agent" },
-  { key: "llama_4_scout", display_name: "Llama 4 Scout", vendor: "Meta", kind: "agent" },
+  { key: "ling_3_0_flash_vl_free", display_name: "Ling 3.0 Flash VL (free)", vendor: "inclusionAI", kind: "agent", free: true, access_class: "open_weights", parameter_size: "124B total / 5.5B active", parameter_total_b: 124 },
+  { key: "gemini_3_8_flash", display_name: "Gemini 3.8 Flash", vendor: "Google", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gemini_3_7_flash", display_name: "Gemini 3.7 Flash", vendor: "Google", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gemini_3_6_flash", display_name: "Gemini 3.6 Flash", vendor: "Google", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "llama_4_maverick", display_name: "Llama 4 Maverick", vendor: "Meta", kind: "agent", access_class: "open_weights", parameter_size: "400B total / 17B active", parameter_total_b: 400 },
+  { key: "llama_4_scout", display_name: "Llama 4 Scout", vendor: "Meta", kind: "agent", access_class: "open_weights", parameter_size: "109B total / 17B active", parameter_total_b: 109 },
+  { key: "deepseek_v4_1_flash", display_name: "DeepSeek V4.1 Flash", vendor: "DeepSeek", kind: "agent", access_class: "open_weights", parameter_size: "552B total / 8B input · 16B output active", parameter_total_b: 552 },
+  { key: "deepseek_v4_flash_0731_free", display_name: "DeepSeek V4 Flash 0731 (free)", vendor: "DeepSeek", kind: "agent", free: true, access_class: "open_weights", parameter_size: "284B total / 13B active", parameter_total_b: 284 },
+  { key: "glm_5_3_flash", display_name: "GLM 5.3 Flash", vendor: "Z.ai", kind: "agent", access_class: "open_weights", parameter_size: "320B total / 18B active", parameter_total_b: 320 },
+  { key: "gpt_5_6_luna", display_name: "GPT-5.6 Luna", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gpt_5_6_sol", display_name: "GPT-5.6 Sol", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gemini_3_5_flash_lite", display_name: "Gemini 3.5 Flash Lite", vendor: "Google", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "qwen_3_8_flash", display_name: "Qwen3.8 Flash", vendor: "Qwen", kind: "agent", access_class: "open_weights", parameter_size: "125B main + 51B n-gram / 6B active", parameter_total_b: 176 },
+  { key: "qwen_3_8_27b_free", display_name: "Qwen3.8 27B (free)", vendor: "Qwen", kind: "agent", free: true, access_class: "open_weights", parameter_size: "27B dense", parameter_total_b: 27 },
+  { key: "muse_spark_1_3", display_name: "Muse Spark 1.3", vendor: "Meta", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "qwen_3_8_27b", display_name: "Qwen3.8 27B", vendor: "Qwen", kind: "agent", access_class: "open_weights", parameter_size: "27B dense", parameter_total_b: 27 },
+  { key: "qwen_3_8_2_4t_a95b", display_name: "Qwen3.8 2.4T A95B", vendor: "Qwen", kind: "agent", access_class: "open_weights", parameter_size: "2.4T total / 95B active", parameter_total_b: 2400 },
+  { key: "gpt_6_astra", display_name: "GPT-6 Astra", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "kimi_k3", display_name: "Kimi K3", vendor: "MoonshotAI", kind: "agent", access_class: "open_weights", parameter_size: "2.8T total", parameter_total_b: 2800 },
+  { key: "mistral_medium_3_5", display_name: "Mistral Medium 3.5", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "128B dense", parameter_total_b: 128 },
+  { key: "qwen_3_6_flash", display_name: "Qwen3.6 Flash", vendor: "Qwen", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gpt_5_5", display_name: "GPT-5.5", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "gemma_4_26b_a4b_free", display_name: "Gemma 4 26B A4B (free)", vendor: "Google", kind: "agent", free: true, access_class: "open_weights", parameter_size: "25.2B total / 3.8B active", parameter_total_b: 25.2 },
+  { key: "gemma_4_31b_free", display_name: "Gemma 4 31B (free)", vendor: "Google", kind: "agent", free: true, access_class: "open_weights", parameter_size: "30.7B dense", parameter_total_b: 30.7 },
+  { key: "gemma_4_26b_a4b", display_name: "Gemma 4 26B A4B", vendor: "Google", kind: "agent", access_class: "open_weights", parameter_size: "25.2B total / 3.8B active", parameter_total_b: 25.2 },
+  { key: "ministral_3_8b_2512", display_name: "Ministral 3 8B 2512", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "8B dense", parameter_total_b: 8 },
+  { key: "mistral_medium_3", display_name: "Mistral Medium 3", vendor: "Mistral AI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "mistral_small_3_2_24b", display_name: "Mistral Small 3.2 24B", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "24B dense", parameter_total_b: 24 },
 ];
+
+const MODEL_GROUPS = [
+  ["frontier", "Frontier / hosted models"],
+  ["open_small", "Open weights · ≤30B total"],
+  ["open_mid", "Open weights · 31B–150B total"],
+  ["open_large", "Open weights · 151B–500B total"],
+  ["open_xlarge", "Open weights · 501B–999B total"],
+  ["open_trillion", "Open weights · 1T+ total"],
+];
+
+function modelGroupKey(model) {
+  if (model.access_class !== "open_weights") return "frontier";
+  const total = Number(model.parameter_total_b);
+  if (!Number.isFinite(total) || total <= 0) return "open_dynamic";
+  if (total <= 30) return "open_small";
+  if (total <= 150) return "open_mid";
+  if (total <= 500) return "open_large";
+  if (total < 1000) return "open_xlarge";
+  return "open_trillion";
+}
+
+const MODEL_RISK_DEFINITIONS = {
+  "Probabilistic output variability": "Model outputs can vary across runs or context changes, so important results require validation and evidence.",
+  "Tool-use boundary": "Tool-capable execution increases the importance of authorization, argument validation, scoped permissions, and fail-closed controls.",
+  "Provider dependency / opacity": "Hosted frontier behavior, implementation details, and model lifecycle are partly controlled outside the Arena.",
+  "Open-weight deployment variance": "Runtime, provider, packaging, quantization, and deployment choices can change behavior or operational characteristics.",
+  "Availability / rate-limit variability": "Free endpoints can introduce capacity, throttling, or availability variability during testing.",
+  "Version drift": "Dynamic family aliases can change the underlying served model while the Arena-facing alias remains stable.",
+  "Large-model resource exposure": "Very large published parameter counts can increase sensitivity to latency, infrastructure, and execution-resource constraints.",
+};
+
+function modelRiskCategories(model) {
+  if (Array.isArray(model?.risk_categories) && model.risk_categories.length) return model.risk_categories;
+  const categories = ["Probabilistic output variability"];
+  if (model?.tool_capable === true || (model?.tool_capable === undefined && model?.kind === "agent")) categories.push("Tool-use boundary");
+  if (model?.access_class === "frontier") categories.push("Provider dependency / opacity");
+  if (model?.access_class === "open_weights") categories.push("Open-weight deployment variance");
+  if (model?.free) categories.push("Availability / rate-limit variability");
+  if (String(model?.model_id || "").startsWith("~") || String(model?.parameter_size || "").toLowerCase().includes("dynamic family alias")) categories.push("Version drift");
+  const total = Number(model?.parameter_total_b);
+  if (Number.isFinite(total) && total >= 500) categories.push("Large-model resource exposure");
+  return categories;
+}
+
+function ModelOptions({ models }) {
+  return MODEL_GROUPS.map(([key, label]) => {
+    const items = models
+      .filter((model) => modelGroupKey(model) === key)
+      .sort((a, b) => {
+        const aTotal = Number(a.parameter_total_b);
+        const bTotal = Number(b.parameter_total_b);
+        if (Number.isFinite(aTotal) && Number.isFinite(bTotal) && aTotal !== bTotal) return aTotal - bTotal;
+        return (a.display_name || a.key).localeCompare(b.display_name || b.key);
+      });
+    if (!items.length) return null;
+    return <optgroup key={key} label={label}>
+      {items.map((model) => <option key={model.key} value={model.key}>{model.display_name || model.key} · {model.vendor} · {model.parameter_size || "parameters undisclosed"}</option>)}
+    </optgroup>;
+  });
+}
 
 const FALLBACK_FUNCTIONS = [
   { key: "analyst", display_name: "Analyst", runtime_role: "analyst_runner", objective: "Bounded analysis with evidence and uncertainty." },
@@ -42,9 +126,12 @@ const NAV = [
   ["overview", "Project", "01"],
   ["lab", "Arena Lab", "02"],
   ["evidence", "Evidence", "03"],
-  ["mcp", "MCP", "04"],
-  ["governance", "Governance", "05"],
-  ["alignment", "Alignment", "06"],
+  ["models", "Models", "04"],
+  ["enterprise", "Enterprise", "05"],
+  ["mcp", "MCP", "06"],
+  ["governance", "Governance", "07"],
+  ["alignment", "Alignment", "08"],
+  ["diagnostics", "Diagnostics", "09"],
 ];
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
@@ -316,10 +403,13 @@ function App() {
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
       {view === "lab" && <LabRunner models={models} functions={functions} onCapture={capturePair} setView={setView} />}
       {view === "evidence" && <Evidence evidence={evidence} lastPair={lastPair} onClear={clearEvidence} models={models} />}
+      {view === "models" && <ModelRegistry models={models} />}
+      {view === "enterprise" && <EnterpriseDeployment />}
       {view === "mcp" && <MCPConsole models={models} entities={mcpEntities} />}
       {view === "chat" && <Chatbot models={models} />}
       {view === "governance" && <Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} />}
       {view === "alignment" && <Alignment />}
+      {view === "diagnostics" && <Diagnostics models={models} functions={functions} entities={mcpEntities} />}
     </main>
   </div>;
 }
@@ -334,11 +424,6 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
       <p>Agentic Arena is the working laboratory around CV 1.1. It compares governed and ungoverned execution against matched tasks and matched source data so the governance layer, not a different prompt, model, or dataset, is the intended experimental variable.</p>
       <p id="cv11-development-context">CV 1.1 has been a year in the making, an on-again, off-again development project. Total development spending is right around $1,200, and that includes purchasing a used Apple M1 computer 😂. I have been cost-conscious throughout the entire development process, working through variables and solutions in the way that has made the most sense for me to approach the problem.</p>
       <p id="anthropic-cost-note"><strong>Model cost note:</strong> Anthropic models are intentionally left out of the current Arena rotation based on cost, not capability. Anthropic models excel at many tasks, but from this project's financial-resource perspective the cost of running them is too high to justify routine comparative testing. In the recorded test spending used to inform this decision, Anthropic models accounted for roughly half of that day's model expenditures. This is a resource-allocation decision, not a claim that the models lack capability.</p>
-      <div className="hero-actions">
-        <button className="primary" onClick={() => setView("lab")}>Run a matched pair</button>
-        <button className="secondary" onClick={() => setView("governance")}>Inspect CV 1.1 controls</button>
-        <button className="ghost" onClick={() => setView("evidence")}>Review evidence</button>
-      </div>
     </section>
 
     <section className="section">
@@ -354,6 +439,29 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
         <Metric label="Functional identities" value={String(functions.length)} foot="Analyst · Modeler · Evaluator · Advisor" />
         <Metric label="Agent models" value={String(models.length)} foot="Allowlisted through the backend registry" />
         <Metric label="Captured pairs" value={String(successfulPairs)} foot="Browser-local matched-run evidence" />
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Operational scope</div>
+          <div className="section-title">Why analytics and auditing</div>
+          <div className="section-note">A deliberate experimental boundary for observing runtime governance, not a claim that these are the only important AI workloads.</div>
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="section-title">Current test surface</div>
+          <p className="body-copy">Agentic Arena currently focuses on analytics and auditing workflows. Across the selected business domains, these tasks are operationally significant and require models to interpret structured data, operate within defined roles, access bounded resources, use evidence, comply with policy, and produce controlled outputs.</p>
+        </div>
+        <div className="card">
+          <div className="section-title">Deliberate boundary</div>
+          <p className="body-copy">Coding, programming, data propagation, automation, orchestration, and other AI workloads are equally important. They are outside the present test surface because they add mutation paths, tool permissions, external state, and infrastructure variables that make runtime-governance effects harder to isolate. The current scope provides a more viable controlled environment for comparing governed and ungoverned runtime behavior.</p>
+        </div>
+      </div>
+      <div className="notice">
+        Agentic Arena demonstrates runtime-governance capabilities within the tested analytics and auditing scope. It does not claim to represent every enterprise AI workload.
       </div>
     </section>
 
@@ -415,7 +523,7 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
         <dl className="kv kv-roomy">
           <dt>Application</dt><dd>FastAPI backend · React / Vite UI</dd>
           <dt>Policy</dt><dd>CV 1.1 · OPA / Rego</dd>
-          <dt>Data</dt><dd>Paired PostgreSQL targets</dd>
+          <dt>Data</dt><dd>Paired PostgreSQL / Neon targets</dd>
           <dt>Execution</dt><dd>Governed + ungoverned comparison paths</dd>
           <dt>Tooling</dt><dd>Bounded MCP entities and server-derived routing</dd>
           <dt>Egress</dt><dd>Domain-aware validation and redaction</dd>
@@ -457,12 +565,12 @@ function ExecutionFlow() {
 }
 
 function LabRunner({ models, functions, onCapture, setView }) {
-  const [systemId, setSystemId] = useState(6);
+  const systemId = 6;
   const [functionKey, setFunctionKey] = useState("analyst");
   const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
   const [task, setTask] = useState(DEFAULT_TASK);
   const [context, setContext] = useState("");
-  const [maxTokens, setMaxTokens] = useState(1200);
+  const [maxTokens, setMaxTokens] = useState(5000);
   const [running, setRunning] = useState(false);
   const [governed, setGoverned] = useState(null);
   const [ungoverned, setUngoverned] = useState(null);
@@ -517,7 +625,7 @@ function LabRunner({ models, functions, onCapture, setView }) {
   }
 
   const functionUnderConstruction = UNDER_CONSTRUCTION_FUNCTIONS.has(functionKey);
-  const canRun = task.trim() && !functionUnderConstruction && Number(maxTokens) >= 1 && Number(maxTokens) <= 4096;
+  const canRun = task.trim() && !functionUnderConstruction && Number(maxTokens) >= 1 && Number(maxTokens) <= 5000;
 
   return <>
     <div className="notice good-notice">Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage.</div>
@@ -530,8 +638,8 @@ function LabRunner({ models, functions, onCapture, setView }) {
           const displayName = f.key === "evaluator" || f.key === "auditor" ? "Auditor" : (f.display_name || f.key);
           return <option key={f.key} value={f.key} disabled={underConstruction}>{displayName}{underConstruction ? " · Under construction" : ""}</option>;
         })}</select></div>
-        <div className="field"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}>{models.map((m) => <option key={m.key} value={m.key}>{m.display_name || m.key} · {m.vendor}</option>)}</select></div>
-        <div className="field"><label>Max output tokens</label><input type="number" min="1" max="4096" value={maxTokens} onChange={(e) => setMaxTokens(e.target.value)} /></div>
+        <div className="field"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
+        <div className="field"><label>Max output tokens</label><input type="number" value="5000" disabled readOnly /></div>
         <div className="field full"><label>Task</label><textarea value={task} onChange={(e) => setTask(e.target.value)} /></div>
         <div className="field full"><label>Optional authorized source context</label><textarea className="compact-textarea" placeholder="Prefer the governed MCP/data path. If supplied, this text is treated as untrusted source data rather than instructions on the governed side." value={context} onChange={(e) => setContext(e.target.value)} /></div>
       </div>
@@ -551,9 +659,8 @@ function LabRunner({ models, functions, onCapture, setView }) {
         <div className="live-path-card control-live"><strong>Ungoverned control</strong><span><span className="spinner inline-spinner" />Request in flight</span></div>
       </div>
       <div className="live-stage-strip">
-        {["Dispatch", "Policy / control boundary", "Dataset read", "Model execution", "Egress + telemetry"].map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
+        {["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"].map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
       </div>
-      <div className="micro">The current provider call does not stream hidden model scratchpad or private chain-of-thought. This panel shows live elapsed execution while the requests are active, then the Reasoning Observatory shows reported reasoning-token and behavior telemetry.</div>
     </section>}
 
     {(governed || ungoverned || errors.governed || errors.ungoverned) && <section className="section">
@@ -715,6 +822,8 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const maxValue = Math.max(...data.map((item) => Number(item[valueKey])), 1);
+  const costs = data.map((item) => Number(item.cost_usd)).filter((value) => Number.isFinite(value) && value >= 0);
+  const maxCost = Math.max(...costs, 0);
   const slotWidth = plotWidth / data.length;
   const barWidth = Math.min(58, slotWidth * 0.62);
   const ticks = [0, 0.25, 0.5, 0.75, 1];
@@ -737,18 +846,89 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
         const barHeight = Math.max(2, (value / maxValue) * plotHeight);
         const x = left + index * slotWidth + (slotWidth - barWidth) / 2;
         const y = top + plotHeight - barHeight;
+        const cost = Number(item.cost_usd);
+        const hasCost = Number.isFinite(cost) && cost >= 0;
+        const costY = hasCost ? top + plotHeight - (maxCost > 0 ? (cost / maxCost) * plotHeight : 0) : null;
         const label = modelNames.get(item.model_key) || item.requested_model_id || item.model_key;
         const shortLabel = label.length > 24 ? label.slice(0, 22) + "…" : label;
         return <g key={item.model_key}>
           <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" className="token-bar">
             <title>{`${label}: ${fmtNumber(value)} tokens · governed ${fmtNumber(item.governed_tokens || 0)} · ungoverned ${fmtNumber(item.ungoverned_tokens || 0)} · ${fmtNumber(item.runs || 0)} runs`}</title>
           </rect>
+          {hasCost && <circle cx={x + barWidth / 2} cy={costY} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5"><title>{`${label} cost: ${fmtCost(cost)}`}</title></circle>}
           <text x={x + barWidth / 2} y={Math.max(18, y - 8)} textAnchor="middle" className="token-bar-value">{compactAxisNumber(value)}</text>
-          <text x={x + barWidth / 2} y={top + plotHeight + 22} textAnchor="end" className="token-x-label" transform={`rotate(-38 ${x + barWidth / 2} ${top + plotHeight + 22})`}>{shortLabel}</text>
+          <text x={x + barWidth / 2} y={top + plotHeight + 12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x + barWidth / 2} ${top + plotHeight + 12})`}>{shortLabel}</text>
         </g>;
       })}
       <text x={left + plotWidth / 2} y={height - 8} textAnchor="middle" className="token-x-axis-title">Models</text>
     </svg>
+    <div className="comparison-chart-legend"><span><i className="comparison-cost-dot-key"/>Cost</span><span className="section-note">Red dot position is scaled to selected-model cost. Hover for exact USD.</span></div>
+  </div>;
+}
+
+function OverallConsumptionCharts({ runs, models }) {
+  const names = new Map((models || []).map((m) => [m.key, m.display_name || m.key]));
+  const totals = new Map();
+  for (const run of runs || []) {
+    if (!run?.model_key) continue;
+    const item = totals.get(run.model_key) || { prompt: 0, reasoning: 0, completion: 0, latency: 0 };
+    const prompt = Number(run.prompt_tokens || 0);
+    const reasoning = Number(run.reasoning_tokens || 0);
+    const completion = Math.max(0, Number(run.completion_tokens || 0) - reasoning);
+    item.prompt += prompt;
+    item.reasoning += reasoning;
+    item.completion += completion;
+    item.latency += Number(run.latency_ms || 0);
+    totals.set(run.model_key, item);
+  }
+  const rows = [...totals.entries()].map(([key,v]) => ({ key, label:names.get(key)||key, ...v })).sort((a,b)=>(b.prompt+b.reasoning+b.completion)-(a.prompt+a.reasoning+a.completion));
+  const render = (metric) => {
+    const labelChars=Math.max(8,...rows.map(r=>String(r.label||"").length)), labelSpace=Math.min(220,Math.max(90,labelChars*6.5));
+    const width=Math.max(760,rows.length*Math.max(90,Math.min(125,900/Math.max(1,rows.length)))), height=280+labelSpace, left=70, right=24, top=30, bottom=labelSpace;
+    const pw=width-left-right, ph=height-top-bottom, slot=rows.length?pw/rows.length:pw, bw=Math.min(58,slot*.62);
+    const max=Math.max(1,...rows.map(r=>metric==="latency"?r.latency:r.prompt+r.reasoning+r.completion));
+    return <div className="token-chart-shell">
+      <div className="section-title">{metric==="latency" ? "Overall model latency" : "Overall model token consumption"}</div>
+      <div className="section-note">{metric==="latency" ? "Cumulative recorded latency by model" : "Stacked prompt, reasoning, and completion token usage by model"}</div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="token-chart">
+        {[0,.25,.5,.75,1].map(p=><g key={p}><line x1={left} x2={left+pw} y1={top+ph-p*ph} y2={top+ph-p*ph} className="token-grid-line"/><text x={left-10} y={top+ph-p*ph+4} textAnchor="end" className="token-y-label">{compactAxisNumber(max*p)}</text></g>)}
+        {rows.map((r,i)=>{
+          const x=left+i*slot+(slot-bw)/2;
+          if(metric==="latency"){const h=(r.latency/max)*ph;return <g key={r.key}><rect x={x} y={top+ph-h} width={bw} height={h} rx="3" className="token-bar"><title>{`${r.label}: ${fmtNumber(r.latency,1)} ms`}</title></rect><text x={x+bw/2} y={top+ph+12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x+bw/2} ${top+ph+12})`}>{r.label}</text></g>}
+          const parts=[["prompt",r.prompt,"var(--accent)"],["reasoning",r.reasoning,"#ffffff"],["completion",r.completion,"#8b5cf6"]];
+          let used=0; return <g key={r.key}>{parts.map(([name,val,color])=>{const h=(val/max)*ph;const y=top+ph-used-h;used+=h;return <rect key={name} x={x} y={y} width={bw} height={h} fill={color}><title>{`${r.label} · ${name}: ${fmtNumber(val)} tokens`}</title></rect>})}<text x={x+bw/2} y={top+ph+12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x+bw/2} ${top+ph+12})`}>{r.label}</text></g>
+        })}
+      </svg>
+      {metric!=="latency" && <div className="chart-inline-legend"><span><i style={{background:"var(--accent)"}}/>Prompt</span><span className="reasoning-legend-label" style={{color:"#ffffff",WebkitTextFillColor:"#ffffff",fontWeight:"400"}}><i style={{background:"#ffffff"}}/>Reasoning</span><span><i style={{background:"#8b5cf6"}}/>Completion</span></div>}
+    </div>
+  };
+  return <div className="overall-consumption-charts">{render("tokens")}{render("latency")}</div>;
+}
+
+function FreeModelUsageTable({ runs, models }) {
+  const names = new Map((models || []).map((m) => [m.key, m.display_name || m.key]));
+  const totals = { arena: { prompt:0, reasoning:0, completion:0, total:0, latency:0, runs:0 }, chatbot: { prompt:0, reasoning:0, completion:0, total:0, latency:0, runs:0 } };
+  for (const run of runs || []) {
+    const operation = String(run.operation || "").toLowerCase();
+    const fn = String(run.function_key || "").toLowerCase();
+    const use = operation === "chat" || operation === "chatbot" || operation.startsWith("chatbot.") || fn === "chat" || fn === "chatbot" ? "chatbot" : "arena";
+    const bucket = totals[use];
+    const reasoning = Number(run.reasoning_tokens || 0);
+    bucket.prompt += Number(run.prompt_tokens || 0);
+    bucket.reasoning += reasoning;
+    bucket.completion += Math.max(0, Number(run.completion_tokens || 0) - reasoning);
+    bucket.total += Number(run.total_tokens || 0);
+    bucket.latency += Number(run.latency_ms || 0);
+    bucket.runs += 1;
+  }
+  const rows = [["arena","Arena"],["chatbot","Chatbot"]].map(([key,label]) => ({ key,label,...totals[key] }));
+  const freeNames = [...new Set((runs || []).map((run) => names.get(run.model_key) || run.model_key).filter(Boolean))].join(", ") || "Free model";
+  return <div className="free-model-metrics">
+    <div className="section-title">Free model usage metrics</div>
+    <div className="section-note">{freeNames} · Arena vs Chatbot from recorded telemetry</div>
+    <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Use</th><th>Runs</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Completion tokens</th><th>Total tokens</th><th>Latency</th></tr></thead><tbody>
+      {rows.map((r) => <tr key={r.key}><td>{r.label}</td><td>{fmtNumber(r.runs)}</td><td>{fmtNumber(r.prompt)}</td><td>{fmtNumber(r.reasoning)}</td><td>{fmtNumber(r.completion)}</td><td>{fmtNumber(r.total)}</td><td>{fmtMs(r.latency)}</td></tr>)}
+    </tbody></table></div>
   </div>;
 }
 
@@ -762,45 +942,192 @@ function Evidence({ evidence, lastPair, onClear, models }) {
   const avgTokenDelta = avg((item) => item.delta?.tokens);
   const avgCostDelta = avg((item) => item.delta?.cost);
   const policyPass = evidence.filter((item) => item.governed?.completed && !item.governed?.error).length;
-  const [tokenUsage, setTokenUsage] = useState(null);
-  const [tokenUsageError, setTokenUsageError] = useState("");
-  const [tokenSlice, setTokenSlice] = useState("all");
+
+  const [comparisonRuns, setComparisonRuns] = useState([]);
+  const [comparisonError, setComparisonError] = useState("");
+  const [pathSlice, setPathSlice] = useState("governed");
+  const [functionSlice, setFunctionSlice] = useState("analyst");
+  const [modelOne, setModelOne] = useState("");
+  const [modelTwo, setModelTwo] = useState("");
+  const [modelThree, setModelThree] = useState("");
+  const [modelFour, setModelFour] = useState("");
+  const [overallPathSlice, setOverallPathSlice] = useState("all");
+  const [overallFunctionSlice, setOverallFunctionSlice] = useState("all");
+  const [overallFamily, setOverallFamily] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const refreshComparisonRuns = async () => {
       try {
-        const payload = await apiRequest("/api/v1/system/telemetry/tokens-by-model", { timeoutMs: 15000 });
-        if (!cancelled) setTokenUsage(payload);
+        const payload = await apiRequest("/api/v1/system/telemetry/comparison-runs?limit=2000", { timeoutMs: 15000 });
+        if (!cancelled) {
+          setComparisonRuns(Array.isArray(payload?.runs) ? payload.runs : []);
+          setComparisonError("");
+        }
       } catch (error) {
-        if (!cancelled) setTokenUsageError(error.message);
+        if (!cancelled) setComparisonError(error.message);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    refreshComparisonRuns();
+    const refreshTimer = window.setInterval(refreshComparisonRuns, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(refreshTimer);
+    };
   }, [evidence.length]);
+
+  const normalizeFunction = (value) => value === "evaluator" ? "auditor" : String(value || "").toLowerCase();
+  const availableModels = useMemo(() => {
+    const keys = [];
+    for (const run of comparisonRuns) {
+      if (run.governance !== pathSlice || normalizeFunction(run.function_key) !== functionSlice) continue;
+      if (run.model_key && !keys.includes(run.model_key)) keys.push(run.model_key);
+    }
+    return keys;
+  }, [comparisonRuns, pathSlice, functionSlice]);
+
+  useEffect(() => {
+    if (!availableModels.length) {
+      setModelOne("");
+      setModelTwo("");
+      return;
+    }
+    setModelOne((current) => availableModels.includes(current) ? current : availableModels[0]);
+    setModelTwo((current) => availableModels.includes(current) ? current : (availableModels[1] || availableModels[0]));
+    setModelThree((current) => availableModels.includes(current) ? current : (availableModels[2] || ""));
+    setModelFour((current) => availableModels.includes(current) ? current : (availableModels[3] || ""));
+  }, [availableModels.join("|")]);
+
+  const selectedRuns = useMemo(() => {
+    const selected = [modelOne, modelTwo, modelThree, modelFour].filter(Boolean).filter((key, index, values) => values.indexOf(key) === index);
+    return selected.map((modelKey) => comparisonRuns.find((run) =>
+      run.model_key === modelKey &&
+      run.governance === pathSlice &&
+      normalizeFunction(run.function_key) === functionSlice
+    )).filter(Boolean);
+  }, [comparisonRuns, pathSlice, functionSlice, modelOne, modelTwo, modelThree, modelFour]);
+
+  const modelFamilyClass = (key) => {
+    const model = (models || []).find((item) => item.key === key);
+    const identity = [key, model?.display_name, model?.model_id, model?.requested_model_id].filter(Boolean).join(" ").toLowerCase();
+    if (identity.includes("ling")) return "free_model";
+    if (!model) return "unknown";
+    if (model.access_class === "open_weights") return "open_weights";
+    if (model.access_class === "frontier") return "frontier";
+    return "other";
+  };
+  const overallConsumptionRuns = useMemo(() => comparisonRuns.filter((run) =>
+    (overallPathSlice === "all" || run.governance === overallPathSlice) &&
+    (overallFunctionSlice === "all" || normalizeFunction(run.function_key) === overallFunctionSlice) &&
+    (overallFamily === "all" || modelFamilyClass(run.model_key) === overallFamily)
+  ), [comparisonRuns, overallPathSlice, overallFunctionSlice, overallFamily, models]);
+
+  const freeModelMetricRuns = useMemo(() => comparisonRuns.filter((run) =>
+    modelFamilyClass(run.model_key) === "free_model"
+  ), [comparisonRuns, models]);
+
+  const chartRows = selectedRuns.map((run) => ({
+    model_key: run.model_key,
+    total_tokens: Number(run.total_tokens || 0),
+    governed_tokens: pathSlice === "governed" ? Number(run.total_tokens || 0) : 0,
+    ungoverned_tokens: pathSlice === "ungoverned" ? Number(run.total_tokens || 0) : 0,
+    cost_usd: run.selected_cost_usd == null ? null : Number(run.selected_cost_usd),
+    runs: 1,
+  }));
+
+  const modelLabel = (key) => (models || []).find((model) => model.key === key)?.display_name || key;
+  const functionLabel = functionSlice === "auditor" ? "Auditor" : "Analyst";
+  const pathLabel = pathSlice === "governed" ? "Governed" : "Ungoverned";
 
   return <>
     <div className="notice">Evidence history is stored only in this browser and contains metrics/metadata, not raw model responses, prompts, source context, database credentials, or secrets. Backend telemetry remains separate.</div>
-    <section className="section grid-4">
-      <Metric label="Captured runs" value={String(evidence.length)} foot={`${complete.length} completed matched pairs`} />
-      <Metric label="Governed completions" value={String(policyPass)} foot="Successful governed executions captured locally" />
-      <Metric label="Avg latency delta" value={avgLatencyDelta === null ? ", " : `${avgLatencyDelta >= 0 ? "+" : ""}${fmtNumber(avgLatencyDelta, 1)} ms`} foot="Governed minus ungoverned" />
-      <Metric label="Avg token delta" value={avgTokenDelta === null ? ", " : `${avgTokenDelta >= 0 ? "+" : ""}${fmtNumber(avgTokenDelta, 1)}`} foot={`Avg cost delta ${avgCostDelta === null ? ", " : fmtCost(avgCostDelta)}`} />
-    </section>
-
     <section className="section card token-chart-card">
-      <div className="section-header">
-        <div><div className="section-title">Token usage by model</div><div className="section-note">Recorded Arena token usage by model · live from audit telemetry</div></div>
-        <span className="badge">{tokenUsage ? `${fmtNumber((tokenUsage.models || []).reduce((sum, item) => sum + Number(tokenSlice === "governed" ? item.governed_tokens || 0 : tokenSlice === "ungoverned" ? item.ungoverned_tokens || 0 : item.total_tokens || 0), 0))} tokens` : "Loading"}</span>
+
+
+      {comparisonError ? <div className="notice error-notice">{comparisonError}</div> : <>
+        <div className="overall-chart-controls">
+          <div className="field">
+            <label>Overall chart path</label>
+            <div className="token-slicer" role="group" aria-label="Overall chart governance path slicer">
+              {[["all","All"],["governed","Governed"],["ungoverned","Ungoverned"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${overallPathSlice === key ? "active" : ""}`} onClick={() => setOverallPathSlice(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+          <div className="field">
+            <label>Overall chart function</label>
+            <div className="token-slicer" role="group" aria-label="Overall chart function slicer">
+              {[["all","All"],["analyst","Analyst"],["auditor","Auditor"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${overallFunctionSlice === key ? "active" : ""}`} onClick={() => setOverallFunctionSlice(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+          <div className="field">
+            <label>Overall chart family class</label>
+            <div className="token-slicer" role="group" aria-label="Overall chart family class slicer">
+              {[["all","All"],["frontier","Frontier / hosted"],["open_weights","Open weights"],["free_model","Free Model"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${overallFamily === key ? "active" : ""}`} onClick={() => setOverallFamily(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+        </div>
+        <OverallConsumptionCharts runs={overallConsumptionRuns} models={models} />
+        {overallFamily === "free_model" && <FreeModelUsageTable runs={freeModelMetricRuns} models={models} />}
+              <div className="section-header">
+        <div>
+          <div className="section-title">Four-model evidence comparison</div>
+          <div className="section-note">Latest recorded run for each selected model · compare up to four models live from Neon telemetry</div>
+        </div>
+        <span className="badge">{pathLabel} · {functionLabel}</span>
       </div>
-      <div className="token-slicer" role="group" aria-label="Token governance slicer">
-        {[
-          ["all", "All"],
-          ["governed", "Governed"],
-          ["ungoverned", "Ungoverned"],
-        ].map(([key, label]) => <button key={key} className={`token-slicer-button ${tokenSlice === key ? "active" : ""}`} onClick={() => setTokenSlice(key)}>{label}</button>)}
+
+        <TokenUsageChart rows={chartRows} models={models} slice={pathSlice} />
+      <div className="evidence-comparison-controls evidence-comparison-controls-vertical">
+        <div className="comparison-slicer-row">
+          <div className="field">
+            <label>Function</label>
+            <div className="token-slicer" role="group" aria-label="Function slicer">
+              {[["analyst","Analyst"],["auditor","Auditor"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${functionSlice === key ? "active" : ""}`} onClick={() => setFunctionSlice(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+          <div className="field">
+            <label>Path</label>
+            <div className="token-slicer" role="group" aria-label="Governance path slicer">
+              {[["governed","Governed"],["ungoverned","Ungoverned"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${pathSlice === key ? "active" : ""}`} onClick={() => setPathSlice(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="model-comparison-grid">
+          <div className="field"><label>Model 1</label><select value={modelOne} onChange={(e) => setModelOne(e.target.value)}>{availableModels.map((key) => <option key={key} value={key}>{modelLabel(key)}</option>)}</select></div>
+          <div className="field"><label>Model 2</label><select value={modelTwo} onChange={(e) => setModelTwo(e.target.value)}>{availableModels.map((key) => <option key={key} value={key}>{modelLabel(key)}</option>)}</select></div>
+          <div className="field"><label>Model 3</label><select value={modelThree} onChange={(e) => setModelThree(e.target.value)}><option value="">None</option>{availableModels.map((key) => <option key={key} value={key}>{modelLabel(key)}</option>)}</select></div>
+          <div className="field"><label>Model 4</label><select value={modelFour} onChange={(e) => setModelFour(e.target.value)}><option value="">None</option>{availableModels.map((key) => <option key={key} value={key}>{modelLabel(key)}</option>)}</select></div>
+        </div>
       </div>
-      {tokenUsageError ? <div className="notice error-notice">{tokenUsageError}</div> : <TokenUsageChart rows={tokenUsage?.models || []} models={models} slice={tokenSlice} />}
+        <div className="table-wrap model-telemetry-table-wrap">
+          <table className="evidence-table">
+            <thead><tr><th>Model</th><th>Function</th><th>Path</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Total tokens</th><th>Latency</th><th>Cost</th><th>Run ID</th></tr></thead>
+            <tbody>
+              {selectedRuns.map((run) => <tr key={run.run_id}>
+                <td>{modelLabel(run.model_key)}</td>
+                <td>{functionLabel}</td>
+                <td>{pathLabel}</td>
+                <td>{fmtNumber(run.prompt_tokens || 0)}</td>
+                <td>{fmtNumber(run.reasoning_tokens || 0)}</td>
+                <td>{fmtNumber(run.total_tokens || 0)}</td>
+                <td>{run.latency_ms == null ? ", " : `${fmtNumber(run.latency_ms, 1)} ms`}</td>
+                <td>{fmtCost(run.selected_cost_usd)}</td>
+                <td className="mono-cell">{run.run_id}</td>
+              </tr>)}
+              {!selectedRuns.length && <tr><td colSpan="9">No recorded runs match these slicers.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </>}
     </section>
 
     <section className="section card">
@@ -809,6 +1136,92 @@ function Evidence({ evidence, lastPair, onClear, models }) {
     </section>
 
     {lastPair && <section className="section grid-2"><div className="card"><div className="section-title">Latest governed metadata</div><pre className="json-box">{JSON.stringify(lastPair.governed, null, 2)}</pre></div><div className="card"><div className="section-title">Latest ungoverned metadata</div><pre className="json-box">{JSON.stringify(lastPair.ungoverned, null, 2)}</pre></div></section>}
+  </>;
+}
+
+function ModelRegistry({ models }) {
+  const [query, setQuery] = useState("");
+  const [access, setAccess] = useState("all");
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return models
+      .filter((model) => access === "all" || model.access_class === access)
+      .filter((model) => !needle || [
+        model.display_name,
+        model.vendor,
+        model.model_id,
+        model.parameter_size,
+        ...modelRiskCategories(model),
+      ].some((value) => String(value || "").toLowerCase().includes(needle)))
+      .sort((a, b) => (a.vendor || "").localeCompare(b.vendor || "") || (a.display_name || a.key).localeCompare(b.display_name || b.key));
+  }, [models, query, access]);
+
+  const allRisks = Array.from(new Set(models.flatMap(modelRiskCategories))).sort();
+  const openCount = models.filter((model) => model.access_class === "open_weights").length;
+  const frontierCount = models.filter((model) => model.access_class === "frontier").length;
+
+  return <>
+    <div className="notice">
+      <strong>General risk categorization.</strong> These labels are governance and operational considerations derived from registry metadata. They are not vendor safety scores, capability rankings, or claims that a model is inherently safe or unsafe.
+    </div>
+
+    <section className="section grid-3">
+      <Metric label="Registry models" value={String(models.length)} foot="Current allowlisted agent models" />
+      <Metric label="Open weights" value={String(openCount)} foot="Models classified as open weights" />
+      <Metric label="Frontier / hosted" value={String(frontierCount)} foot="Hosted models with external provider dependency" />
+    </section>
+
+    <section className="section card">
+      <div className="section-header">
+        <div>
+          <div className="section-title">Risk category legend</div>
+          <div className="section-note">Broad control considerations used consistently across the registry.</div>
+        </div>
+        <span className="badge">{allRisks.length} categories in use</span>
+      </div>
+      <div className="risk-legend-grid">
+        {allRisks.map((risk) => <div className="risk-legend-item" key={risk}>
+          <strong>{risk}</strong>
+          <span>{MODEL_RISK_DEFINITIONS[risk] || "General governance consideration."}</span>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="section form-panel">
+      <div className="form-grid two-cols">
+        <div className="field"><label>Search registry</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Model, vendor, parameter size, or risk category" /></div>
+        <div className="field"><label>Access class</label><select value={access} onChange={(e) => setAccess(e.target.value)}><option value="all">All models</option><option value="frontier">Frontier / hosted</option><option value="open_weights">Open weights</option></select></div>
+      </div>
+      <div className="section-note model-filter-note">Showing {visible.length} of {models.length} registered models.</div>
+    </section>
+
+    <section className="section model-registry-grid">
+      {visible.map((model) => {
+        const risks = modelRiskCategories(model);
+        return <article className="card model-registry-card" key={model.key}>
+          <div className="model-registry-head">
+            <div>
+              <div className="domain-number">{model.vendor || "Unknown vendor"}</div>
+              <h3>{model.display_name || model.key}</h3>
+            </div>
+            <span className="badge">{model.access_class === "open_weights" ? "Open weights" : "Frontier / hosted"}</span>
+          </div>
+          <dl className="model-registry-meta">
+            <dt>Registry key</dt><dd>{model.key}</dd>
+            <dt>Model ID</dt><dd>{model.model_id || "Not exposed"}</dd>
+            <dt>Parameters</dt><dd>{model.parameter_size || "Undisclosed"}</dd>
+            <dt>Tool capable</dt><dd>{model.tool_capable === false ? "No" : "Yes"}</dd>
+            <dt>Free route</dt><dd>{model.free ? "Yes" : "No"}</dd>
+          </dl>
+          <div className="model-risk-block">
+            <div className="model-risk-title">General risk categories</div>
+            <div className="model-risk-tags">{risks.map((risk) => <span className="risk-tag" key={risk}>{risk}</span>)}</div>
+          </div>
+        </article>;
+      })}
+    </section>
+    {!visible.length && <div className="empty-state"><div className="empty-mark">MR</div><strong>No matching models</strong><span>Change the search or access-class filter.</span></div>}
   </>;
 }
 
@@ -877,7 +1290,7 @@ function MCPConsole({ models, entities }) {
           <div className="field"><label>Entity</label><select value={entityKey} onChange={(e) => setEntityKey(e.target.value)}>{effectiveEntities.map((item) => <option key={item.key} value={item.key}>{item.key} · {item.runtime_role}</option>)}</select></div>
           <div className="field"><label>Tool</label><select value={toolName} onChange={(e) => setToolName(e.target.value)}>{(entity?.tools || []).map((tool) => <option key={tool.name} value={tool.name}>{tool.name}</option>)}</select></div>
           <div className="field"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-          <div className="field"><label>Model binding</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}>{models.map((m) => <option key={m.key} value={m.key}>{m.display_name || m.key}</option>)}</select></div>
+          <div className="field"><label>Model binding</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
           {toolNeedsTable && <div className="field"><label>Source table</label><input value={table} onChange={(e) => setTable(e.target.value)} placeholder="source_data" /></div>}
           {["dataset.sample", "dataset.query", "rag.retrieve"].includes(toolName) && <div className="field"><label>{toolName === "rag.retrieve" ? "Top K" : "Limit"}</label><input type="number" min="1" max={toolName === "dataset.query" ? "100" : toolName === "dataset.sample" ? "25" : "20"} value={limit} onChange={(e) => setLimit(e.target.value)} /></div>}
           {toolName === "dataset.query" && <div className="field full"><label>Select columns (optional, comma separated)</label><input value={selectColumns} onChange={(e) => setSelectColumns(e.target.value)} placeholder="Carrier, Status, Cost" /></div>}
@@ -897,7 +1310,8 @@ function MCPConsole({ models, entities }) {
 }
 
 function Chatbot({ models }) {
-  const [systemId, setSystemId] = useState(6);
+  const [systemId, setSystemId] = useState(1);
+  const [workflowKey, setWorkflowKey] = useState("analyst");
   const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
   const [history, setHistory] = useState([{ role: "assistant", content: "Agentic Arena guide ready. I can explain the public architecture, CV 1.1 controls, or help route you to a governed workflow." }]);
   const [message, setMessage] = useState("");
@@ -914,7 +1328,7 @@ function Chatbot({ models }) {
     setHistory((items) => [...items, { role: "user", content: current }]);
     setMessage("");
     try {
-      const result = await apiRequest("/api/v1/chatbot/message", { method: "POST", body: { operation: "chat", system_id: Number(systemId), model_key: modelKey, message: current, history: prior, max_tokens: 512 } });
+      const result = await apiRequest("/api/v1/chatbot/message", { method: "POST", body: { operation: "execute_workflow", system_id: Number(systemId), model_key: modelKey, message: current, history: prior, workflow: { function_key: workflowKey, source_context: null, max_tokens: 10000 }, max_tokens: 10000 } });
       setHistory((items) => [...items, { role: "assistant", content: result.reply || assistantText(result) || "No response returned." }]);
     } catch (e) {
       setError(e.message);
@@ -932,17 +1346,18 @@ function Chatbot({ models }) {
       <div className="result-head"><div><strong>Governed lab guide</strong><div className="micro">Professional · safe mode · bounded history</div></div><div className="button-row"><StatusPill good={true} label="CV 1.1" /><button className="ghost small-button" onClick={clearChat}>Reset</button></div></div>
       <div className="chat-log" aria-live="polite">{history.map((item, i) => <div key={`${item.role}-${i}`} className={`chat-message ${item.role}`}><span className="chat-role">{item.role}</span>{item.content}</div>)}</div>
       {error && <div className="notice error-notice chat-error">{error}</div>}
-      <div className="chat-composer"><textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Ask about CV 1.1, architecture, controls, or governed workflows…" /><button className="primary" onClick={send} disabled={sending || !message.trim()}>{sending ? "Sending…" : "Send"}</button></div>
+      <div className="chat-composer"><textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Enter a task for the selected governed domain and workflow…" /><button className="primary" onClick={send} disabled={sending || !message.trim()}>{sending ? "Sending…" : "Send"}</button></div>
     </div>
     <div className="form-panel side-config">
-      <div className="field"><label>Domain context</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-      <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}>{models.map((m) => <option key={m.key} value={m.key}>{m.display_name || m.key}</option>)}</select></div>
+      <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
+      <div className="field config-gap"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((domain) => <option key={domain.id} value={domain.id}>{domain.name}</option>)}</select></div>
+      <div className="field config-gap"><label>Workflow</label><select value={workflowKey} onChange={(e) => setWorkflowKey(e.target.value)}><option value="analyst">Analyst</option><option value="auditor">Auditor</option><option value="data_modeler">Data Modeler</option><option value="evaluator">Evaluator</option><option value="advisor">Advisor</option></select></div>
       <div className="section-title config-title">Chatbot boundaries</div>
       <div className="control-list">
         <Control name="Governed trigger" desc="The chatbot remains inside CV 1.1 and cannot elect an ungoverned mode." state="Fixed" />
         <Control name="Backend disclosure" desc="Raw rows, credentials, hidden prompts, policy source, and internal control records are outside the disclosure boundary." state="Blocked" />
         <Control name="Conversation memory" desc="Only bounded request history is supplied to the chatbot execution path." state="12 max" />
-        <Control name="Output budget" desc="Professional guide output uses the configured bounded response ceiling." state="512 max" />
+        <Control name="Output budget" desc="Professional guide output uses the configured bounded response ceiling." state="10000 max" />
         <Control name="Content scope" desc="No sexual/explicit content or profanity; philosophy is limited to abstract technology concepts." state="Scoped" />
       </div>
     </div>
@@ -978,6 +1393,143 @@ function Governance({ ready, cv11, functions, entities }) {
   </>;
 }
 
+function EnterpriseDeployment() {
+  const deploymentStages = [
+    ["01", "Segment the API surface", "Give each functional division its own REST API boundary, identity scope, approved data sources, tool permissions, rate limits, and policy modules."],
+    ["02", "Containerize bounded services", "Package each division API as a separately deployable service. Keep credentials, model-provider keys, and data bindings server-side."],
+    ["03", "Run replicated workloads", "Deploy multiple API replicas in Kubernetes so a pod or node failure does not make the business function unavailable."],
+    ["04", "Balance only healthy traffic", "Use ingress and load balancers with readiness and liveness checks so requests route only to healthy service replicas."],
+    ["05", "Fail over the model, not the policy", "Route a governed request envelope to an approved backup model when the primary provider is unavailable. Authorization, data scope, tool limits, and egress controls remain unchanged."],
+    ["06", "Observe and prove execution", "Centralize health, latency, cost, policy decisions, failover events, output controls, and signed audit evidence without granting the model additional authority."],
+  ];
+
+  const divisionApis = [
+    ["Finance API", "Finance data and approved analytical functions", "/api/v1/finance/*"],
+    ["Operations API", "Operational data, planning, logistics, and bounded analytics", "/api/v1/operations/*"],
+    ["Human Resources API", "HR workflows with separate privacy and access policy", "/api/v1/hr/*"],
+    ["Engineering API", "Approved repositories, technical workflows, and controlled tooling", "/api/v1/engineering/*"],
+    ["Legal / Compliance API", "Document review, policy evidence, and bounded advisory workflows", "/api/v1/legal/*"],
+  ];
+
+  const runtimeFlow = [
+    "Employee / application",
+    "SSO + enterprise gateway",
+    "Division REST API",
+    "K8s service + replicas",
+    "CV 1.1 policy boundary",
+    "Model router",
+    "Primary or approved backup AI",
+    "Bounded data + tools",
+    "Egress + signed telemetry",
+  ];
+
+  return <>
+    <div className="notice good-notice"><strong>Enterprise deployment path.</strong> This is a reference architecture showing how the Arena governance pattern could be adapted for enterprise use. It is not a claim that the current lab is deployed in this topology.</div>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Reference architecture</div>
+          <div className="section-title">Governance-first enterprise AI deployment</div>
+          <div className="section-note">Keep business authority inside functional APIs, keep runtime governance stable through infrastructure or model failover, and treat the model as a bounded execution dependency.</div>
+        </div>
+        <span className="badge">REST · Kubernetes · load balanced</span>
+      </div>
+      <div className="card enterprise-flow-card">
+        <div className="enterprise-flow">
+          {runtimeFlow.map((item, index) => <React.Fragment key={item}>
+            <div className="enterprise-flow-node">{item}</div>
+            {index < runtimeFlow.length - 1 && <div className="enterprise-flow-arrow">→</div>}
+          </React.Fragment>)}
+        </div>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Functional isolation</div>
+          <div className="section-title">One governed API boundary per division</div>
+          <div className="section-note">A shared employee interface can sit above these services, but execution authority remains segmented by business function.</div>
+        </div>
+      </div>
+      <div className="grid-3 enterprise-api-grid">
+        {divisionApis.map(([name, scope, route]) => <div className="card enterprise-api-card" key={name}>
+          <div className="section-title">{name}</div>
+          <p className="body-copy">{scope}</p>
+          <span className="mono-cell">{route}</span>
+          <div className="model-risk-tags">
+            <span className="tag">separate auth scope</span>
+            <span className="tag">bounded data</span>
+            <span className="tag">policy enforced</span>
+          </div>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Deployment sequence</div>
+          <div className="section-title">Path from governed lab pattern to enterprise service</div>
+          <div className="section-note">Each stage adds operational capability without moving authorization into the model.</div>
+        </div>
+      </div>
+      <div className="enterprise-stage-grid">
+        {deploymentStages.map(([step, title, detail]) => <div className="card enterprise-stage-card" key={step}>
+          <div className="enterprise-stage-number">{step}</div>
+          <div>
+            <div className="section-title">{title}</div>
+            <p className="body-copy">{detail}</p>
+          </div>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="section grid-2">
+      <div className="card">
+        <div className="eyebrow">Service resilience</div>
+        <div className="section-title">Kubernetes and load balancing</div>
+        <div className="control-list">
+          <Control name="Replicated division APIs" desc="Run multiple stateless API replicas behind a Kubernetes Service so individual pod loss does not remove the function." state="Scale out" />
+          <Control name="Health-aware routing" desc="Readiness checks remove unhealthy replicas from traffic while liveness checks support controlled restart behavior." state="Required" />
+          <Control name="Failure-domain isolation" desc="Keep division services independently deployable so a failure in one business function does not require a platform-wide outage." state="Isolated" />
+          <Control name="Horizontal scaling" desc="Scale API replicas based on measured demand while preserving the same authorization and policy contract for every replica." state="Elastic" />
+        </div>
+      </div>
+      <div className="card">
+        <div className="eyebrow">Model resilience</div>
+        <div className="section-title">Approved primary and backup AI</div>
+        <div className="control-list">
+          <Control name="Model router" desc="Select only allowlisted models approved for the division, task type, and data sensitivity." state="Bounded" />
+          <Control name="Circuit breaker" desc="Repeated provider failures or timeouts can open the primary route and direct eligible requests to an approved backup." state="Fail over" />
+          <Control name="Governance invariant" desc="Failover changes the inference dependency, not identity, data authorization, tool permissions, policy evaluation, or egress controls." state="Fixed" />
+          <Control name="High-risk degradation" desc="Mutation-capable or high-impact workflows can degrade to read-only or require human approval instead of replaying automatically." state="Controlled" />
+        </div>
+      </div>
+    </section>
+
+    <section className="section grid-2">
+      <div className="card">
+        <div className="section-title">REST contract</div>
+        <dl className="kv kv-roomy">
+          <dt>Identity</dt><dd>SSO identity and division role resolved before execution</dd>
+          <dt>Request</dt><dd>Validated operation, bounded inputs, and explicit business function</dd>
+          <dt>Policy</dt><dd>OPA / Rego authorization against trusted runtime state</dd>
+          <dt>Execution</dt><dd>Approved data, tools, and model route only</dd>
+          <dt>Response</dt><dd>Verified and sanitized output with request and trace identifiers</dd>
+          <dt>Evidence</dt><dd>Latency, usage, policy outcome, failover state, and signed telemetry</dd>
+        </dl>
+      </div>
+      <div className="card">
+        <div className="section-title">Failover guardrails</div>
+        <p className="body-copy">Read-only inference can usually be retried or routed to a backup model safely when the request envelope is unchanged. Mutation-capable operations require idempotency keys, transaction state, explicit retry rules, and confirmation that the first attempt did not commit before any replay.</p>
+        <div className="notice enterprise-inner-notice"><strong>Design rule:</strong> infrastructure can reroute execution, but an outage never grants broader authority. If the approved fallback cannot satisfy the same policy contract, the governed operation fails closed.</div>
+      </div>
+    </section>
+  </>;
+}
+
 function Alignment() {
   return <>
     <div className="notice"><strong>Alignment, not compliance.</strong> These are engineering mappings intended to move the platform toward recognized privacy, security, AI-risk, and sector expectations. Applicability, legal bases, contracts, notices, retention, incident programs, conformity assessment, certification, and jurisdiction-specific obligations remain external organizational responsibilities.</div>
@@ -988,6 +1540,59 @@ function Alignment() {
     </section>
     <section className="section card"><div className="section-title">Domain posture</div><div className="domain-alignment-grid">{DOMAINS.map((domain) => <div className="domain-alignment" key={domain.id}><span className="domain-number">SYSTEM {String(domain.id).padStart(2,"0")}</span><strong>{domain.name}</strong><span>{domain.privacy}</span><span className="micro">Human-reviewed decision support · no autonomous high-impact final decision</span></div>)}</div></section>
   </>;
+}
+
+function Diagnostics({ models, functions, entities }) {
+  const checks = [
+    ["Health", "/health"],
+    ["Readiness", "/ready"],
+    ["CV 1.1 status", "/api/v1/system/cv11"],
+    ["Audit integrity", "/api/v1/system/audit/integrity"],
+    ["Model registry", "/api/v1/models"],
+    ["Governed functions", "/api/v1/governed/functions"],
+    ["Ungoverned pairing", "/api/v1/ungoverned/functions"],
+    ["Governed MCP", "/api/v1/mcp/governed/entities"],
+  ];
+  const [results, setResults] = useState({});
+  const [running, setRunning] = useState(false);
+
+  async function runChecks() {
+    setRunning(true);
+    const output = {};
+    await Promise.all(checks.map(async ([name, path]) => {
+      const start = performance.now();
+      try {
+        const payload = await apiRequest(path, { timeoutMs: 15000 });
+        output[path] = { name, ok: true, latency: performance.now() - start, summary: summarizeDiagnostic(path, payload) };
+      } catch (e) {
+        output[path] = { name, ok: false, latency: performance.now() - start, summary: e.message };
+      }
+    }));
+    setResults(output);
+    setRunning(false);
+  }
+
+  useEffect(() => { runChecks(); }, []);
+  const passed = Object.values(results).filter((item) => item.ok).length;
+
+  return <>
+    <div className="notice">Diagnostics are read-only frontend checks. They do not mutate Railway, Neon, ingestion state, policy, datasets, or the deadman switch.</div>
+    <section className="section grid-4"><Metric label="Checks" value={String(checks.length)} foot="Read-only API surfaces" /><Metric label="Passing" value={Object.keys(results).length ? String(passed) : ", "} foot="Current browser-to-backend reachability" /><Metric label="Models" value={String(models.length)} foot="Agent models visible to the UI" /><Metric label="MCP entities" value={String(entities.length || 4)} foot={`${functions.length} functional identities`} /></section>
+    <section className="section card"><div className="section-header"><div><div className="section-title">Endpoint checks</div><div className="section-note">Measured from this browser through the Vercel proxy.</div></div><button className="secondary small-button" onClick={runChecks} disabled={running}>{running ? "Checking…" : "Run diagnostics"}</button></div><div className="diagnostic-list">{checks.map(([name, path]) => { const item = results[path]; return <div className="diagnostic-row" key={path}><div><strong>{name}</strong><span className="mono-cell">{path}</span></div><div className="diagnostic-summary">{item?.summary || "Waiting"}</div><div className="diagnostic-latency">{item ? fmtMs(item.latency) : ", "}</div><StatusPill good={item ? item.ok : null} label={item ? (item.ok ? "Pass" : "Fail") : "Pending"} /></div>; })}</div></section>
+    <section className="section grid-2"><div className="card"><div className="section-title">Deployment boundary</div><p className="body-copy">The browser talks to a Vercel server-side proxy. Backend and provider credentials remain server-side. The proxy has an explicit path allowlist and returns no-store responses.</p></div><div className="card"><div className="section-title">Current intentional signal</div><p className="body-copy">Stepped deployments may deliberately surface a fail-closed signal when a protected precondition is no longer valid. A failed protected step is not automatically equivalent to loss of the last known-good application state.</p></div></section>
+  </>;
+}
+
+function summarizeDiagnostic(path, payload) {
+  if (path === "/health") return payload?.status || "responded";
+  if (path === "/ready") return `status=${payload?.status || "unknown"}; OPA=${payload?.cv11_opa_healthy ? "healthy" : "check"}`;
+  if (path.endsWith("/cv11")) return `${payload?.policy || "CV1.1"}; ${payload?.governed_failure_mode || "fail_closed"}`;
+  if (path.endsWith("/audit/integrity")) return `gov=${payload?.governed?.valid ? "valid" : "check"}; ungov=${payload?.ungoverned?.valid ? "valid" : "check"}; HMAC-SHA256`;
+  if (path.endsWith("/models")) return `${payload?.models?.length ?? payload?.count ?? 0} registered models`;
+  if (path.includes("governed/functions")) return `${payload?.functions?.length ?? 0} functions · ${payload?.domains?.length ?? 0} domains`;
+  if (path.includes("ungoverned/functions")) return payload?.pairing_contract ? "pairing contract exposed" : "control path responded";
+  if (path.includes("mcp/governed/entities")) return `${payload?.entities?.length ?? 0} governed entities`;
+  return "responded";
 }
 
 createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
