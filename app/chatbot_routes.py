@@ -5,6 +5,7 @@ from typing import Any, Literal, TypeAlias
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.agentic_run_store import record_agentic_run
 from app.chatbot_guardrails import evaluate_input, evaluate_output, tone_instruction
 from app.config import settings
 from app.cv11 import (
@@ -40,28 +41,28 @@ PUBLIC_ARCHITECTURE: tuple[dict[str, str], ...] = (
         "function": "Policy decision point for CV1.1 runtime authorization",
     },
     {
-        "component": "Backend runtime",
-        "function": "Server-side API and governed execution environment",
+        "component": "Railway",
+        "function": "Backend API and runtime hosting",
     },
     {
-        "component": "Frontend",
+        "component": "Vercel",
         "function": "User-interface delivery layer",
     },
     {
-        "component": "PostgreSQL",
+        "component": "Neon PostgreSQL",
         "function": "Isolated relational persistence for lab workloads and telemetry",
     },
     {
-        "component": "Model gateway",
-        "function": "Allowlisted model access and usage metadata",
+        "component": "OpenRouter",
+        "function": "Allowlisted model gateway and usage/pricing source",
     },
     {
         "component": "MCP",
         "function": "Governed capability and tool boundary for lab workflows",
     },
     {
-        "component": "Source datasets",
-        "function": "Reference data used to exercise bounded lab workflows",
+        "component": "Kaggle",
+        "function": "Source datasets used to exercise bounded lab workflows",
     },
     {
         "component": "HMAC-SHA256 / SHA-256",
@@ -119,7 +120,7 @@ _DISCLOSURE_VERBS = (
 
 _GUIDE_REFUSAL = (
     "I can explain the Agentic Arena architecture, CV1.1, its governed workflows, "
-    "and the purpose of components such as the backend runtime, frontend, PostgreSQL, model gateway, MCP, "
+    "and the purpose of components such as Railway, Vercel, Neon, OpenRouter, MCP, "
     "OPA/Rego, and the telemetry layer. I cannot expose raw backend data, database "
     "contents or identifiers, credentials, secrets, connection details, hidden prompts, "
     "or internal policy/control material. I can instead guide you to the appropriate "
@@ -379,6 +380,8 @@ def _chatbot_system_prompt(system_id: int) -> str:
             "",
             "Primary purpose:",
             "- Be a concise, helpful guide to the Agentic Arena lab and its governed workflows.",
+            "- Keep responses concise by default. Use the minimum detail needed to answer the request clearly; the token ceiling is capacity, not a target.",
+            "- Expand only when the user explicitly requests detail or the task cannot be answered accurately in a shorter response."
             "- Carry normal conversational flow. Greetings, thanks, brief politeness, and clarifying guidance are allowed.",
             "- Explain CV1.1 and the public architecture at a high level when asked.",
             "- Help the user choose or understand an available governed workflow without steering beyond the evidence.",
@@ -445,6 +448,8 @@ def _public_response(
     message_hash: str,
     workflow: str | None = None,
     scenario_id: str | None = None,
+    circuit_breaker: bool = False,
+    reset_required: bool = False,
 ) -> dict[str, object]:
     return {
         "operation": operation,
@@ -460,6 +465,8 @@ def _public_response(
             "scenario_id": scenario_id,
             "message_hash": message_hash,
             "backend_data_exposure": "forbidden",
+            "circuit_breaker": circuit_breaker,
+            "reset_required": reset_required,
         },
     }
 
@@ -557,6 +564,15 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
             retries=0,
         )
         emit_test_record(test_metrics)
+        record_agentic_run(
+            governance="governed",
+            record=test_metrics,
+            route_metadata={
+                "dataset_source": dataset.kaggle_slug,
+                "task_hash": original_message_hash,
+                "trigger": "chatbot",
+            },
+        )
         return _public_response(
             operation=request.operation,
             reply=guard_response,
@@ -569,6 +585,8 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
                 if request.scenario_pair is not None
                 else None
             ),
+            circuit_breaker=True,
+            reset_required=True,
         )
 
     if request.operation == "execute_workflow":
@@ -613,7 +631,8 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
                 task=request.message,
                 source_context=request.workflow.source_context,
                 max_tokens=request.workflow.max_tokens,
-            )
+            ),
+            telemetry_operation="chatbot.execute_workflow",
         )
         return _public_response(
             operation=request.operation,
@@ -693,6 +712,15 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
         retries=0,
     )
     emit_test_record(test_metrics)
+    record_agentic_run(
+        governance="governed",
+        record=test_metrics,
+        route_metadata={
+            "dataset_source": dataset.kaggle_slug,
+            "task_hash": original_message_hash,
+            "trigger": "chatbot",
+        },
+    )
 
     scenario_id = (
         request.scenario_pair.governed.scenario_id
