@@ -35,7 +35,7 @@ class UngovernedExecuteRequest(StrictRequest):
     model_key: str = Field(min_length=1, max_length=128)
     task: str = Field(min_length=1, max_length=20_000)
     source_context: str | None = Field(default=None, max_length=150_000)
-    max_tokens: int = Field(default=2500, ge=1, le=4096)
+    max_tokens: int = Field(default=2500, ge=2500, le=5000)
 
     @model_validator(mode="after")
     def validate_source_context(self) -> "UngovernedExecuteRequest":
