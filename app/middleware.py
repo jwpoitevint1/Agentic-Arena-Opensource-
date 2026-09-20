@@ -333,7 +333,11 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             )
 
         request_host = (request.url.hostname or "").lower().rstrip(".")
-        if not _host_allowed(request_host):
+        railway_healthcheck = (
+            path == "/health"
+            and request_host == "healthcheck.railway.app"
+        )
+        if not railway_healthcheck and not _host_allowed(request_host):
             logger.warning(
                 "request_blocked reason=host path=%s host=%s request_id=%s",
                 path,
@@ -374,6 +378,16 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 request_id=request_id,
             )
 
+        if (
+            path.startswith(f"{settings.api.prefix}/system/database")
+            and not _env_bool("ENABLE_SYSTEM_DIAGNOSTICS", False)
+        ):
+            return _json_error(
+                request,
+                status_code=404,
+                detail="route not available",
+                request_id=request_id,
+            )
 
         if path.startswith(settings.api.prefix):
             allowed, retry_after = _consume_global_rate_token(client_ip)
