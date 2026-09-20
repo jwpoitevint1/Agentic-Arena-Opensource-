@@ -1,14 +1,5 @@
 import "./floating-chat.css";
 
-const DOMAINS = [
-  [1, "Finance"],
-  [2, "Environmental Operations"],
-  [3, "Healthcare"],
-  [4, "Retail"],
-  [5, "Aviation"],
-  [6, "Supply Chain / Freight"],
-];
-
 const UI_GUIDE_MODEL_KEY = "ling_3_0_flash_vl_free";
 const UI_GUIDE_MODEL_NAME = "Ling 3.0 Flash VL";
 const START_MESSAGE = "UI Guide ready. Ask about CV 1.1, the control architecture, the Arena interface, or governed workflows.";
@@ -26,7 +17,9 @@ async function apiRequest(path, options = {}) {
   if (!response.ok) {
     const detail = typeof payload === "object" && payload?.detail ? payload.detail : payload;
     const message = typeof detail === "string" ? detail : detail?.message || JSON.stringify(detail);
-    throw new Error(message || `Request failed with ${response.status}`);
+    const error = new Error(message || `Request failed with ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
   return payload;
 }
@@ -73,7 +66,6 @@ function mountFloatingChat() {
         </div>
       </header>
       <div class="cv-chat-settings">
-        <label>Domain<select class="cv-chat-domain"></select></label>
         <label>Model<div class="cv-chat-model-fixed" title="UI Guide model is fixed by policy">${escapeHtml(UI_GUIDE_MODEL_NAME)}</div></label>
       </div>
       <div class="cv-chat-log" aria-live="polite"></div>
@@ -82,7 +74,7 @@ function mountFloatingChat() {
         <textarea rows="2" maxlength="20000" placeholder="Ask UI Guide about CV 1.1, controls, architecture, or governed workflows…"></textarea>
         <button class="cv-chat-send" type="button">Send</button>
       </div>
-      <footer>${escapeHtml(UI_GUIDE_MODEL_NAME)} · bounded history · 512-token response ceiling · CV 1.1 governed</footer>
+      <footer>${escapeHtml(UI_GUIDE_MODEL_NAME)} · bounded history · 512-token response ceiling · CV 1.1 governed · guard trip requires Reset</footer>
     </section>
   `;
   document.body.appendChild(shell);
@@ -94,15 +86,9 @@ function mountFloatingChat() {
   const textarea = shell.querySelector("textarea");
   const sendButton = shell.querySelector(".cv-chat-send");
   const errorBox = shell.querySelector(".cv-chat-error");
-  const domainSelect = shell.querySelector(".cv-chat-domain");
-
-  DOMAINS.forEach(([id, name]) => domainSelect.insertAdjacentHTML(
-    "beforeend",
-    `<option value="${id}"${id === 6 ? " selected" : ""}>${escapeHtml(name)}</option>`,
-  ));
-
   let history = [{ role: "assistant", content: START_MESSAGE }];
   let sending = false;
+  let circuitBroken = false;
 
   function renderHistory() {
     log.innerHTML = history.map((item) => `
@@ -123,8 +109,19 @@ function mountFloatingChat() {
 
   function setSending(value) {
     sending = value;
-    sendButton.disabled = value || !textarea.value.trim();
+    sendButton.disabled = circuitBroken || value || !textarea.value.trim();
     sendButton.textContent = value ? "…" : "Send";
+  }
+
+  function setCircuitBreaker(tripped) {
+    circuitBroken = tripped;
+    textarea.disabled = tripped;
+    shell.classList.toggle("circuit-broken", tripped);
+    if (tripped) {
+      textarea.value = "";
+      showError("CV 1.1 circuit breaker tripped. Click Reset to re-arm the UI Guide.");
+    }
+    setSending(false);
   }
 
   function showError(message) {
@@ -134,7 +131,7 @@ function mountFloatingChat() {
 
   async function send() {
     const current = textarea.value.trim();
-    if (!current || sending) return;
+    if (!current || sending || circuitBroken) return;
     showError("");
     const prior = history.slice(-12);
     history = [...history, { role: "user", content: current }];
@@ -146,7 +143,7 @@ function mountFloatingChat() {
         method: "POST",
         body: {
           operation: "chat",
-          system_id: Number(domainSelect.value),
+          system_id: 6,
           model_key: UI_GUIDE_MODEL_KEY,
           message: current,
           history: prior,
@@ -157,9 +154,17 @@ function mountFloatingChat() {
         role: "assistant",
         content: result.reply || assistantText(result) || "No response returned.",
       }];
+      if (result?.chatbot?.reset_required || result?.chatbot?.circuit_breaker) {
+        setCircuitBreaker(true);
+      }
     } catch (error) {
-      showError(error.message || "The governed UI Guide request did not complete.");
-      history = [...history, { role: "assistant", content: "The governed UI Guide request did not complete." }];
+      if (error?.status === 403) {
+        history = [...history, { role: "assistant", content: "CV 1.1 denied the request. Reset the UI Guide before continuing." }];
+        setCircuitBreaker(true);
+      } else {
+        showError(error.message || "The governed UI Guide request did not complete.");
+        history = [...history, { role: "assistant", content: "The governed UI Guide request did not complete." }];
+      }
     } finally {
       renderHistory();
       setSending(false);
@@ -170,8 +175,10 @@ function mountFloatingChat() {
   minimize.addEventListener("click", () => setOpen(false));
   reset.addEventListener("click", () => {
     history = [{ role: "assistant", content: START_MESSAGE }];
+    setCircuitBreaker(false);
     showError("");
     renderHistory();
+    textarea.focus();
   });
   textarea.addEventListener("input", () => setSending(sending));
   textarea.addEventListener("keydown", (event) => {
