@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 from decimal import Decimal, InvalidOperation
@@ -99,6 +100,10 @@ def _capability_snapshot(result: dict[str, Any] | None, model: ModelDefinition) 
     capabilities.setdefault("kind", model.kind.value)
     capabilities.setdefault("tool_capable", model.tool_capable)
     capabilities.setdefault("free", model.free)
+    capabilities.setdefault("access_class", model.access_class)
+    capabilities.setdefault("parameter_size", model.parameter_size)
+    capabilities.setdefault("parameter_total_b", model.parameter_total_b)
+    capabilities.setdefault("parameter_active_b", model.parameter_active_b)
     return capabilities
 
 
@@ -269,6 +274,10 @@ def build_test_record(
             "kind": model.kind.value,
             "free": model.free,
             "tool_capable": model.tool_capable,
+            "access_class": model.access_class,
+            "parameter_size": model.parameter_size,
+            "parameter_total_b": model.parameter_total_b,
+            "parameter_active_b": model.parameter_active_b,
             "capabilities": capabilities,
             "context_capacity_tokens": context_capacity,
         },
@@ -315,6 +324,13 @@ def build_test_record(
             "refusal_observed": refusal,
             "behavioral_nuances": behavioral_flags,
         },
+        "output": {
+            "text": output_text,
+            "sha256": hashlib.sha256(output_text.encode("utf-8")).hexdigest(),
+            "characters": len(output_text),
+            "storage": "full_text",
+            "user_visible_form": True,
+        },
         "outcome": {
             "completed": execution_pass,
             "status": (
@@ -338,7 +354,11 @@ def build_test_record(
 
 
 def emit_test_record(record: dict[str, Any]) -> None:
-    logger.info("experiment_run=%s", json.dumps(record, ensure_ascii=False, separators=(",", ":")))
+    log_record = json.loads(json.dumps(record, ensure_ascii=False, default=str))
+    output = log_record.get("output")
+    if isinstance(output, dict) and "text" in output:
+        output["text"] = "[OMITTED_FROM_APPLICATION_LOGS]"
+    logger.info("experiment_run=%s", json.dumps(log_record, ensure_ascii=False, separators=(",", ":")))
 
 
 def pair_delta(governed: dict[str, Any], ungoverned: dict[str, Any]) -> dict[str, Any]:
