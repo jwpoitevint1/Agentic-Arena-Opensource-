@@ -31,7 +31,7 @@ class CorsConfig(BaseModel):
 class ChatbotDefaultsConfig(BaseModel):
     tone: str = "professional"
     max_history: int = Field(default=12, ge=0, le=50)
-    max_output_tokens: int = Field(default=512, ge=1, le=2048)
+    max_output_tokens: int = Field(default=10000, ge=1, le=10000)
     safe_mode: bool = True
 
 
