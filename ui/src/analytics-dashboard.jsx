@@ -332,7 +332,7 @@ export default function AnalyticsDashboard({ domains }) {
 
   return <>
     <div className="notice good-notice">
-      Human comparative analytics workspace. No AI model is used here. Governed and ungoverned PostgreSQL source tables are read side by side through deterministic, bounded SQL operations.
+      Human comparative analytics workspace. No AI model is used here. Governed and ungoverned Neon source tables are read side by side through deterministic, bounded SQL operations.
     </div>
 
     <section className="section analytics-toolbar compare-toolbar">
