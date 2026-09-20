@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 
+const DEFAULT_BACKEND = "https://api.example.com";
 const ALLOWED_PREFIXES = [
   "/health",
   "/ready",
@@ -17,7 +18,7 @@ const MAX_REQUEST_BYTES = Math.min(
   16777216
 );
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
-const UPSTREAM_TIMEOUT_MS = 55000;
+const UPSTREAM_TIMEOUT_MS = 120000;
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const HEADER_NAME_PATTERN = /^[A-Za-z0-9-]+$/;
 
@@ -52,10 +53,7 @@ function safeError(error) {
 }
 
 function backendTarget(path) {
-  const backend = process.env.BACKEND_URL;
-  if (!backend) {
-    throw new Error("BACKEND_URL is required");
-  }
+  const backend = process.env.BACKEND_URL || DEFAULT_BACKEND;
   const base = new URL(backend);
   if (base.protocol !== "https:") {
     throw new Error("backend URL must use HTTPS");
