@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 15
     env:
       ALLOW_DIRECT_MODEL_ROUTES: "true"
+      ENABLE_SYSTEM_DIAGNOSTICS: "true"
       API_AUTH_REQUIRED: "false"
       API_DOCS_ENABLED: "false"
       MAX_REQUEST_BYTES: "1048576"
@@ -42,7 +43,7 @@ jobs:
           python -m pip install -r requirements-dev.txt pip-audit
 
       - name: Compile Python
-        run: python -m compileall -q app
+        run: python -m compileall -q app scripts
 
       - name: Run security gate tests
         run: |
