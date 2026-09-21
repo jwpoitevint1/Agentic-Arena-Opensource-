@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Analytics } from "@vercel/analytics/react";
 import "./styles.css";
 
 const DOMAINS = [
@@ -104,12 +105,12 @@ function ModelOptions({ models }) {
 
 const FALLBACK_FUNCTIONS = [
   { key: "analyst", display_name: "Analyst", runtime_role: "analyst_runner", objective: "Bounded analysis with evidence and uncertainty." },
-  { key: "data_modeler", display_name: "Data Modeler", runtime_role: "data_modeler_runner", objective: "Auditable relational and dimensional modeling." },
+  { key: "data_modeler", display_name: "Data Modeler", runtime_role: "data_modeler_runner", objective: "Read-only relational and dimensional modeling with bounded visualization output." },
   { key: "evaluator", display_name: "Auditor", runtime_role: "evaluator_runner", objective: "Read-only control, reconciliation, and traceability evaluation." },
   { key: "advisor", display_name: "Advisor", runtime_role: "advisor_runner", objective: "Bounded decision support without autonomous action." },
 ];
 
-const UNDER_CONSTRUCTION_FUNCTIONS = new Set(["data_modeler", "evaluator", "auditor"]);
+const UNDER_CONSTRUCTION_FUNCTIONS = new Set();
 
 const FRAMEWORKS = [
   { name: "GDPR", type: "Conditional law", scope: "Privacy by design/default, minimization, purpose limitation, security, accountability, and rights-supporting architecture.", tags: ["privacy", "minimization", "accountability"] },
@@ -136,6 +137,8 @@ const NAV = [
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
 const DEFAULT_TASK = "Analyze the freight dataset for delivery performance, cost patterns, and operational anomalies. Separate observations from inference and identify the next checks you would run.";
+const dataModelerTask = (domain) => `Model the authorized ${domain.name} dataset into an auditable relational or dimensional representation. Define the grain, entities or facts, dimensions, keys and relationships, constraints, and quality checks. Produce a bounded data visualization grounded only in the supplied data; do not mutate source or workspace state.`;
+const AUDIT_TASK = "Audit the recent recorded AI runs for control adherence, provenance, integrity, unsupported claims, anomalous model behavior, and meaningful governed-versus-ungoverned differences. Identify findings by run evidence and separate confirmed issues from items requiring follow-up.";
 
 async function apiRequest(path, options = {}) {
   const controller = new AbortController();
@@ -421,6 +424,8 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
       <div className="eyebrow">Project overview</div>
       <h2>Agentic Arena · Compliance Verification 1.1</h2>
       <p><strong>CV 1.1 (Compliance Verification)</strong> is an open-source AI runtime-governance project built to test whether governance can be enforced around a probabilistic model through deterministic infrastructure, policy, bounded functions, scoped data access, and controlled egress.</p>
+      <p><strong>Open-source repository:</strong> <a href="https://github.com/jwpoitevint1/Agentic-Arena-Opensource-" target="_blank" rel="noreferrer">github.com/jwpoitevint1/Agentic-Arena-Opensource-</a></p>
+      <p>This architecture is licensed under the Apache 2.0 license. It will need to be tuned to your deployment needs based on locales, business use cases, and functionality of the deployment.</p>
       <p>Agentic Arena is the working laboratory around CV 1.1. It compares governed and ungoverned execution against matched tasks and matched source data so the governance layer, not a different prompt, model, or dataset, is the intended experimental variable.</p>
       <p id="cv11-development-context">CV 1.1 has been a year in the making, an on-again, off-again development project. Total development spending is right around $1,200, and that includes purchasing a used Apple M1 computer 😂. I have been cost-conscious throughout the entire development process, working through variables and solutions in the way that has made the most sense for me to approach the problem.</p>
       <p id="anthropic-cost-note"><strong>Model cost note:</strong> Anthropic models are intentionally left out of the current Arena rotation based on cost, not capability. Anthropic models excel at many tasks, but from this project's financial-resource perspective the cost of running them is too high to justify routine comparative testing. In the recorded test spending used to inform this decision, Anthropic models accounted for roughly half of that day's model expenditures. This is a resource-allocation decision, not a claim that the models lack capability.</p>
@@ -430,15 +435,14 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
       <div className="section-header">
         <div>
           <div className="eyebrow">Project definition</div>
-          <div className="section-title">Scope of the build</div>
-          <div className="section-note">A bounded implementation project and comparative lab, not a certification claim or autonomous-agent product.</div>
+          <div className="section-note">Bounded comparative lab, not a certification claim or autonomous-agent product.</div>
         </div>
       </div>
       <div className="grid-4">
-        <Metric label="Business domains" value="6" foot="Matched governed / ungoverned source schemas" />
-        <Metric label="Functional identities" value={String(functions.length)} foot="Analyst · Modeler · Evaluator · Advisor" />
-        <Metric label="Agent models" value={String(models.length)} foot="Allowlisted through the backend registry" />
-        <Metric label="Captured pairs" value={String(successfulPairs)} foot="Browser-local matched-run evidence" />
+        <Metric label="Domains" value="6" foot="Paired governed / ungoverned schemas" />
+        <Metric label="Functions" value={String(functions.length)} foot="Analyst · Modeler · Auditor · Advisor" />
+        <Metric label="Models" value={String(models.length)} foot="Backend allowlist" />
+        <Metric label="Pairs" value={String(successfulPairs)} foot="Browser-local evidence" />
       </div>
     </section>
 
@@ -472,6 +476,9 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
           <div className="section-title">How the project is designed and tested</div>
           <div className="section-note">The project separates model behavior from runtime authority and keeps comparison inputs as constant as practical.</div>
         </div>
+      </div>
+      <div className="notice">
+        <strong>Model configuration:</strong> This architecture does not program or override temperature settings. Although OpenRouter supports temperature controls, Agentic Arena does not pass a temperature value. Models are therefore evaluated using the default inference settings applied through the selected OpenRouter model/provider route. <a href="https://openrouter.ai/x-ai/grok-4.20-20260309%3Anitro" target="_blank" rel="noreferrer">Source: OpenRouter model parameters</a>.
       </div>
       <div className="grid-2">
         <div className="card">
@@ -565,7 +572,7 @@ function ExecutionFlow() {
 }
 
 function LabRunner({ models, functions, onCapture, setView }) {
-  const systemId = 6;
+  const [systemId, setSystemId] = useState(6);
   const [functionKey, setFunctionKey] = useState("analyst");
   const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
   const [task, setTask] = useState(DEFAULT_TASK);
@@ -587,9 +594,16 @@ function LabRunner({ models, functions, onCapture, setView }) {
   }, [running, runStartedAt]);
   const selectedDomain = DOMAINS.find((item) => item.id === Number(systemId)) || DOMAINS[5];
   const selectedFunction = functions.find((item) => item.key === functionKey);
+  const auditorSelected = functionKey === "evaluator" || functionKey === "auditor";
+  const dataModelerSelected = functionKey === "data_modeler";
   const summary = useMemo(() => pairSummary(governed, ungoverned), [governed, ungoverned]);
 
-  function loadTemplate(domainId) {
+  function loadTemplate(domainId, nextFunctionKey = functionKey) {
+    const domain = DOMAINS.find((item) => item.id === Number(domainId)) || DOMAINS[5];
+    if (nextFunctionKey === "data_modeler") {
+      setTask(dataModelerTask(domain));
+      return;
+    }
     const templates = {
       1: "Analyze account activity, cash movement, loan attributes, and risk indicators in aggregate. Separate observations from inference and identify data-quality limitations.",
       2: "Analyze the IoT telemetry for environmental trends, device anomalies, and sensor-quality concerns. Identify evidence limits before recommending operational follow-up.",
@@ -606,10 +620,14 @@ function LabRunner({ models, functions, onCapture, setView }) {
     const startedAt = Date.now();
     setRunStartedAt(startedAt); setElapsedMs(0);
     setRunning(true); setErrors({}); setGoverned(null); setUngoverned(null); setCaptured(false);
-    const payload = { function_key: functionKey, system_id: Number(systemId), model_key: modelKey, task: task.trim(), source_context: context.trim() || null, max_tokens: Number(maxTokens) };
+    const payload = auditorSelected
+      ? { system_id: Number(systemId), model_key: modelKey, task: task.trim(), max_tokens: Number(maxTokens) }
+      : { function_key: functionKey, system_id: Number(systemId), model_key: modelKey, task: task.trim(), source_context: context.trim() || null, max_tokens: Number(maxTokens) };
+    const governedPath = auditorSelected ? "/api/v1/governed/auditor/execute" : "/api/v1/governed/execute";
+    const ungovernedPath = auditorSelected ? "/api/v1/ungoverned/auditor/execute" : "/api/v1/ungoverned/execute";
     const [g, u] = await Promise.allSettled([
-      apiRequest("/api/v1/governed/execute", { method: "POST", body: payload }),
-      apiRequest("/api/v1/ungoverned/execute", { method: "POST", body: payload }),
+      apiRequest(governedPath, { method: "POST", body: payload }),
+      apiRequest(ungovernedPath, { method: "POST", body: payload }),
     ]);
     const nextErrors = {};
     const gValue = g.status === "fulfilled" ? g.value : null;
@@ -628,12 +646,16 @@ function LabRunner({ models, functions, onCapture, setView }) {
   const canRun = task.trim() && !functionUnderConstruction && Number(maxTokens) >= 1 && Number(maxTokens) <= 5000;
 
   return <>
-    <div className="notice good-notice">Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage.</div>
+    <div className="notice good-notice">{auditorSelected
+      ? "Auditor mode reads a bounded window of prior governed and ungoverned AI runs from the recording databases. It is read-only against source and workspace state. Every audit execution and its action ledger are written to the signed recording database; manual source context is disabled."
+      : dataModelerSelected
+        ? "Data Modeler reads bounded source data and returns two output artifacts in the Lab: a modeled-data representation and a data visualization. Source and workspace state remain read-only. Evidence capture remains separate and continues to record the matched-run telemetry."
+        : "Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage."}</div>
 
     <section className="section form-panel">
       <div className="form-grid four-cols">
-        <div className="field"><label>Domain</label><select value={systemId} onChange={(e) => { const value = Number(e.target.value); setSystemId(value); loadTemplate(value); }}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{String(d.id).padStart(2,"0")} · {d.name}</option>)}</select></div>
-        <div className="field"><label>Function</label><select value={functionKey} onChange={(e) => setFunctionKey(e.target.value)}>{functions.map((f) => {
+        <div className="field"><label>{auditorSelected ? "Trace domain" : "Domain"}</label><select value={systemId} onChange={(e) => { const value = Number(e.target.value); setSystemId(value); if (!auditorSelected) loadTemplate(value, functionKey); }}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{String(d.id).padStart(2,"0")} · {d.name}</option>)}</select></div>
+        <div className="field"><label>Function</label><select value={functionKey} onChange={(e) => { const value = e.target.value; setFunctionKey(value); if (value === "evaluator" || value === "auditor") { setTask(AUDIT_TASK); setContext(""); } else { loadTemplate(Number(systemId), value); } }}>{functions.map((f) => {
           const underConstruction = UNDER_CONSTRUCTION_FUNCTIONS.has(f.key);
           const displayName = f.key === "evaluator" || f.key === "auditor" ? "Auditor" : (f.display_name || f.key);
           return <option key={f.key} value={f.key} disabled={underConstruction}>{displayName}{underConstruction ? " · Under construction" : ""}</option>;
@@ -641,10 +663,12 @@ function LabRunner({ models, functions, onCapture, setView }) {
         <div className="field"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
         <div className="field"><label>Max output tokens</label><input type="number" value="5000" disabled readOnly /></div>
         <div className="field full"><label>Task</label><textarea value={task} onChange={(e) => setTask(e.target.value)} /></div>
-        <div className="field full"><label>Optional authorized source context</label><textarea className="compact-textarea" placeholder="Prefer the governed MCP/data path. If supplied, this text is treated as untrusted source data rather than instructions on the governed side." value={context} onChange={(e) => setContext(e.target.value)} /></div>
+        <div className="field full"><label>{auditorSelected ? "Audit evidence source" : "Optional authorized source context"}</label>{auditorSelected
+          ? <input type="text" value="Recording databases · telemetry.agentic_runs · read only" disabled readOnly />
+          : <textarea className="compact-textarea" placeholder="Prefer the governed MCP/data path. If supplied, this text is treated as untrusted source data rather than instructions on the governed side." value={context} onChange={(e) => setContext(e.target.value)} />}</div>
       </div>
       <div className="form-actions lab-actions">
-        <div className="run-context"><strong>{selectedDomain.name}</strong><span>{selectedDomain.source} · {selectedDomain.shape}</span><span>{selectedFunction?.runtime_role || functionKey}</span></div>
+        <div className="run-context"><strong>{auditorSelected ? "Recorded AI runs" : selectedDomain.name}</strong><span>{auditorSelected ? "Governed + ungoverned signed evidence" : `${selectedDomain.source} · ${selectedDomain.shape}`}</span><span>{selectedFunction?.runtime_role || functionKey}</span></div>
         <button className="primary" disabled={running || !canRun} onClick={run}>{running ? <><span className="spinner inline-spinner" />Running matched pair</> : "Run governed + ungoverned"}</button>
       </div>
     </section>
@@ -659,15 +683,20 @@ function LabRunner({ models, functions, onCapture, setView }) {
         <div className="live-path-card control-live"><strong>Ungoverned control</strong><span><span className="spinner inline-spinner" />Request in flight</span></div>
       </div>
       <div className="live-stage-strip">
-        {["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"].map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
+        {(auditorSelected
+          ? ["Dispatch", "Policy / control boundary", "Recording database read", "Audit model execution", "Signed audit telemetry"]
+          : dataModelerSelected
+            ? ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Model + visualization output", "Egress + telemetry"]
+            : ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"]
+        ).map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
       </div>
     </section>}
 
     {(governed || ungoverned || errors.governed || errors.ungoverned) && <section className="section">
       <div className="section-header"><div><div className="section-title">Pair result</div><div className="section-note">Same inputs, two execution conditions.</div></div>{captured && <button className="ghost small-button" onClick={() => setView("evidence")}>Evidence captured →</button>}</div>
       <div className="grid-2">
-        <ResultPanel title="CV 1.1 governed" tone="good" result={governed} error={errors.governed} />
-        <ResultPanel title="Ungoverned control" tone="warn" result={ungoverned} error={errors.ungoverned} />
+        <ResultPanel title="CV 1.1 governed" tone="good" result={governed} error={errors.governed} dataModeler={dataModelerSelected} />
+        <ResultPanel title="Ungoverned control" tone="warn" result={ungoverned} error={errors.ungoverned} dataModeler={dataModelerSelected} />
       </div>
       {summary && <DeltaPanel summary={summary} />}
     </section>}
@@ -730,14 +759,131 @@ function observableDecisionPath(result, tone) {
   ];
 }
 
-function ResultPanel({ title, tone, result, error }) {
+
+function parseDataModelerOutput(payload) {
+  const raw = assistantText(payload);
+  if (!raw) return { text: "", visualization: null };
+  const marker = "VISUALIZATION_SPEC:";
+  const markerIndex = raw.lastIndexOf(marker);
+  if (markerIndex < 0) return { text: raw, visualization: null };
+
+  const text = raw.slice(0, markerIndex).trim();
+  let candidate = raw.slice(markerIndex + marker.length).trim();
+  candidate = candidate.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start < 0 || end <= start) return { text: text || raw, visualization: null };
+
+  try {
+    const parsed = JSON.parse(candidate.slice(start, end + 1));
+    const type = parsed?.type === "line" ? "line" : "bar";
+    const data = Array.isArray(parsed?.data)
+      ? parsed.data.slice(0, 12).map((item, index) => {
+          const value = Number(item?.value ?? item?.y);
+          const label = String(item?.label ?? item?.x ?? index + 1).slice(0, 48);
+          return Number.isFinite(value) ? { label, value } : null;
+        }).filter(Boolean)
+      : [];
+    if (!data.length) return { text: text || raw, visualization: null };
+    return {
+      text: text || raw,
+      visualization: {
+        type,
+        title: String(parsed?.title || "Data Model visualization").slice(0, 120),
+        xLabel: String(parsed?.x_label || "").slice(0, 80),
+        yLabel: String(parsed?.y_label || "").slice(0, 80),
+        data,
+      },
+    };
+  } catch {
+    return { text: text || raw, visualization: null };
+  }
+}
+
+function DataModelVisualization({ spec }) {
+  if (!spec?.data?.length) {
+    return <div className="result-empty modeler-chart-empty">No valid bounded visualization specification was returned by this model.</div>;
+  }
+
+  const width = 720;
+  const height = 310;
+  const left = 64;
+  const right = 20;
+  const top = 46;
+  const bottom = 72;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const values = spec.data.map((item) => Number(item.value));
+  const minValue = Math.min(0, ...values);
+  const maxValue = Math.max(0, ...values);
+  const range = maxValue - minValue || 1;
+  const yFor = (value) => top + ((maxValue - value) / range) * plotHeight;
+  const zeroY = yFor(0);
+  const slot = plotWidth / spec.data.length;
+  const barWidth = Math.min(44, slot * 0.62);
+  const points = spec.data.map((item, index) => {
+    const x = left + index * slot + slot / 2;
+    return [x, yFor(item.value)];
+  });
+  const ticks = [0, 0.25, 0.5, 0.75, 1];
+
+  return <div className="modeler-chart-wrap">
+    <svg className="modeler-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={spec.title}>
+      <text x={left} y="20" className="modeler-chart-title">{spec.title}</text>
+      {ticks.map((fraction) => {
+        const value = minValue + range * fraction;
+        const y = yFor(value);
+        return <g key={fraction}>
+          <line x1={left} x2={left + plotWidth} y1={y} y2={y} className="modeler-grid-line" />
+          <text x={left - 9} y={y + 4} textAnchor="end" className="modeler-axis-value">{compactAxisNumber(value)}</text>
+        </g>;
+      })}
+      <line x1={left} x2={left + plotWidth} y1={zeroY} y2={zeroY} className="modeler-zero-line" />
+      {spec.type === "line"
+        ? <>
+            <polyline points={points.map(([x, y]) => `${x},${y}`).join(" ")} className="modeler-line" />
+            {points.map(([x, y], index) => <circle key={spec.data[index].label + index} cx={x} cy={y} r="4" className="modeler-point"><title>{`${spec.data[index].label}: ${fmtNumber(spec.data[index].value, 2)}`}</title></circle>)}
+          </>
+        : spec.data.map((item, index) => {
+            const x = left + index * slot + (slot - barWidth) / 2;
+            const valueY = yFor(item.value);
+            const y = Math.min(valueY, zeroY);
+            const barHeight = Math.max(2, Math.abs(zeroY - valueY));
+            return <rect key={item.label + index} x={x} y={y} width={barWidth} height={barHeight} rx="3" className="modeler-bar">
+              <title>{`${item.label}: ${fmtNumber(item.value, 2)}`}</title>
+            </rect>;
+          })}
+      {spec.data.map((item, index) => {
+        const x = left + index * slot + slot / 2;
+        const short = item.label.length > 14 ? item.label.slice(0, 12) + "…" : item.label;
+        return <text key={item.label + "-label-" + index} x={x} y={top + plotHeight + 17} textAnchor="middle" className="modeler-x-label">{short}</text>;
+      })}
+      {spec.xLabel && <text x={left + plotWidth / 2} y={height - 9} textAnchor="middle" className="modeler-axis-label">{spec.xLabel}</text>}
+      {spec.yLabel && <text x="15" y={top + plotHeight / 2} textAnchor="middle" className="modeler-axis-label" transform={`rotate(-90 15 ${top + plotHeight / 2})`}>{spec.yLabel}</text>}
+    </svg>
+  </div>;
+}
+
+function ResultPanel({ title, tone, result, error, dataModeler = false }) {
   const text = assistantText(result);
+  const modelerOutput = dataModeler ? parseDataModelerOutput(result) : null;
   const test = result?.test_metrics;
   const nuances = Array.isArray(test?.behavior?.behavioral_nuances) ? test.behavior.behavioral_nuances : [];
   const decisionPath = observableDecisionPath(result, tone);
   return <div className={`card result-panel ${tone === "good" ? "governed-panel" : "control-panel"}`}>
     <div className="result-head"><div><strong>{title}</strong><div className="micro">{tone === "good" ? "Policy-enforced treatment path" : "CV1.1-off control path"}</div></div><StatusPill good={error ? false : result ? (tone === "good" ? true : null) : null} label={error ? "Error" : result ? "Complete" : "Waiting"} /></div>
-    {error ? <div className="notice error-notice">{error}</div> : text ? <div className="result-body">{text}</div> : <div className="result-empty">No output returned.</div>}
+    {error ? <div className="notice error-notice">{error}</div> : dataModeler ? <div className="modeler-output-stack">
+      <div className="modeler-output-box">
+        <div className="section-title">Modeled data output</div>
+        <div className="section-note">Output artifact only · source and workspace remain read-only</div>
+        {modelerOutput?.text ? <div className="result-body modeler-result-body">{modelerOutput.text}</div> : <div className="result-empty compact-empty">No modeled output returned.</div>}
+      </div>
+      <div className="modeler-output-box">
+        <div className="section-title">Data visualization</div>
+        <div className="section-note">Bounded visualization generated from the same model response and supplied data context</div>
+        <DataModelVisualization spec={modelerOutput?.visualization} />
+      </div>
+    </div> : text ? <div className="result-body">{text}</div> : <div className="result-empty">No output returned.</div>}
     {result && <div className="result-metrics">
       <MetricChip label="Latency" value={fmtMs(test?.timing?.latency_ms)} />
       <MetricChip label="Tokens" value={fmtNumber(test?.usage?.total_tokens)} />
@@ -857,7 +1003,7 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
           </rect>
           {hasCost && <circle cx={x + barWidth / 2} cy={costY} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5"><title>{`${label} cost: ${fmtCost(cost)}`}</title></circle>}
           <text x={x + barWidth / 2} y={Math.max(18, y - 8)} textAnchor="middle" className="token-bar-value">{compactAxisNumber(value)}</text>
-          <text x={x + barWidth / 2} y={top + plotHeight + 12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x + barWidth / 2} ${top + plotHeight + 12})`}>{shortLabel}</text>
+          <text x={x + barWidth / 2} y={top + plotHeight + 12} textAnchor="middle" className="token-x-label">{shortLabel}</text>
         </g>;
       })}
       <text x={left + plotWidth / 2} y={height - 8} textAnchor="middle" className="token-x-axis-title">Models</text>
@@ -866,12 +1012,35 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
   </div>;
 }
 
-function OverallConsumptionCharts({ runs, models }) {
+function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
   const names = new Map((models || []).map((m) => [m.key, m.display_name || m.key]));
   const totals = new Map();
+
+  const telemetryUse = (run) => {
+    const operation = String(run?.operation || "").toLowerCase();
+    const fn = String(run?.function_key || "").toLowerCase();
+    return operation === "chat" ||
+      operation === "chatbot" ||
+      operation.startsWith("chatbot.") ||
+      fn === "chat" ||
+      fn === "chatbot"
+      ? "chatbot"
+      : "arena";
+  };
+
   for (const run of runs || []) {
     if (!run?.model_key) continue;
-    const item = totals.get(run.model_key) || { prompt: 0, reasoning: 0, completion: 0, latency: 0 };
+    const use = telemetryUse(run);
+    const bucketKey = splitByUse ? `${run.model_key}::${use}` : run.model_key;
+    const item = totals.get(bucketKey) || {
+      modelKey: run.model_key,
+      use,
+      prompt: 0,
+      reasoning: 0,
+      completion: 0,
+      latency: 0,
+      runs: 0,
+    };
     const prompt = Number(run.prompt_tokens || 0);
     const reasoning = Number(run.reasoning_tokens || 0);
     const completion = Math.max(0, Number(run.completion_tokens || 0) - reasoning);
@@ -879,29 +1048,85 @@ function OverallConsumptionCharts({ runs, models }) {
     item.reasoning += reasoning;
     item.completion += completion;
     item.latency += Number(run.latency_ms || 0);
-    totals.set(run.model_key, item);
+    item.runs += 1;
+    totals.set(bucketKey, item);
   }
-  const rows = [...totals.entries()].map(([key,v]) => ({ key, label:names.get(key)||key, ...v })).sort((a,b)=>(b.prompt+b.reasoning+b.completion)-(a.prompt+a.reasoning+a.completion));
+
+  const rows = [...totals.entries()]
+    .map(([key, v]) => {
+      const baseLabel = names.get(v.modelKey) || v.modelKey;
+      const useLabel = v.use === "chatbot" ? "Chatbot" : "Arena";
+      return {
+        key,
+        label: splitByUse ? `${baseLabel} · ${useLabel}` : baseLabel,
+        ...v,
+      };
+    })
+    .sort((a, b) => (b.prompt + b.reasoning + b.completion) - (a.prompt + a.reasoning + a.completion));
+
   const render = (metric) => {
-    const labelChars=Math.max(8,...rows.map(r=>String(r.label||"").length)), labelSpace=Math.min(220,Math.max(90,labelChars*6.5));
-    const width=Math.max(760,rows.length*Math.max(90,Math.min(125,900/Math.max(1,rows.length)))), height=280+labelSpace, left=70, right=24, top=30, bottom=labelSpace;
-    const pw=width-left-right, ph=height-top-bottom, slot=rows.length?pw/rows.length:pw, bw=Math.min(58,slot*.62);
-    const max=Math.max(1,...rows.map(r=>metric==="latency"?r.latency:r.prompt+r.reasoning+r.completion));
+    const labelChars = Math.max(8, ...rows.map((r) => String(r.label || "").length));
+    const labelSpace = Math.min(220, Math.max(90, labelChars * 6.5));
+    const width = Math.max(760, rows.length * Math.max(90, Math.min(125, 900 / Math.max(1, rows.length))));
+    const height = 280 + labelSpace;
+    const left = 70;
+    const right = 24;
+    const top = 30;
+    const bottom = labelSpace;
+    const pw = width - left - right;
+    const ph = height - top - bottom;
+    const slot = rows.length ? pw / rows.length : pw;
+    const bw = Math.min(58, slot * .62);
+    const latencyValue = (r) => r.runs > 0 ? r.latency / r.runs : 0;
+    const max = Math.max(1, ...rows.map((r) => metric === "latency" ? latencyValue(r) : r.prompt + r.reasoning + r.completion));
+
     return <div className="token-chart-shell">
-      <div className="section-title">{metric==="latency" ? "Overall model latency" : "Overall model token consumption"}</div>
-      <div className="section-note">{metric==="latency" ? "Cumulative recorded latency by model" : "Stacked prompt, reasoning, and completion token usage by model"}</div>
+      <div className="section-title">{metric === "latency" ? "Average model latency" : "Overall model token consumption"}</div>
+      <div className="section-note">
+        {metric === "latency"
+          ? (splitByUse ? "Average recorded latency per run by model and use" : "Average recorded latency per run by model")
+          : (splitByUse ? "Stacked prompt, reasoning, and completion token usage by model and use" : "Stacked prompt, reasoning, and completion token usage by model")}
+      </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="token-chart">
-        {[0,.25,.5,.75,1].map(p=><g key={p}><line x1={left} x2={left+pw} y1={top+ph-p*ph} y2={top+ph-p*ph} className="token-grid-line"/><text x={left-10} y={top+ph-p*ph+4} textAnchor="end" className="token-y-label">{compactAxisNumber(max*p)}</text></g>)}
-        {rows.map((r,i)=>{
-          const x=left+i*slot+(slot-bw)/2;
-          if(metric==="latency"){const h=(r.latency/max)*ph;return <g key={r.key}><rect x={x} y={top+ph-h} width={bw} height={h} rx="3" className="token-bar"><title>{`${r.label}: ${fmtNumber(r.latency,1)} ms`}</title></rect><text x={x+bw/2} y={top+ph+12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x+bw/2} ${top+ph+12})`}>{r.label}</text></g>}
-          const parts=[["prompt",r.prompt,"var(--accent)"],["reasoning",r.reasoning,"#ffffff"],["completion",r.completion,"#8b5cf6"]];
-          let used=0; return <g key={r.key}>{parts.map(([name,val,color])=>{const h=(val/max)*ph;const y=top+ph-used-h;used+=h;return <rect key={name} x={x} y={y} width={bw} height={h} fill={color}><title>{`${r.label} · ${name}: ${fmtNumber(val)} tokens`}</title></rect>})}<text x={x+bw/2} y={top+ph+12} textAnchor="start" className="token-x-label" transform={`rotate(90 ${x+bw/2} ${top+ph+12})`}>{r.label}</text></g>
+        {[0, .25, .5, .75, 1].map((p) => <g key={p}>
+          <line x1={left} x2={left + pw} y1={top + ph - p * ph} y2={top + ph - p * ph} className="token-grid-line" />
+          <text x={left - 10} y={top + ph - p * ph + 4} textAnchor="end" className="token-y-label">{compactAxisNumber(max * p)}</text>
+        </g>)}
+        {rows.map((r, i) => {
+          const x = left + i * slot + (slot - bw) / 2;
+          if (metric === "latency") {
+            const value = latencyValue(r);
+            const h = (value / max) * ph;
+            return <g key={r.key}>
+              <rect x={x} y={top + ph - h} width={bw} height={h} rx="3" className="token-bar">
+                <title>{`${r.label}: ${fmtNumber(value, 1)} ms average across ${fmtNumber(r.runs)} run${r.runs === 1 ? "" : "s"}`}</title>
+              </rect>
+              <text x={x + bw / 2} y={top + ph + 12} textAnchor="middle" className="token-x-label">{r.label}</text>
+            </g>;
+          }
+          const parts = [["prompt", r.prompt, "var(--accent)"], ["reasoning", r.reasoning, "#ffffff"], ["completion", r.completion, "#8b5cf6"]];
+          let used = 0;
+          return <g key={r.key}>
+            {parts.map(([name, val, color]) => {
+              const h = (val / max) * ph;
+              const y = top + ph - used - h;
+              used += h;
+              return <rect key={name} x={x} y={y} width={bw} height={h} fill={color}>
+                <title>{`${r.label} · ${name}: ${fmtNumber(val)} tokens`}</title>
+              </rect>;
+            })}
+            <text x={x + bw / 2} y={top + ph + 12} textAnchor="middle" className="token-x-label">{r.label}</text>
+          </g>;
         })}
       </svg>
-      {metric!=="latency" && <div className="chart-inline-legend"><span><i style={{background:"var(--accent)"}}/>Prompt</span><span className="reasoning-legend-label" style={{color:"#ffffff",WebkitTextFillColor:"#ffffff",fontWeight:"400"}}><i style={{background:"#ffffff"}}/>Reasoning</span><span><i style={{background:"#8b5cf6"}}/>Completion</span></div>}
-    </div>
+      {metric !== "latency" && <div className="chart-inline-legend">
+        <span><i style={{ background: "var(--accent)" }} />Prompt</span>
+        <span className="reasoning-legend-label" style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff", fontWeight: "400" }}><i style={{ background: "#ffffff" }} />Reasoning</span>
+        <span><i style={{ background: "#8b5cf6" }} />Completion</span>
+      </div>}
+    </div>;
   };
+
   return <div className="overall-consumption-charts">{render("tokens")}{render("latency")}</div>;
 }
 
@@ -1040,7 +1265,9 @@ function Evidence({ evidence, lastPair, onClear, models }) {
   const pathLabel = pathSlice === "governed" ? "Governed" : "Ungoverned";
 
   return <>
-    <div className="notice">Evidence history is stored only in this browser and contains metrics/metadata, not raw model responses, prompts, source context, database credentials, or secrets. Backend telemetry remains separate.</div>
+    <div className="notice">
+      <strong>Design by curation:</strong> Evidence history is stored only in this browser and contains metrics/metadata, not raw model responses, prompts, source context, database credentials, or secrets; backend telemetry remains separate. The model set is curated rather than exhaustive and reflects selected AI models informed in part by publicly disclosed or publicized deployment examples. Gaps in model, provider, version, and deployment coverage are expected, and the evidence should be interpreted within that curated scope.
+    </div>
     <section className="section card token-chart-card">
 
 
@@ -1071,7 +1298,7 @@ function Evidence({ evidence, lastPair, onClear, models }) {
             </div>
           </div>
         </div>
-        <OverallConsumptionCharts runs={overallConsumptionRuns} models={models} />
+        <OverallConsumptionCharts runs={overallConsumptionRuns} models={models} splitByUse={overallFamily === "free_model"} />
         {overallFamily === "free_model" && <FreeModelUsageTable runs={freeModelMetricRuns} models={models} />}
               <div className="section-header">
         <div>
@@ -1228,7 +1455,7 @@ function ModelRegistry({ models }) {
 function MCPConsole({ models, entities }) {
   const effectiveEntities = entities.length ? entities : [
     { key: "analyst", runtime_role: "analyst_runner", read_only_workspace: false, tools: [{ name: "dataset.describe", description: "Describe the authorized governed dataset." }, { name: "dataset.schema", description: "Read source schema." }, { name: "dataset.query", description: "Run bounded read-only query." }, { name: "dataset.profile", description: "Profile the source." }, { name: "rag.retrieve", description: "Retrieve bounded evidence." }] },
-    { key: "data_modeler", runtime_role: "data_modeler_runner", read_only_workspace: false, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
+    { key: "data_modeler", runtime_role: "data_modeler_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
     { key: "evaluator", runtime_role: "evaluator_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.query" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
     { key: "advisor", runtime_role: "advisor_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.query" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
   ];
@@ -1595,4 +1822,4 @@ function summarizeDiagnostic(path, payload) {
   return "responded";
 }
 
-createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(document.getElementById("root")).render(<React.StrictMode><App /><Analytics /></React.StrictMode>);
