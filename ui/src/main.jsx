@@ -1414,7 +1414,7 @@ function TestingObservations() {
     {
       title: "Governed and ungoverned paths must be verified independently",
       status: "Observed",
-      detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being behaviorally contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
+      detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being linguistically contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
     },
     {
       title: "Required MCP boundaries need fail-closed behavior",
@@ -1435,13 +1435,13 @@ function TestingObservations() {
     {
       title: "Model capability varies by task, function, and domain",
       status: "Observed",
-      detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore treats capability as task-dependent and evaluates model behavior within the specific domain, function, evidence path, and execution condition being tested rather than assuming that performance in one workflow generalizes to another."
+      detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore treats capability as task-dependent and evaluates model performance within the specific domain, function, evidence path, and execution condition being tested rather than assuming that performance in one workflow generalizes to another."
     },
 
     {
       title: "Governance tuning should account for model capacity, capability, and function",
       status: "Observed",
-      detail: "Current matched-pair runs show that the same governance representation does not produce the same behavioral or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. These observations support treating governance as model- and function-aware rather than assuming one control profile transfers unchanged across model families or workloads. Model capacity, native capabilities, tool behavior, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent. This is an architectural design implication from current testing, not a claim that a single optimal tuning exists for each model."
+      detail: "Current matched-pair runs show that the same governance representation does not produce the same response or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. These observations support treating governance as model- and function-aware rather than assuming one control profile transfers unchanged across model families or workloads. Model capacity, native capabilities, tool behavior, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent. This is an architectural design implication from current testing, not a claim that a single optimal tuning exists for each model."
     },
 
     {
@@ -1465,8 +1465,38 @@ function TestingObservations() {
 
   return <>
     <div className="notice">
-      <strong>Development observations, not research conclusions.</strong> These notes document behaviors and implementation issues seen while building and testing Agentic Arena. They are retained to make methodology changes traceable. Repeated trials and controlled analysis are required before generalizing any observation across models, domains, or deployments.
+      <strong>Development observations, not research conclusions.</strong> These notes document execution patterns and implementation issues seen while building and testing Agentic Arena. They are retained to make methodology changes traceable. Repeated trials and controlled analysis are required before generalizing any observation across models, domains, or deployments.
     </div>
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">One evidence stack, three views</div>
+          <div className="section-title">Translate the same observations by audience</div>
+          <div className="section-note">The underlying evidence does not change. The emphasis changes based on whether the reader is evaluating methodology, deployment architecture, or organizational impact.</div>
+        </div>
+      </div>
+      <div className="grid-3">
+        <article className="card">
+          <div className="eyebrow">Research / methodology</div>
+          <div className="section-title">What must be controlled before drawing conclusions?</div>
+          <p className="body-copy">Matched-pair validity depends on prompt neutrality, execution-path isolation, bounded evidence, repeat trials, and explicit treatment of confounds. Current observations also show that model capacity, model family, assigned function, and task domain can change the measured result, so performance in one workflow should not be generalized to another without additional testing.</p>
+          <div className="control-state">Primary question: is the observed difference attributable to the treatment?</div>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Engineering / deployment</div>
+          <div className="section-title">How should the system be built and routed?</div>
+          <p className="body-copy">Keep deterministic enforcement shared, then tune the model-facing layer by function and model profile. Segmented APIs, scoped MCP tools, read-only data paths, deterministic statistics, OPA authorization, redaction, integrity records, and telemetry provide the common boundary. Fallback routing should remain within the same model family when practical; cross-family contingency should be explicit and separately governed.</p>
+          <div className="control-state">Primary question: can the control boundary remain stable while model-specific tuning changes?</div>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Executive / business impact</div>
+          <div className="section-title">What changes operationally and why does it matter?</div>
+          <p className="body-copy">Governance introduces measurable tradeoffs in latency, token use, cost, tool calls, response length, and stability while also changing how tightly outputs remain bound to supplied evidence. The business decision is therefore not simply which model is strongest, but which model-function-governance combination delivers acceptable risk, cost, reliability, and fallback characteristics for the intended workload.</p>
+          <div className="control-state">Primary question: what combination is acceptable for this use case?</div>
+        </article>
+      </div>
+    </section>
+
     <section className="section">
       <div className="section-header">
         <div>
