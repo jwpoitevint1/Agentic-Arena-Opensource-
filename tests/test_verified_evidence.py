@@ -184,3 +184,49 @@ def test_claim_verification_accepts_equivalent_discount_ratio() -> None:
     assert report["status"] == "pass"
     assert report["checked"] == 1
     assert report["corrected"] == 0
+
+
+def test_finance_verified_evidence_uses_canonical_accounting_parser() -> None:
+    rows = [
+        {"income_level": "($25,488.15)", "interest_rate": "11.94%"},
+        {"income_level": "$10,000.00 ", "interest_rate": "10.06%"},
+    ]
+
+    facts = build_verified_evidence(rows, system_id=1)
+    income = facts["columns"]["income_level"]
+    rate = facts["columns"]["interest_rate"]
+
+    assert income["numeric_count"] == 2
+    assert income["min"] == -25488.15
+    assert income["max"] == 10000.0
+    assert income["sum"] == -15488.15
+    assert rate["numeric_count"] == 2
+    assert rate["mean"] == 11.0
+
+
+def test_claim_verification_reports_evidence_bound_when_no_post_generation_metric_matches() -> None:
+    rows = [
+        {"income_level": "($25,488.15)", "loan_status": "approved"},
+        {"income_level": "$10,000.00", "loan_status": "pending"},
+    ]
+    facts = build_verified_evidence(rows, system_id=1)
+    payload = {
+        "result": {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": "The bounded finance sample contains two retrieved rows.",
+                    }
+                }
+            ]
+        }
+    }
+
+    _, report = verify_governed_claims(payload, verified_evidence=facts)
+
+    assert report["status"] == "evidence_bound"
+    assert report["evidence_attached"] is True
+    assert report["verification_mode"] == "preverified_evidence_binding"
+    assert report["checked"] == 0
+    assert report["corrected"] == 0
