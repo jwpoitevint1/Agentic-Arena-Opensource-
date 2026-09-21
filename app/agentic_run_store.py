@@ -27,6 +27,15 @@ _ENV_BY_GOVERNANCE = {
     "ungoverned": "DB_LOG_AGENTIC_UNGOV",
 }
 
+# Historical telemetry at or before this instant belongs to the pre-MCP-tuning
+# archive epoch. Signed records remain in place so integrity chains and audit
+# history are preserved; current analytical summaries exclude the archive.
+CURRENT_TELEMETRY_EPOCH_START = datetime(
+    2026, 9, 21, 3, 23, 31, tzinfo=timezone.utc
+)
+CURRENT_TELEMETRY_EPOCH_LABEL = "post_mcp_deterministic_statistics"
+ARCHIVED_TELEMETRY_RUNS = 265
+
 _INSERT_SQL = """
     INSERT INTO telemetry.agentic_runs (
         run_id,
@@ -124,6 +133,10 @@ _MODEL_TOKEN_SQL = """
         coalesce(sum(completion_tokens), 0) AS completion_tokens
     FROM telemetry.agentic_runs
     WHERE model_key IS NOT NULL
+      AND recorded_at > %s
+      AND latency_ms > 0
+      AND coalesce(record #>> '{outcome,completed}', 'false') = 'true'
+      AND coalesce((record #>> '{behavior,model_calls}')::int, 0) = 1
     GROUP BY model_key
 """
 
@@ -145,6 +158,10 @@ _COMPARISON_RUN_SQL = """
     FROM telemetry.agentic_runs
     WHERE model_key IS NOT NULL
       AND function_key IS NOT NULL
+      AND recorded_at > %s
+      AND latency_ms > 0
+      AND coalesce(record #>> '{outcome,completed}', 'false') = 'true'
+      AND coalesce((record #>> '{behavior,model_calls}')::int, 0) = 1
     ORDER BY recorded_at DESC
     LIMIT %s
 """
@@ -425,7 +442,7 @@ def token_usage_by_model() -> dict[str, object]:
         try:
             with psycopg.connect(url, connect_timeout=3) as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(_MODEL_TOKEN_SQL)
+                    cursor.execute(_MODEL_TOKEN_SQL, (CURRENT_TELEMETRY_EPOCH_START,))
                     rows = cursor.fetchall()
         except psycopg.Error:
             logger.exception(
@@ -477,6 +494,12 @@ def token_usage_by_model() -> dict[str, object]:
         "total_tokens": sum(int(item["total_tokens"]) for item in models),
         "runs": sum(int(item["runs"]) for item in models),
         "database_status": database_status,
+        "telemetry_epoch": {
+            "label": CURRENT_TELEMETRY_EPOCH_LABEL,
+            "starts_after": CURRENT_TELEMETRY_EPOCH_START.isoformat(),
+            "archived_runs": ARCHIVED_TELEMETRY_RUNS,
+            "archive_policy": "retained_for_audit_excluded_from_current_analytics",
+        },
     }
 
 
@@ -494,7 +517,10 @@ def comparison_runs(limit: int = 1000) -> dict[str, object]:
         try:
             with psycopg.connect(url, connect_timeout=3) as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(_COMPARISON_RUN_SQL, (safe_limit,))
+                    cursor.execute(
+                        _COMPARISON_RUN_SQL,
+                        (CURRENT_TELEMETRY_EPOCH_START, safe_limit),
+                    )
                     rows = cursor.fetchall()
         except psycopg.Error:
             logger.exception("comparison_runs_failed governance=%s", governance)
@@ -520,7 +546,16 @@ def comparison_runs(limit: int = 1000) -> dict[str, object]:
             })
 
     runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
-    return {"runs": runs[:safe_limit], "database_status": database_status}
+    return {
+        "runs": runs[:safe_limit],
+        "database_status": database_status,
+        "telemetry_epoch": {
+            "label": CURRENT_TELEMETRY_EPOCH_LABEL,
+            "starts_after": CURRENT_TELEMETRY_EPOCH_START.isoformat(),
+            "archived_runs": ARCHIVED_TELEMETRY_RUNS,
+            "archive_policy": "retained_for_audit_excluded_from_current_analytics",
+        },
+    }
 
 
 def _audit_record_view(
