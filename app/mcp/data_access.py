@@ -10,6 +10,7 @@ from psycopg.rows import dict_row
 from app.database import database_url
 from app.execution import DatabaseTarget
 from app.mcp.patterns import validate_text
+from app.numeric_parsing import parse_numeric_like as _parse_numeric_like
 
 
 class MCPDataError(RuntimeError):
@@ -333,40 +334,6 @@ def aggregate_table(
         "aggregation": aggregation_key,
         "rows": normalized,
     }
-
-_NUMERIC_TEXT_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
-
-
-def _parse_numeric_like(value: Any) -> float | None:
-    """Parse common dataset numeric encodings without guessing from free text."""
-    if isinstance(value, bool) or value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if not isinstance(value, str):
-        return None
-
-    text = value.strip()
-    if not text:
-        return None
-
-    negative_parentheses = text.startswith("(") and text.endswith(")")
-    if negative_parentheses:
-        text = text[1:-1].strip()
-
-    if text.endswith("%"):
-        text = text[:-1].strip()
-
-    text = text.replace(",", "").strip()
-    if text[:1] in {"$", "€", "£"}:
-        text = text[1:].strip()
-
-    if not _NUMERIC_TEXT_RE.fullmatch(text):
-        return None
-
-    number = float(text)
-    return -abs(number) if negative_parentheses else number
-
 
 def table_statistics(
     target: DatabaseTarget,
