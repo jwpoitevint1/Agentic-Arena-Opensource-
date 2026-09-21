@@ -1268,6 +1268,9 @@ function Evidence({ evidence, onClear, models }) {
     <div className="notice">
       <strong>Design by curation:</strong> Evidence history is stored only in this browser and contains metrics/metadata, not raw model responses, prompts, source context, database credentials, or secrets; backend telemetry remains separate. The model set is curated rather than exhaustive and reflects selected AI models informed in part by publicly disclosed or publicized deployment examples. Gaps in model, provider, version, and deployment coverage are expected, and the evidence should be interpreted within that curated scope.
     </div>
+    <div className="notice">
+      <strong>Development note:</strong> During testing, a 1,200-output-token limit was found to truncate model output in Agentic Arena. The output-token limit was therefore increased from 1,200 to 2,500, and then increased a final time to 5,000 tokens.
+    </div>
     <section className="section card token-chart-card">
 
 
