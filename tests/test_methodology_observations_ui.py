@@ -46,3 +46,12 @@ def test_numbered_sidebar_navigation_matches_requested_order() -> None:
     for item in expected:
         assert item in source
     assert '["overview", "Project"' not in source
+
+
+def test_finance_arithmetic_observation_and_mcp_update_are_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Finance still stumps AI" in source
+    assert "models produced useful schemas and careful caveats yet still miscounted" in source
+    assert "MCP package update:" in source
+    assert "counts, sums, averages, minima, maxima" in source
