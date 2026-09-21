@@ -127,12 +127,13 @@ const NAV = [
   ["overview", "Project", "01"],
   ["lab", "Arena Lab", "02"],
   ["evidence", "Evidence", "03"],
-  ["models", "Models", "04"],
-  ["enterprise", "Enterprise", "05"],
-  ["mcp", "MCP", "06"],
-  ["governance", "Governance", "07"],
-  ["alignment", "Alignment", "08"],
-  ["diagnostics", "Diagnostics", "09"],
+  ["observations", "Observations", "04"],
+  ["models", "Models", "05"],
+  ["enterprise", "Enterprise", "06"],
+  ["mcp", "MCP", "07"],
+  ["governance", "Governance", "08"],
+  ["alignment", "Alignment", "09"],
+  ["diagnostics", "Diagnostics", "10"],
 ];
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
@@ -406,6 +407,7 @@ function App() {
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
       {view === "lab" && <LabRunner models={models} functions={functions} onCapture={capturePair} setView={setView} />}
       {view === "evidence" && <Evidence evidence={evidence} onClear={clearEvidence} models={models} />}
+      {view === "observations" && <TestingObservations />}
       {view === "models" && <ModelRegistry models={models} />}
       {view === "enterprise" && <EnterpriseDeployment />}
       {view === "mcp" && <MCPConsole models={models} entities={mcpEntities} />}
@@ -489,6 +491,10 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
           <div className="section-title">Matched-pair experimental methodology</div>
           <p className="body-copy">Governed and ungoverned runs are designed to hold the model, task, domain, functional role, source context, and token ceiling constant. The intended treatment variable is the CV 1.1 governed execution path and the controls applied around the model.</p>
           <div className="comparison-mini"><div><span className="mini-label">Treatment</span><strong>CV 1.1 governed</strong></div><div className="compare-arrow">↔</div><div><span className="mini-label">Control</span><strong>Ungoverned baseline</strong></div></div>
+        </div>
+        <div className="card">
+          <div className="section-title">Neutral programming and prompt language</div>
+          <p className="body-copy">Shared experimental code and task language are kept functionally descriptive rather than governance-prescriptive. The same task objective, domain, model, source context, and output contract are supplied to both paths. Shared prompts do not tell the control path that data are authorized, bounded, auditable, read-only, policy-governed, or MCP-derived. Those treatment concepts are introduced only inside the governed execution path. Regression tests check the ungoverned system prompts and shared UI task templates for governance-coded language so prompt framing does not become an unintended experimental variable.</p>
         </div>
         <div className="card">
           <div className="section-title">Data methodology</div>
@@ -1373,6 +1379,81 @@ function Evidence({ evidence, onClear, models }) {
       {evidence.length ? <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Time</th><th>Domain</th><th>Function</th><th>Model</th><th>Pair</th><th>Δ latency</th><th>Δ tokens</th><th>Δ cost</th><th>Policy</th></tr></thead><tbody>{evidence.map((item) => <tr key={item.id}><td>{new Date(item.captured_at).toLocaleString()}</td><td>{item.domain_name}</td><td>{item.function_key}</td><td className="mono-cell">{item.model_key}</td><td><StatusPill good={item.governed.completed && item.ungoverned.completed ? true : false} label={item.governed.completed && item.ungoverned.completed ? "Complete" : "Partial"} /></td><td>{item.delta?.latency_ms == null ? ", " : `${item.delta.latency_ms >= 0 ? "+" : ""}${fmtNumber(item.delta.latency_ms, 1)} ms`}</td><td>{item.delta?.tokens == null ? ", " : `${item.delta.tokens >= 0 ? "+" : ""}${fmtNumber(item.delta.tokens)}`}</td><td>{item.delta?.cost == null ? ", " : fmtCost(item.delta.cost)}</td><td>{item.governed.policy || (item.governed.completed ? "1.1" : ", ")}</td></tr>)}</tbody></table></div> : <div className="result-empty compact-empty">No local evidence yet. Run a matched pair in Arena Lab.</div>}
     </section>
 
+  </>;
+}
+
+function TestingObservations() {
+  const observations = [
+    {
+      title: "Prompt language can contaminate the control condition",
+      status: "Observed",
+      detail: "During Data Modeler testing, shared task wording used terms such as authorized, auditable, bounded, and no mutation. Ungoverned outputs echoed that language even though CV1.1, OPA, governed MCP execution, and governed egress controls were bypassed. The task hash and UI review traced the behavior to shared prompt wording. Shared task templates and ungoverned system prompts were then neutralized."
+    },
+    {
+      title: "UI testing can expose experimental drift",
+      status: "Observed",
+      detail: "Backend isolation tests can pass while shared UI task text or result labels still introduce treatment language. Visual review after changes has therefore been used as a regression step alongside code tests, telemetry inspection, and prompt-hash checks."
+    },
+    {
+      title: "Output-token ceilings can change the apparent result",
+      status: "Observed",
+      detail: "A 1,200-output-token ceiling truncated some model responses. The ceiling was increased to 2,500 and then to 5,000 tokens. Reasoning-heavy routes may consume completion budget before a visible final answer is emitted, so a missing or cut-off answer is not automatically treated as a model or gateway failure."
+    },
+    {
+      title: "Plausible modeling does not guarantee reliable aggregation",
+      status: "Observed",
+      detail: "A model can produce a structurally useful relational or dimensional design while manually deriving an incorrect count from row context. Other runs reproduced directly supplied numeric values correctly. This distinction led to tighter separation between model-generated structure and database-computed quantitative evidence."
+    },
+    {
+      title: "Governed and ungoverned paths must be verified independently",
+      status: "Observed",
+      detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being behaviorally contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
+    },
+    {
+      title: "Required MCP boundaries need fail-closed behavior",
+      status: "Observed",
+      detail: "Data Modeler testing showed that allowing a direct-data fallback weakens the meaning of an MCP-required treatment. The governed Data Modeler now requires schema, profile, and row context through the governed MCP boundary and stops before model execution when that required context is unavailable."
+    },
+    {
+      title: "Governance overhead is measurable",
+      status: "Observed",
+      detail: "Matched runs expose changes in latency, token use, cost, tool calls, and context utilization. These measurements are treated as execution characteristics, not benchmark scores or automatic quality judgments."
+    },
+    {
+      title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
+      status: "Method note",
+      detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
+    },
+  ];
+
+  return <>
+    <div className="notice">
+      <strong>Development observations, not research conclusions.</strong> These notes document behaviors and implementation issues seen while building and testing Agentic Arena. They are retained to make methodology changes traceable. Repeated trials and controlled analysis are required before generalizing any observation across models, domains, or deployments.
+    </div>
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Observations during testing</div>
+          <div className="section-title">What the lab has exposed during development</div>
+          <div className="section-note">Observed behavior, root-cause findings, and methodology corrections are kept separate from benchmark scoring or claims of model superiority.</div>
+        </div>
+        <span className="badge">{observations.length} documented observations</span>
+      </div>
+      <div className="grid-2">
+        {observations.map((item) => <article className="card" key={item.title}>
+          <div className="card-title-row">
+            <div className="section-title">{item.title}</div>
+            <span className="badge">{item.status}</span>
+          </div>
+          <p className="body-copy">{item.detail}</p>
+        </article>)}
+      </div>
+    </section>
+    <section className="section grid-3">
+      <Metric label="Prompt posture" value="Neutral shared task" foot="Treatment language remains on the governed path" />
+      <Metric label="Control posture" value="Runtime separated" foot="CV1.1-off path measured independently" />
+      <Metric label="Interpretation" value="No benchmark score" foot="Observations remain evidence for further testing" />
+    </section>
   </>;
 }
 
