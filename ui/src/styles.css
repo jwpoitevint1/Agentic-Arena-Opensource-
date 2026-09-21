@@ -420,7 +420,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
   .nav {
     grid-template-columns: repeat(20, minmax(0, 1fr));
     grid-auto-flow: row;
-    gap: 2px;
+    gap: 0;
     overflow: visible;
     padding-bottom: 2px;
   }
