@@ -118,6 +118,24 @@ test_allows_modeler_mcp_sample_on_governed_database if {
     decision.allow
 }
 
+test_allows_modeler_derived_model_action if {
+    request := object.union(base_request, {"action": "data.model", "function_key": "data_modeler", "system_id": 2, "database_target": "agentic_gov_02"})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
+    decision.allow
+}
+
+test_allows_modeler_mcp_query_on_governed_database if {
+    request := object.union(base_request, {"action": "mcp.dataset.query", "function_key": "data_modeler", "mcp_entity": "data_modeler", "system_id": 2, "database_target": "agentic_gov_02"})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
+    decision.allow
+}
+
+test_allows_modeler_mcp_aggregate_on_governed_database if {
+    request := object.union(base_request, {"action": "mcp.dataset.aggregate", "function_key": "data_modeler", "mcp_entity": "data_modeler", "system_id": 2, "database_target": "agentic_gov_02"})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
+    decision.allow
+}
+
 test_denies_modeler_workspace_write if {
     request := object.union(base_request, {"action": "workspace.write", "function_key": "data_modeler", "system_id": 2})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
