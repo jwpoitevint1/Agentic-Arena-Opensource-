@@ -1,11 +1,11 @@
 import json
-import math
 import re
 from collections import Counter
 from copy import deepcopy
 from datetime import date, datetime
-from decimal import Decimal
 from typing import Any
+
+from app.numeric_parsing import parse_numeric_like
 
 
 MAX_CATEGORICAL_VALUES = 12
@@ -33,27 +33,7 @@ def _normalized_key(value: str) -> str:
 
 
 def _safe_number(value: Any) -> float | None:
-    if value is None or isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float, Decimal)):
-        number = float(value)
-        return number if math.isfinite(number) else None
-    if not isinstance(value, str):
-        return None
-
-    text = value.strip()
-    if not text:
-        return None
-
-    percent = text.endswith("%")
-    text = text.rstrip("%").replace("$", "").replace(",", "")
-    try:
-        number = float(text)
-    except ValueError:
-        return None
-    if not math.isfinite(number):
-        return None
-    return number / 100.0 if percent else number
+    return parse_numeric_like(value)
 
 
 def _round_number(value: float) -> float:
@@ -428,9 +408,13 @@ def verify_governed_claims(
     verified = deepcopy(value)
     report: dict[str, object] = {
         "enabled": verified_evidence is not None,
+        "evidence_attached": verified_evidence is not None,
+        "verification_mode": (
+            "none" if verified_evidence is None else "preverified_evidence_binding"
+        ),
         "checked": 0,
         "corrected": 0,
-        "status": "not_applicable" if verified_evidence is None else "pass",
+        "status": "not_applicable" if verified_evidence is None else "evidence_bound",
         "contradictions": [],
     }
     if verified_evidence is None:
@@ -504,9 +488,14 @@ def verify_governed_claims(
 
         message["content"] = "\n".join(new_lines)
 
+    if int(report["checked"]) > 0:
+        report["status"] = "pass"
+        report["verification_mode"] = "post_generation_match"
+
     if contradictions:
         report["corrected"] = len(contradictions)
         report["status"] = "corrected"
+        report["verification_mode"] = "post_generation_match"
         report["contradictions"] = contradictions
 
     return verified, report
