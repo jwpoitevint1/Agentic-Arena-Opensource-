@@ -125,7 +125,7 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
         key=MCPEntity.DATA_MODELER,
         runtime_role="data_modeler_runner",
         read_only_workspace=True,
-        tools=(DESCRIBE, SCHEMA, SAMPLE, PROFILE, RAG_RETRIEVE),
+        tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, PROFILE, RAG_RETRIEVE),
     ),
     MCPEntity.EVALUATOR: MCPEntityDefinition(
         key=MCPEntity.EVALUATOR,
