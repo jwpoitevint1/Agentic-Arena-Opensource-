@@ -1439,6 +1439,12 @@ function TestingObservations() {
     },
 
     {
+      title: "Tune governance to the observed failure mode, not only the model name",
+      status: "Observed",
+      detail: "Current testing supports a failure-mode-first tuning approach. Governance should be adjusted to the error the model is actually producing, not merely to the vendor or model label. A practical control chain is: failure type → risk level → verification method → output contract → escalation requirement. Numerical or factual fabrication should trigger deterministic verification and stronger factual checks; summarization drift should trigger a tighter definition of summary, source-faithfulness requirements, and explicit highlighting of factual data; secondary aggregation or semantic expansion should require deterministic grouped evidence or clearer separation between observed facts, derived values, and interpretation. Higher-impact information can justify multiple independent verification checks before release."
+    },
+
+    {
       title: "Governance tuning should account for model capacity, capability, and function",
       status: "Observed",
       detail: "Current matched-pair runs show that the same governance representation does not produce the same response or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. These observations support treating governance as model- and function-aware rather than assuming one control profile transfers unchanged across model families or workloads. Model capacity, native capabilities, tool behavior, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent. This is an architectural design implication from current testing, not a claim that a single optimal tuning exists for each model."
