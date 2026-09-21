@@ -649,7 +649,7 @@ function LabRunner({ models, functions, onCapture, setView }) {
     <div className="notice good-notice">{auditorSelected
       ? "Auditor mode reads a bounded window of prior governed and ungoverned AI runs from the recording databases. It is read-only against source and workspace state. Every audit execution and its action ledger are written to the signed recording database; manual source context is disabled."
       : dataModelerSelected
-        ? "Data Modeler reads bounded source data and returns two output artifacts in the Lab: a modeled-data representation and a data visualization. Source and workspace state remain read-only. Evidence capture remains separate and continues to record the matched-run telemetry."
+        ? "Data Modeler returns two output artifacts in the Lab: a modeled-data representation and a data visualization. The governed path requires its schema and bounded row context through the governed MCP boundary and fails closed if that context is unavailable. Persisted source and workspace state remain read-only."
         : "Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage."}</div>
 
     <section className="section form-panel">
@@ -686,7 +686,7 @@ function LabRunner({ models, functions, onCapture, setView }) {
         {(auditorSelected
           ? ["Dispatch", "Policy / control boundary", "Recording database read", "Audit model execution", "Signed audit telemetry"]
           : dataModelerSelected
-            ? ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Model + visualization output", "Egress + telemetry"]
+            ? ["Dispatch", "Policy / control boundary", "Required governed MCP read", "Derived data modeling", "Model + visualization output", "Egress + telemetry"]
             : ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"]
         ).map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
       </div>
