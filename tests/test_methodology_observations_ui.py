@@ -90,3 +90,14 @@ def test_same_family_fallback_observation_is_documented() -> None:
     assert "Fallback routing should preserve model family where possible" in source
     assert "silent cross-family failover" in source
     assert "cross-family contingency should be explicit" in source
+
+
+def test_observations_translate_same_evidence_for_three_audiences() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "One evidence stack, three views" in source
+    assert "Research / methodology" in source
+    assert "Engineering / deployment" in source
+    assert "Executive / business impact" in source
+    assert "Fallback routing should remain within the same model family when practical" in source
+    assert "which model-function-governance combination" in source
