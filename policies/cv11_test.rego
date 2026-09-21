@@ -60,8 +60,14 @@ test_allows_advisor_function_binding if {
     decision.allow
 }
 
-test_denies_governed_function_over_4096_tokens if {
+test_allows_governed_function_at_5000_tokens if {
     request := object.union(base_request, {"action": "model.chat", "function_key": "data_modeler", "system_id": 4, "message_roles": ["user"], "max_tokens": 5000})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
+    decision.allow
+}
+
+test_denies_governed_function_over_5000_tokens if {
+    request := object.union(base_request, {"action": "model.chat", "function_key": "data_modeler", "system_id": 4, "message_roles": ["user"], "max_tokens": 5001})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
     not decision.allow
     "governed_function_token_limit_exceeded" in decision.reasons
@@ -112,10 +118,24 @@ test_allows_modeler_mcp_sample_on_governed_database if {
     decision.allow
 }
 
-test_allows_evaluator_mcp_rag_on_governed_database if {
-    request := object.union(base_request, {"action": "mcp.rag.retrieve", "function_key": "evaluator", "mcp_entity": "evaluator", "system_id": 5, "database_target": "agentic_gov_05"})
+test_denies_modeler_workspace_write if {
+    request := object.union(base_request, {"action": "workspace.write", "function_key": "data_modeler", "system_id": 2})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "data_modeler_runner"}, "request": request}
+    not decision.allow
+    "action_not_permitted_for_role" in decision.reasons
+}
+
+test_allows_evaluator_audit_run_read if {
+    request := object.union(base_request, {"action": "audit.runs.read", "function_key": "evaluator", "system_id": 5})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "evaluator_runner"}, "request": request}
     decision.allow
+}
+
+test_denies_evaluator_direct_mcp_dataset_access if {
+    request := object.union(base_request, {"action": "mcp.dataset.query", "function_key": "evaluator", "mcp_entity": "evaluator", "system_id": 5, "database_target": "agentic_gov_05"})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "evaluator_runner"}, "request": request}
+    not decision.allow
+    "action_not_permitted_for_role" in decision.reasons
 }
 
 test_allows_advisor_mcp_query_on_governed_database if {
