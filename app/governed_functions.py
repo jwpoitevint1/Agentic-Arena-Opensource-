@@ -231,20 +231,30 @@ def _focus_for(function: GovernedFunctionDefinition, domain: DomainProfile) -> t
     return domain.advisory_focus
 
 
-def _data_modeler_display_lines(function: GovernedFunctionDefinition) -> tuple[str, ...]:
+def _data_modeler_output_lines(function: GovernedFunctionDefinition) -> tuple[str, ...]:
     if function.key is not GovernedFunctionType.DATA_MODELER:
         return ()
     return (
         "",
-        "Data Modeler display contract:",
-        "- Persisted source tables and workspace state are read-only.",
-        "- On the governed path, Data Modeler evidence must be supplied through the governed MCP boundary. Do not substitute direct source access or unsupported assumptions for required MCP context.",
-        "- You are explicitly authorized to model the supplied data into a derived in-memory/output artifact. This includes reshaping, normalizing or denormalizing, defining facts and dimensions, deriving bounded fields, grouping, and producing visualization-ready structures from authorized rows.",
-        "- The derived model must remain in the returned artifact only; do not claim or attempt a write back to the source database or persisted workspace.",
+        "Data Modeler output contract:",
         "- Provide the relational or dimensional model in human-readable form before the visualization specification.",
         "- Finish with exactly one VISUALIZATION_SPEC line followed by one compact JSON object. A colon after VISUALIZATION_SPEC is optional.",
         "- VISUALIZATION_SPEC schema: {\"type\":\"bar|line\",\"title\":\"...\",\"x_label\":\"...\",\"y_label\":\"...\",\"data\":[{\"label\":\"...\",\"value\":0}]}",
-        "- Limit visualization data to at most 12 points and use only numeric values supported by the bounded relational data supplied in this run.",
+        "- Limit visualization data to at most 12 points.",
+    )
+
+
+def _governed_data_modeler_lines(function: GovernedFunctionDefinition) -> tuple[str, ...]:
+    if function.key is not GovernedFunctionType.DATA_MODELER:
+        return ()
+    return (
+        "",
+        "Governed Data Modeler controls:",
+        "- Persisted source tables and workspace state are read-only.",
+        "- Data Modeler evidence must be supplied through the governed MCP boundary. Do not substitute direct source access or unsupported assumptions for required MCP context.",
+        "- You are explicitly authorized to model the supplied data into a derived in-memory/output artifact. This includes reshaping, normalizing or denormalizing, defining facts and dimensions, deriving bounded fields, grouping, and producing visualization-ready structures from authorized rows.",
+        "- The derived model must remain in the returned artifact only; do not claim or attempt a write back to the source database or persisted workspace.",
+        "- Use only numeric values supported by the bounded relational data supplied in this run.",
         "- Do not use schema metadata alone as quantitative evidence and do not invent chart values.",
     )
 
@@ -281,7 +291,8 @@ def build_system_prompt(function: GovernedFunctionDefinition, domain: DomainProf
         "",
         "Domain focus:",
         *[f"- {item}" for item in focus],
-        *_data_modeler_display_lines(function),
+        *_governed_data_modeler_lines(function),
+        *_data_modeler_output_lines(function),
         "",
         "Required output sections:",
         *[f"- {item}" for item in function.output_contract],
@@ -302,7 +313,7 @@ def build_ungoverned_system_prompt(
         "",
         "Domain focus:",
         *[f"- {item}" for item in focus],
-        *_data_modeler_display_lines(function),
+        *_data_modeler_output_lines(function),
         "",
         "Required output sections:",
         *[f"- {item}" for item in function.output_contract],
