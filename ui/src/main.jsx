@@ -411,7 +411,7 @@ function App() {
       {view === "models" && <ModelRegistry models={models} />}
       {view === "enterprise" && <EnterpriseDeployment />}
       {view === "chat" && <Chatbot models={models} />}
-      {view === "governance" && <><Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} /><MCPConsole models={models} entities={mcpEntities} /></>}
+      {view === "governance" && <div className="governance-mcp-view"><Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} /><MCPConsole models={models} entities={mcpEntities} /></div>}
       {view === "alignment" && <Alignment />}
       {view === "diagnostics" && <Diagnostics models={models} functions={functions} entities={mcpEntities} />}
     </main>
