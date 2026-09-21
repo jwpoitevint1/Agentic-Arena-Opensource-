@@ -162,6 +162,68 @@ def _execute_tool(*, entity_key: MCPEntity, system_id: int, target: object, tool
     raise MCPDataError("unsupported MCP tool")
 
 
+def execute_governed_mcp_tool(
+    *,
+    entity_key: str,
+    system_id: int,
+    model_key: str,
+    tool_name: str,
+    arguments: dict[str, Any],
+) -> dict[str, object]:
+    """Execute one governed MCP tool through the same CV1.1 boundary used by JSON-RPC."""
+    entity = entity_for_key(entity_key)
+    tool_for_entity(entity, tool_name)
+    validate_arguments(arguments)
+    model = model_for_key(model_key)
+    if model.kind is not ModelKind.AGENT:
+        raise ValueError("governed MCP tools require an agent model")
+
+    context = ExecutionContext(
+        governance=GovernanceMode.GOVERNED,
+        workload=WorkloadType.AGENTIC,
+        system_id=system_id,
+    )
+    target = resolve_database_target(context)
+    decision = enforce_cv11(
+        context=context,
+        action=f"mcp.{tool_name}",
+        model_key=model_key,
+        content="",
+        message_roles=[],
+        max_tokens=0,
+        runtime_role=entity.runtime_role,
+        function_key=entity.key.value,
+        mcp_entity=entity.key.value,
+        database_target=target.value,
+    )
+    output = _execute_tool(
+        entity_key=entity.key,
+        system_id=system_id,
+        target=target,
+        tool_name=tool_name,
+        arguments=arguments,
+    )
+    sanitized_output, output_redactions = redact_governed_payload(system_id, output)
+    if not isinstance(sanitized_output, dict):
+        raise MCPDataError("governed output sanitation failed")
+
+    return {
+        "structuredContent": sanitized_output,
+        "_meta": {
+            "entity": entity.key.value,
+            "runtime_role": entity.runtime_role,
+            "system_id": system_id,
+            "database_target": target.value,
+            "cv11": decision.to_dict(),
+            "output_redaction": {
+                "enabled": governed_output_redaction_enabled(system_id),
+                "total": sum(output_redactions.values()),
+                "categories": output_redactions,
+            },
+        },
+    }
+
+
 @router.get("/entities")
 def list_mcp_entities() -> dict[str, object]:
     return {
@@ -194,41 +256,13 @@ def governed_mcp(entity_key: str, request: JSONRPCRequest) -> dict[str, object]:
 
     try:
         system_id, model_key, tool_name, arguments = _tools_call_params(request.params)
-        tool_for_entity(entity, tool_name)
-        validate_arguments(arguments)
-        model = model_for_key(model_key)
-        if model.kind is not ModelKind.AGENT:
-            raise ValueError("governed MCP tools require an agent model")
-
-        context = ExecutionContext(
-            governance=GovernanceMode.GOVERNED,
-            workload=WorkloadType.AGENTIC,
+        tool_result = execute_governed_mcp_tool(
+            entity_key=entity.key.value,
             system_id=system_id,
-        )
-        target = resolve_database_target(context)
-        decision = enforce_cv11(
-            context=context,
-            action=f"mcp.{tool_name}",
             model_key=model_key,
-            content="",
-            message_roles=[],
-            max_tokens=0,
-            runtime_role=entity.runtime_role,
-            function_key=entity.key.value,
-            mcp_entity=entity.key.value,
-            database_target=target.value,
-        )
-        output = _execute_tool(
-            entity_key=entity.key,
-            system_id=system_id,
-            target=target,
             tool_name=tool_name,
             arguments=arguments,
         )
-        sanitized_output, output_redactions = redact_governed_payload(system_id, output)
-        if not isinstance(sanitized_output, dict):
-            raise MCPDataError("governed output sanitation failed")
-        output = sanitized_output
     except CV11PolicyDenied as exc:
         return _error(request.id, -32003, "CV1.1 denied the MCP tool call", {"reasons": list(exc.reasons)})
     except CV11PolicyUnavailable:
@@ -242,19 +276,8 @@ def governed_mcp(entity_key: str, request: JSONRPCRequest) -> dict[str, object]:
         request.id,
         {
             "content": [{"type": "text", "text": "Governed MCP tool completed."}],
-            "structuredContent": output,
+            "structuredContent": tool_result["structuredContent"],
             "isError": False,
-            "_meta": {
-                "entity": entity.key.value,
-                "runtime_role": entity.runtime_role,
-                "system_id": system_id,
-                "database_target": target.value,
-                "cv11": decision.to_dict(),
-                "output_redaction": {
-                    "enabled": governed_output_redaction_enabled(system_id),
-                    "total": sum(output_redactions.values()),
-                    "categories": output_redactions,
-                },
-            },
+            "_meta": tool_result["_meta"],
         },
     )
