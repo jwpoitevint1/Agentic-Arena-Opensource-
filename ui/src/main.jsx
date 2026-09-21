@@ -129,10 +129,9 @@ const NAV = [
   ["observations", "Observations", "03"],
   ["models", "Models", "04"],
   ["enterprise", "Enterprise", "05"],
-  ["mcp", "MCP", "06"],
-  ["governance", "Governance", "07"],
-  ["alignment", "Alignment", "08"],
-  ["diagnostics", "Diagnostics", "09"],
+  ["governance", "Governance + MCP", "06"],
+  ["alignment", "Alignment", "07"],
+  ["diagnostics", "Diagnostics", "08"],
 ];
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v2";
@@ -411,9 +410,8 @@ function App() {
       {view === "observations" && <TestingObservations />}
       {view === "models" && <ModelRegistry models={models} />}
       {view === "enterprise" && <EnterpriseDeployment />}
-      {view === "mcp" && <MCPConsole models={models} entities={mcpEntities} />}
       {view === "chat" && <Chatbot models={models} />}
-      {view === "governance" && <Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} />}
+      {view === "governance" && <><Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} /><MCPConsole models={models} entities={mcpEntities} /></>}
       {view === "alignment" && <Alignment />}
       {view === "diagnostics" && <Diagnostics models={models} functions={functions} entities={mcpEntities} />}
     </main>
