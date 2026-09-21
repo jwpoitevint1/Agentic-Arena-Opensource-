@@ -150,6 +150,39 @@ _COMPARISON_RUN_SQL = """
 """
 
 
+_AUDIT_RUN_SQL = """
+    SELECT
+        run_id,
+        governance,
+        operation,
+        system_id,
+        domain,
+        dataset,
+        function_key,
+        model_key,
+        requested_model_id,
+        returned_model_id,
+        vendor,
+        recorded_at,
+        latency_ms,
+        prompt_tokens,
+        completion_tokens,
+        total_tokens,
+        selected_cost_usd,
+        finish_reason,
+        tool_calls,
+        retries,
+        error,
+        record
+    FROM telemetry.agentic_runs
+    WHERE coalesce(function_key, '') NOT IN ('evaluator', 'auditor')
+      AND left(coalesce(operation, ''), 6) <> 'audit.'
+      AND left(coalesce(operation, ''), 8) <> 'auditor.'
+    ORDER BY recorded_at DESC, run_id DESC
+    LIMIT %s
+"""
+
+
 def _section(record: dict[str, Any], key: str) -> dict[str, Any]:
     value = record.get(key)
     return value if isinstance(value, dict) else {}
@@ -165,6 +198,13 @@ def _provenance(route_metadata: dict[str, Any]) -> dict[str, object]:
         "relational_context_hash",
         "verified_evidence_hash",
         "verified_evidence_provided",
+        "audit_scope",
+        "audit_source",
+        "audit_actions",
+        "audit_run_count",
+        "audit_run_ids_hash",
+        "audit_database_status",
+        "audit_read_only",
     )
     return {key: route_metadata.get(key) for key in keys if key in route_metadata}
 
@@ -481,6 +521,123 @@ def comparison_runs(limit: int = 1000) -> dict[str, object]:
 
     runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
     return {"runs": runs[:safe_limit], "database_status": database_status}
+
+
+def _audit_record_view(
+    row: tuple[Any, ...],
+    *,
+    max_output_chars: int,
+) -> dict[str, object]:
+    record = row[21] if len(row) > 21 and isinstance(row[21], dict) else {}
+    output = _section(record, "output")
+    control = _section(record, "control")
+    outcome = _section(record, "outcome")
+    integrity = _section(record, "integrity")
+    provenance = _section(record, "provenance")
+    usage = _section(record, "usage")
+    behavior = _section(record, "behavior")
+
+    text_value = output.get("text")
+    output_text = text_value if isinstance(text_value, str) else ""
+    excerpt = output_text[:max_output_chars]
+
+    return {
+        "run_id": row[0],
+        "governance": row[1],
+        "operation": row[2],
+        "system_id": row[3],
+        "domain": row[4],
+        "dataset": row[5],
+        "function_key": row[6],
+        "model_key": row[7],
+        "requested_model_id": row[8],
+        "returned_model_id": row[9],
+        "vendor": row[10],
+        "recorded_at": row[11].isoformat() if row[11] is not None else None,
+        "latency_ms": float(row[12]) if row[12] is not None else None,
+        "prompt_tokens": int(row[13] or 0),
+        "completion_tokens": int(row[14] or 0),
+        "total_tokens": int(row[15] or 0),
+        "selected_cost_usd": float(row[16]) if row[16] is not None else None,
+        "finish_reason": row[17],
+        "tool_calls": int(row[18] or 0),
+        "retries": int(row[19] or 0),
+        "error": row[20],
+        "policy_applied": control.get("policy_applied"),
+        "policy_allowed": control.get("policy_allowed"),
+        "outcome": outcome.get("status"),
+        "reasoning_tokens": int(usage.get("reasoning_tokens") or 0),
+        "behavioral_nuances": behavior.get("behavioral_nuances", []),
+        "output_excerpt": excerpt,
+        "output_characters": int(output.get("characters") or len(output_text)),
+        "output_sha256": output.get("sha256"),
+        "output_truncated_for_audit_context": len(output_text) > len(excerpt),
+        "integrity": {
+            "signed": bool(integrity.get("event_hash")),
+            "sequence": integrity.get("sequence"),
+            "event_hash": integrity.get("event_hash"),
+            "previous_event_hash": integrity.get("previous_event_hash"),
+            "key_id": integrity.get("key_id"),
+        },
+        "provenance": {
+            "dataset_source": provenance.get("dataset_source"),
+            "task_hash": provenance.get("task_hash"),
+            "source_context_hash": provenance.get("source_context_hash"),
+            "dataset_context_hash": provenance.get("dataset_context_hash"),
+            "verified_evidence_hash": provenance.get("verified_evidence_hash"),
+            "verified_evidence_provided": provenance.get("verified_evidence_provided"),
+        },
+    }
+
+
+def audit_run_history(
+    *,
+    limit_per_governance: int = 12,
+    max_output_chars: int = 3500,
+) -> dict[str, object]:
+    safe_limit = max(1, min(int(limit_per_governance), 25))
+    safe_output_chars = max(500, min(int(max_output_chars), 8000))
+    runs: list[dict[str, object]] = []
+    database_status: dict[str, str] = {}
+
+    for governance, env_var in _ENV_BY_GOVERNANCE.items():
+        url = os.getenv(env_var)
+        if not url:
+            database_status[governance] = "unconfigured"
+            continue
+
+        try:
+            with psycopg.connect(url, connect_timeout=3) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("BEGIN READ ONLY")
+                    cursor.execute("SET LOCAL statement_timeout = 5000")
+                    cursor.execute(_AUDIT_RUN_SQL, (safe_limit,))
+                    rows = cursor.fetchall()
+                    connection.rollback()
+        except psycopg.Error:
+            logger.exception("audit_run_history_failed governance=%s", governance)
+            database_status[governance] = "database_error"
+            continue
+
+        database_status[governance] = "ok"
+        for row in rows:
+            runs.append(
+                _audit_record_view(
+                    row,
+                    max_output_chars=safe_output_chars,
+                )
+            )
+
+    runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
+    return {
+        "source": "telemetry.agentic_runs",
+        "mode": "read_only",
+        "limit_per_governance": safe_limit,
+        "max_output_chars_per_run": safe_output_chars,
+        "run_count": len(runs),
+        "runs": runs,
+        "database_status": database_status,
+    }
 
 
 def verify_agentic_run_chain(governance: str) -> dict[str, object]:
