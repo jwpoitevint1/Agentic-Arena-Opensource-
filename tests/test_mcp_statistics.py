@@ -42,3 +42,5 @@ def test_numeric_parser_rejects_free_text() -> None:
     assert data_access._parse_numeric_like("($25,488.15)") == -25488.15
     assert data_access._parse_numeric_like("11.94%") == 11.94
     assert data_access._parse_numeric_like("merchant purchase $12.00") is None
+    assert data_access._parse_numeric_like("-$1,234.50") == -1234.5
+    assert data_access._parse_numeric_like("  (£2,000.25)  ") == -2000.25
