@@ -145,7 +145,6 @@ def _execute_ungoverned_auditor(
     audit_payload = {
         "scope": "historical_ai_runs",
         "source": "telemetry.agentic_runs",
-        "mode": "read_only",
         "database_status": history.get("database_status"),
         "run_count": len(run_items),
         "runs": run_items,
@@ -407,7 +406,7 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
                     model.key,
                     model.model_id,
                     code="DATASET_EMPTY",
-                    message="Authorized dataset is empty.",
+                    message="Dataset is empty.",
                 )
         except MCPDataUnavailable:
             result = _unavailable_result(
@@ -431,9 +430,9 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
             else "NO_DATASET"
         )
         message = (
-            "Authorized dataset is empty."
+            "Dataset is empty."
             if code == "DATASET_EMPTY"
-            else "No authorized dataset provided."
+            else "No dataset provided."
         )
         result = _unavailable_result(model.key, model.model_id, code=code, message=message)
 
