@@ -280,6 +280,27 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
 .result-body { white-space: pre-wrap; color: #d9e1f3; line-height: 1.62; font-size: 13px; max-height: 650px; overflow: auto; padding-right: 4px; }
 .result-empty { display: grid; place-items: center; min-height: 240px; color: #71809d; text-align: center; padding: 20px; }
 .compact-empty { min-height: 150px; }
+
+.modeler-output-stack { display: grid; gap: 12px; }
+.modeler-output-box {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,.014);
+}
+.modeler-output-box .section-note { margin-top: 3px; }
+.modeler-result-body { margin-top: 12px; max-height: 430px; }
+.modeler-chart-wrap { margin-top: 10px; overflow-x: auto; }
+.modeler-chart { display: block; width: 100%; min-width: 520px; min-height: 260px; }
+.modeler-chart-empty { min-height: 220px; }
+.modeler-grid-line { stroke: rgba(148,163,184,.14); stroke-width: 1; }
+.modeler-zero-line { stroke: rgba(199,210,254,.38); stroke-width: 1.2; }
+.modeler-bar { fill: var(--accent); opacity: .82; }
+.modeler-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.modeler-point { fill: var(--cyan); stroke: var(--bg); stroke-width: 2; }
+.modeler-chart-title { fill: var(--text); font-size: 13px; font-weight: 700; }
+.modeler-axis-value, .modeler-x-label, .modeler-axis-label { fill: var(--muted); font-size: 9px; }
+.modeler-axis-label { font-size: 10px; }
 .result-metrics { margin-top: auto; padding-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
 .metric-chip { border: 1px solid var(--line); border-radius: 10px; padding: 9px; background: rgba(255,255,255,0.018); min-width: 0; }
 .metric-chip span { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
