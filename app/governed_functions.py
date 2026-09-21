@@ -64,8 +64,7 @@ _FUNCTIONS: dict[GovernedFunctionType, GovernedFunctionDefinition] = {
         display_name="Data Modeler",
         runtime_role="data_modeler_runner",
         objective=(
-            "Create an auditable derived relational or dimensional model from the authorized "
-            "domain data and produce a bounded visualization without mutating persisted source data."
+            "Create a relational or dimensional model of the domain data and produce a data visualization."
         ),
         output_contract=(
             "modeled_data_output",
