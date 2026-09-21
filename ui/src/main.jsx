@@ -1433,6 +1433,30 @@ function TestingObservations() {
     <section className="section">
       <div className="section-header">
         <div>
+          <div className="eyebrow">Close-attention areas</div>
+          <div className="section-title">Three contamination surfaces that require active review</div>
+          <div className="section-note">A clean matched-pair experiment requires control of what the model is told, what the execution path does, and what the human interface presents.</div>
+        </div>
+      </div>
+      <div className="grid-3">
+        <div className="card">
+          <div className="section-title">Prompt contamination</div>
+          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can introduce governance-coded language into the control condition. Terms such as authorized, auditable, bounded, read-only, policy-governed, or MCP-derived must not appear in shared prompt surfaces unless they are part of the governed treatment itself.</p>
+        </div>
+        <div className="card">
+          <div className="section-title">Execution-path contamination</div>
+          <p className="body-copy">Shared helpers, fallback logic, data-access functions, MCP calls, CV1.1 or OPA checks, claim verification, sanitation, redaction, or other governed controls can accidentally bleed into the ungoverned path. Runtime isolation is verified independently from prompt neutrality.</p>
+        </div>
+        <div className="card">
+          <div className="section-title">Presentation / UI contamination</div>
+          <p className="body-copy">Labels, subtitles, default templates, cached state, stale frontend bundles, and other presentation elements can make an ungoverned run appear governed or can reintroduce treatment language into the task. UI review is therefore treated as part of experimental regression testing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
           <div className="eyebrow">Observations during testing</div>
           <div className="section-title">What the lab has exposed during development</div>
           <div className="section-note">Observed behavior, root-cause findings, and methodology corrections are kept separate from benchmark scoring or claims of model superiority.</div>
