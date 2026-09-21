@@ -135,7 +135,9 @@ const NAV = [
   ["diagnostics", "Diagnostics", "09"],
 ];
 
-const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
+const HISTORY_KEY = "agentic-arena-experiment-evidence-v2";
+const TELEMETRY_EPOCH_START = "2026-09-21T03:23:31Z";
+const ARCHIVED_TELEMETRY_RUNS = 265;
 const DEFAULT_TASK = "Analyze the freight dataset for delivery performance, cost patterns, and operational anomalies. Summarize notable findings and supporting data.";
 const dataModelerTask = (domain) => `Create a relational or dimensional model of the ${domain.name} dataset. Describe the grain, entities or facts, dimensions, keys and relationships, constraints, and quality checks. Create one data visualization using the provided data.`;
 const AUDIT_TASK = "Review the recent recorded AI runs. Identify notable patterns, anomalies, differences, and the evidence supporting each finding.";
@@ -1091,7 +1093,7 @@ function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
       <div className="section-title">{metric === "latency" ? "Average model latency" : "Overall model token consumption"}</div>
       <div className="section-note">
         {metric === "latency"
-          ? (splitByUse ? "Average recorded latency per run by model and use" : "Average recorded latency per run by model")
+          ? (splitByUse ? "Average post-MCP latency per completed model call by model and use" : "Average post-MCP latency per completed model call by model")
           : (splitByUse ? "Stacked prompt, reasoning, and completion token usage by model and use" : "Stacked prompt, reasoning, and completion token usage by model")}
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="token-chart">
@@ -1280,7 +1282,7 @@ function Evidence({ evidence, onClear, models }) {
 
   return <>
     <div className="notice">
-      <strong>Design by curation:</strong> Evidence history is stored only in this browser and contains metrics/metadata, not raw model responses, prompts, source context, database credentials, or secrets; backend telemetry remains separate. The model set is curated rather than exhaustive and reflects selected AI models informed in part by publicly disclosed or publicized deployment examples. Gaps in model, provider, version, and deployment coverage are expected, and the evidence should be interpreted within that curated scope.
+      <strong>Current telemetry epoch:</strong> Post-MCP deterministic-statistics tuning only. {ARCHIVED_TELEMETRY_RUNS} earlier signed runs at or before {new Date(TELEMETRY_EPOCH_START).toLocaleString()} are archived for audit/integrity and excluded from current comparison metrics. Browser evidence also starts a new v2 history from this epoch. The model set is curated rather than exhaustive and reflects selected AI models informed in part by publicly disclosed or publicized deployment examples. Gaps in model, provider, version, and deployment coverage are expected, and the evidence should be interpreted within that curated scope.
     </div>
     <div className="notice">
       <strong>Development note:</strong> During testing, a 1,200-output-token limit was found to truncate model output in Agentic Arena. The output-token limit was therefore increased from 1,200 to 2,500, and then increased a final time to 5,000 tokens.
