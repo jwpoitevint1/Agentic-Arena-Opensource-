@@ -101,3 +101,16 @@ def test_observations_translate_same_evidence_for_three_audiences() -> None:
     assert "Executive / business impact" in source
     assert "Fallback routing should remain within the same model family when practical" in source
     assert "which model-function-governance combination" in source
+
+
+def test_enterprise_governance_cell_and_requirements_package_are_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Cross-functional governance cell" in source
+    assert "Blended matrix governance" in source
+    assert "Configuration specialist" in source
+    assert "Business analyst / process owner" in source
+    assert "Legal / compliance officer" in source
+    assert "From business need to governed deployment" in source
+    assert "approved same-family fallback model when one exists" in source
+    assert "Cross-family contingency is explicit and separately governed" in source
