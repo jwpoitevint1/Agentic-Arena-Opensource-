@@ -1433,6 +1433,12 @@ function TestingObservations() {
     },
 
     {
+      title: "Model capability varies by task, function, and domain",
+      status: "Observed",
+      detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore treats capability as task-dependent and evaluates model behavior within the specific domain, function, evidence path, and execution condition being tested rather than assuming that performance in one workflow generalizes to another."
+    },
+
+    {
       title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
       status: "Method note",
       detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
