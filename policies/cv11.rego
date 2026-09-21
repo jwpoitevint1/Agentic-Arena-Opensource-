@@ -11,18 +11,18 @@ role_actions := {
     "agentic_runner": ["model.chat", "model.embed", "model.rerank", "model.safety", "model.speech"],
     "analyst_runner": [
         "model.chat", "data.read", "workspace.write", "output.write",
-        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.profile", "mcp.rag.retrieve",
+        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.statistics", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
     "data_modeler_runner": [
         "model.chat", "data.read", "data.model", "output.write",
-        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.sample", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.profile", "mcp.rag.retrieve",
+        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.sample", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.statistics", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
     "evaluator_runner": [
         "model.chat", "audit.runs.read", "output.write",
     ],
     "advisor_runner": [
         "model.chat", "data.read", "output.write",
-        "mcp.dataset.describe", "mcp.dataset.query", "mcp.dataset.profile", "mcp.rag.retrieve",
+        "mcp.dataset.describe", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.statistics", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
     "chatbot_runner": ["model.chat", "scenario.read.governed", "scenario.read.ungoverned", "workflow.execute", "output.write"],
     "analytics_reader": [
