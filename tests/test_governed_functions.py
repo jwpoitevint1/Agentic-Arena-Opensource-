@@ -114,3 +114,7 @@ def test_data_modeler_prompt_requires_output_visualization_contract() -> None:
     assert "Governed Data Modeler controls" not in ungoverned_prompt
     assert "read-only" not in ungoverned_prompt
     assert "untrusted data" not in ungoverned_prompt
+    assert "authorized" not in ungoverned_prompt.lower()
+    assert "auditable" not in ungoverned_prompt.lower()
+    assert "bounded" not in ungoverned_prompt.lower()
+    assert "mutat" not in ungoverned_prompt.lower()
