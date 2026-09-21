@@ -763,12 +763,13 @@ function observableDecisionPath(result, tone) {
 function parseDataModelerOutput(payload) {
   const raw = assistantText(payload);
   if (!raw) return { text: "", visualization: null };
-  const marker = "VISUALIZATION_SPEC:";
-  const markerIndex = raw.lastIndexOf(marker);
-  if (markerIndex < 0) return { text: raw, visualization: null };
+  const markerMatches = [...raw.matchAll(/VISUALIZATION_SPEC\s*:?\s*/g)];
+  const markerMatch = markerMatches[markerMatches.length - 1];
+  if (!markerMatch || markerMatch.index == null) return { text: raw, visualization: null };
 
+  const markerIndex = markerMatch.index;
   const text = raw.slice(0, markerIndex).trim();
-  let candidate = raw.slice(markerIndex + marker.length).trim();
+  let candidate = raw.slice(markerIndex + markerMatch[0].length).trim();
   candidate = candidate.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
