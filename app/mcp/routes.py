@@ -16,6 +16,7 @@ from app.mcp.data_access import (
     rag_retrieve,
     sample_table,
     source_schema,
+    table_statistics,
 )
 from app.mcp.entities import MCPEntity, entities, entity_for_key, tool_for_entity
 from app.mcp.patterns import (
@@ -136,6 +137,22 @@ def _execute_tool(*, entity_key: MCPEntity, system_id: int, target: object, tool
             aggregation=str(aggregation),
             filters=filters,
             limit=int(limit),
+        )
+    if tool_name == "dataset.statistics":
+        table = arguments.get("table")
+        columns = arguments.get("columns")
+        limit = arguments.get("limit", 100)
+        max_categories = arguments.get("max_categories", 20)
+        if not isinstance(table, str):
+            raise MCPDataError("table is required")
+        if columns is not None and not isinstance(columns, list):
+            raise MCPDataError("columns must be an array")
+        return table_statistics(
+            target,
+            table=table,
+            columns=columns,
+            limit=int(limit),
+            max_categories=int(max_categories),
         )
     if tool_name == "dataset.profile":
         table = arguments.get("table")
