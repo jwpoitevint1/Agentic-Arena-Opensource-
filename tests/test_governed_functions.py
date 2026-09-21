@@ -101,10 +101,16 @@ def test_data_modeler_prompt_requires_output_visualization_contract() -> None:
     governed_prompt = build_system_prompt(modeler, retail)
     ungoverned_prompt = build_ungoverned_system_prompt(modeler, retail)
 
-    assert "Data Modeler display contract:" in governed_prompt
+    assert "Data Modeler output contract:" in governed_prompt
     assert "VISUALIZATION_SPEC" in governed_prompt
     assert "explicitly authorized to model the supplied data" in governed_prompt
     assert "Persisted source tables and workspace state are read-only" in governed_prompt
     assert "must be supplied through the governed MCP boundary" in governed_prompt
-    assert "Data Modeler display contract:" in ungoverned_prompt
+    assert "Data Modeler output contract:" in ungoverned_prompt
     assert "VISUALIZATION_SPEC" in ungoverned_prompt
+
+    assert "CV1.1" not in ungoverned_prompt
+    assert "governed MCP" not in ungoverned_prompt
+    assert "Governed Data Modeler controls" not in ungoverned_prompt
+    assert "read-only" not in ungoverned_prompt
+    assert "untrusted data" not in ungoverned_prompt
