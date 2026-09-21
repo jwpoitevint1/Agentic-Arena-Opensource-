@@ -124,16 +124,15 @@ const FRAMEWORKS = [
 ];
 
 const NAV = [
-  ["overview", "Project", "01"],
-  ["lab", "Arena Lab", "02"],
-  ["evidence", "Evidence", "03"],
-  ["observations", "Observations", "04"],
-  ["models", "Models", "05"],
-  ["enterprise", "Enterprise", "06"],
-  ["mcp", "MCP", "07"],
-  ["governance", "Governance", "08"],
-  ["alignment", "Alignment", "09"],
-  ["diagnostics", "Diagnostics", "10"],
+  ["lab", "Arena Lab", "01"],
+  ["evidence", "Evidence", "02"],
+  ["observations", "Observations", "03"],
+  ["models", "Models", "04"],
+  ["enterprise", "Enterprise", "05"],
+  ["mcp", "MCP", "06"],
+  ["governance", "Governance", "07"],
+  ["alignment", "Alignment", "08"],
+  ["diagnostics", "Diagnostics", "09"],
 ];
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
@@ -314,7 +313,7 @@ function Control({ name, desc, state, tone = "good" }) {
 
 function App() {
   const initialHash = window.location.hash.replace("#", "");
-  const [view, setViewState] = useState(NAV.some(([key]) => key === initialHash) ? initialHash : "overview");
+  const [view, setViewState] = useState(initialHash === "overview" || NAV.some(([key]) => key === initialHash) ? initialHash : "overview");
   const [ready, setReady] = useState(null);
   const [cv11, setCv11] = useState(null);
   const [models, setModels] = useState(FALLBACK_MODELS);
@@ -333,7 +332,7 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const next = window.location.hash.replace("#", "");
-      if (NAV.some(([key]) => key === next)) setViewState(next);
+      if (next === "overview" || NAV.some(([key]) => key === next)) setViewState(next);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -379,7 +378,7 @@ function App() {
     saveEvidence([]);
   }
 
-  const title = NAV.find(([key]) => key === view)?.[1] || "Agentic Arena";
+  const title = view === "overview" ? "Project" : (NAV.find(([key]) => key === view)?.[1] || "Agentic Arena");
 
   return <div className="app-shell">
     <aside className="sidebar">
@@ -1450,6 +1449,30 @@ function TestingObservations() {
         <div className="card">
           <div className="section-title">Presentation / UI contamination</div>
           <p className="body-copy">Labels, subtitles, default templates, cached state, stale frontend bundles, and other presentation elements can make an ungoverned run appear governed or can reintroduce treatment language into the task. UI review is therefore treated as part of experimental regression testing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Experimental contamination controls</div>
+          <div className="section-title">Three surfaces require close attention</div>
+          <div className="section-note">A clean control condition depends on more than backend isolation. What the model is told, what the system does, and what the human sees must be checked independently.</div>
+        </div>
+      </div>
+      <div className="grid-3">
+        <div className="card">
+          <div className="section-title">Prompt contamination</div>
+          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can bias the control condition when they contain governance-coded language. Neutral shared wording is required so treatment concepts originate only from the governed path.</p>
+        </div>
+        <div className="card">
+          <div className="section-title">Execution-path contamination</div>
+          <p className="body-copy">Shared helpers, MCP calls, policy checks, sanitation, claim verification, data-access behavior, or fallback logic can accidentally apply governed behavior to the control path. Runtime isolation is verified separately from prompt neutrality.</p>
+        </div>
+        <div className="card">
+          <div className="section-title">Presentation / UI contamination</div>
+          <p className="body-copy">Labels, subtitles, templates, stale frontend state, or cached bundles can make the control appear governed or feed treatment language back into the task. UI review remains part of regression and root-cause analysis after changes.</p>
         </div>
       </div>
     </section>
