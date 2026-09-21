@@ -124,14 +124,14 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
     MCPEntity.DATA_MODELER: MCPEntityDefinition(
         key=MCPEntity.DATA_MODELER,
         runtime_role="data_modeler_runner",
-        read_only_workspace=False,
+        read_only_workspace=True,
         tools=(DESCRIBE, SCHEMA, SAMPLE, PROFILE, RAG_RETRIEVE),
     ),
     MCPEntity.EVALUATOR: MCPEntityDefinition(
         key=MCPEntity.EVALUATOR,
         runtime_role="evaluator_runner",
         read_only_workspace=True,
-        tools=(DESCRIBE, SCHEMA, QUERY, PROFILE, RAG_RETRIEVE),
+        tools=(),
     ),
     MCPEntity.ADVISOR: MCPEntityDefinition(
         key=MCPEntity.ADVISOR,
