@@ -1439,6 +1439,12 @@ function TestingObservations() {
     },
 
     {
+      title: "Governance tuning should account for model capacity, capability, and function",
+      status: "Observed",
+      detail: "Current matched-pair runs show that the same governance representation does not produce the same behavioral or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. These observations support treating governance as model- and function-aware rather than assuming one control profile transfers unchanged across model families or workloads. Model capacity, native capabilities, tool behavior, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent. This is an architectural design implication from current testing, not a claim that a single optimal tuning exists for each model."
+    },
+
+    {
       title: "Potential model-family compatibility effect",
       status: "Method note",
       detail: "Current testing suggests that some model families may align more naturally with CV1.1's natural-language control contract, including its emphasis on evidence boundaries, uncertainty, concise output, human oversight, and separation of observation from inference. Because the architecture and prompts were iterated while multiple model families were being tested, this pattern is treated as a potential compatibility effect or experimental confound, not evidence that CV1.1 is optimized for OpenAI or any other vendor. Deterministic controls such as OPA authorization, database isolation, governed MCP reads, numeric parsing, deterministic statistics, redaction, integrity signing, and audit logging remain model-agnostic. Controlled prompt-representation testing would be required to determine whether any vendor-specific compatibility effect is actually present."
