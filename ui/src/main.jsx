@@ -405,7 +405,7 @@ function App() {
       {bootstrapError && <div className="notice error-notice page-notice">{bootstrapError}</div>}
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
       {view === "lab" && <LabRunner models={models} functions={functions} onCapture={capturePair} setView={setView} />}
-      {view === "evidence" && <Evidence evidence={evidence} lastPair={lastPair} onClear={clearEvidence} models={models} />}
+      {view === "evidence" && <Evidence evidence={evidence} onClear={clearEvidence} models={models} />}
       {view === "models" && <ModelRegistry models={models} />}
       {view === "enterprise" && <EnterpriseDeployment />}
       {view === "mcp" && <MCPConsole models={models} entities={mcpEntities} />}
@@ -1157,7 +1157,7 @@ function FreeModelUsageTable({ runs, models }) {
   </div>;
 }
 
-function Evidence({ evidence, lastPair, onClear, models }) {
+function Evidence({ evidence, onClear, models }) {
   const complete = evidence.filter((item) => item.governed?.completed && item.ungoverned?.completed);
   const avg = (path) => {
     const values = complete.map(path).filter((value) => Number.isFinite(Number(value))).map(Number);
@@ -1362,7 +1362,6 @@ function Evidence({ evidence, lastPair, onClear, models }) {
       {evidence.length ? <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Time</th><th>Domain</th><th>Function</th><th>Model</th><th>Pair</th><th>Δ latency</th><th>Δ tokens</th><th>Δ cost</th><th>Policy</th></tr></thead><tbody>{evidence.map((item) => <tr key={item.id}><td>{new Date(item.captured_at).toLocaleString()}</td><td>{item.domain_name}</td><td>{item.function_key}</td><td className="mono-cell">{item.model_key}</td><td><StatusPill good={item.governed.completed && item.ungoverned.completed ? true : false} label={item.governed.completed && item.ungoverned.completed ? "Complete" : "Partial"} /></td><td>{item.delta?.latency_ms == null ? ", " : `${item.delta.latency_ms >= 0 ? "+" : ""}${fmtNumber(item.delta.latency_ms, 1)} ms`}</td><td>{item.delta?.tokens == null ? ", " : `${item.delta.tokens >= 0 ? "+" : ""}${fmtNumber(item.delta.tokens)}`}</td><td>{item.delta?.cost == null ? ", " : fmtCost(item.delta.cost)}</td><td>{item.governed.policy || (item.governed.completed ? "1.1" : ", ")}</td></tr>)}</tbody></table></div> : <div className="result-empty compact-empty">No local evidence yet. Run a matched pair in Arena Lab.</div>}
     </section>
 
-    {lastPair && <section className="section grid-2"><div className="card"><div className="section-title">Latest governed metadata</div><pre className="json-box">{JSON.stringify(lastPair.governed, null, 2)}</pre></div><div className="card"><div className="section-title">Latest ungoverned metadata</div><pre className="json-box">{JSON.stringify(lastPair.ungoverned, null, 2)}</pre></div></section>}
   </>;
 }
 
