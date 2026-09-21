@@ -230,3 +230,34 @@ def test_claim_verification_reports_evidence_bound_when_no_post_generation_metri
     assert report["verification_mode"] == "preverified_evidence_binding"
     assert report["checked"] == 0
     assert report["corrected"] == 0
+
+
+def test_claim_verification_does_not_rewrite_narrative_retrieved_rows_sentence() -> None:
+    rows = [
+        {"account_balance": "$100,000.00"},
+        {"account_balance": "$1,000.00"},
+    ]
+    facts = build_verified_evidence(rows, system_id=1)
+    original = (
+        "Retrieved rows show repeated account_balance values at $100,000.00 "
+        "(verified max) and at $1,000.00 (verified min)."
+    )
+    payload = {
+        "result": {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": original,
+                    }
+                }
+            ]
+        }
+    }
+
+    verified, report = verify_governed_claims(payload, verified_evidence=facts)
+
+    assert verified["result"]["choices"][0]["message"]["content"] == original
+    assert report["status"] == "evidence_bound"
+    assert report["checked"] == 0
+    assert report["corrected"] == 0
