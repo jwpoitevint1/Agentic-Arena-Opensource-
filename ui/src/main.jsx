@@ -1427,6 +1427,12 @@ function TestingObservations() {
       detail: "Matched runs expose changes in latency, token use, cost, tool calls, and context utilization. These measurements are treated as execution characteristics, not benchmark scores or automatic quality judgments."
     },
     {
+      title: "Post-MCP GPT-5.5 Finance runs are highly repeatable under governance",
+      status: "Observed",
+      detail: "Across four post-MCP Finance Analyst matched pairs using GPT-5.5, the governed responses repeatedly converged on the same bounded factual analysis while remaining highly similar to one another. Governed pairwise output similarity averaged 0.888, versus 0.822 for the ungoverned controls. Governed runs averaged 24.48 seconds latency, 735 reasoning tokens, 2,698 completion tokens, and $0.1160 selected cost; controls averaged 43.61 seconds, 2,713 reasoning tokens, 4,672 completion tokens, and $0.1708. All four governed runs ended normally with stop, while two of four controls reached the 5,000-token ceiling and ended on length. The governed outputs consistently used bounded language around possible caps, synthetic-data artifacts, free-text risk indicators, and human review, while controls more often extended into underwriting, suitability, fraud/AML, or approval-logic interpretations. This is retained as a repeated observation within this model/domain/function configuration, not a general causal claim across models or domains."
+    },
+
+    {
       title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
       status: "Method note",
       detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
