@@ -1447,7 +1447,7 @@ function TestingObservations() {
     {
       title: "Fallback routing should preserve model family where possible",
       status: "Observed",
-      detail: "Current testing shows that model families can exhibit materially different evidence handling, semantic expansion, reasoning behavior, tool use, latency, and response stability under the same function and governance conditions. A fallback model therefore should remain within the same model family when a suitable family member exists, because silent cross-family failover can change the behavioral profile that the governance tuning was designed around. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as behaviorally equivalent redundancy."
+      detail: "Current testing shows that model families can exhibit materially different evidence handling, semantic expansion, reasoning use, tool use, latency, and response stability under the same function and governance conditions. A fallback model therefore should remain within the same model family when a suitable family member exists, because silent cross-family failover can change the execution profile that the governance tuning was designed around. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as operationally equivalent redundancy."
     },
 
     {
