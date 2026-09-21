@@ -66,3 +66,11 @@ def test_gpt55_post_mcp_finance_replication_is_documented() -> None:
     assert "2,713 reasoning tokens" in source
     assert "two of four controls reached the 5,000-token ceiling" in source
     assert "not a general causal claim across models or domains" in source
+
+
+def test_model_family_compatibility_method_note_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Potential model-family compatibility effect" in source
+    assert "not evidence that CV1.1 is optimized for OpenAI or any other vendor" in source
+    assert "Controlled prompt-representation testing" in source
