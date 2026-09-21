@@ -16,7 +16,7 @@ def test_testing_observations_tab_is_registered_and_rendered() -> None:
     assert '["observations", "Observations", "03"]' in source
     assert 'view === "observations" && <TestingObservations />' in source
     assert "function TestingObservations()" in source
-    assert "Development observations, not research conclusions." in source
+    assert "Development observations, not formal research conclusions." in source
     assert "Pre-neutrality runs are development evidence, not clean treatment evidence" in source
 
 
@@ -26,7 +26,7 @@ def test_observations_document_three_contamination_surfaces() -> None:
     assert "Prompt contamination" in source
     assert "Execution-path contamination" in source
     assert "Presentation / UI contamination" in source
-    assert "Three surfaces require close attention" in source
+    assert "Three contamination surfaces stay under active review" in source
 
 
 def test_numbered_sidebar_navigation_matches_requested_order() -> None:
@@ -51,10 +51,10 @@ def test_numbered_sidebar_navigation_matches_requested_order() -> None:
 def test_finance_arithmetic_observation_and_mcp_update_are_documented() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
-    assert "Finance still stumps AI" in source
+    assert "Finance remains a repeatable arithmetic and interpretation stress case" in source
     assert "models produced useful schemas and careful caveats yet still miscounted" in source
-    assert "MCP package update:" in source
-    assert "counts, sums, averages, minima, maxima" in source
+    assert "Evidence principle:" in source
+    assert "exact arithmetic and bounded aggregates belong in deterministic computation" in source
 
 
 def test_gpt55_post_mcp_finance_replication_is_documented() -> None:
@@ -65,7 +65,7 @@ def test_gpt55_post_mcp_finance_replication_is_documented() -> None:
     assert "24.48 seconds latency" in source
     assert "2,713 reasoning tokens" in source
     assert "two of four controls reached the 5,000-token ceiling" in source
-    assert "not a general causal claim across models or domains" in source
+    assert "not a general causal claim" in source
 
 
 def test_model_family_compatibility_method_note_is_documented() -> None:
@@ -80,7 +80,7 @@ def test_model_aware_governance_tuning_observation_is_documented() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert "Governance tuning should account for model capacity, capability, and function" in source
-    assert "model- and function-aware" in source
+    assert "Model capacity, native capabilities, tool use, assigned function, domain, and evidence requirements should inform tuning" in source
     assert "deterministic enforcement boundaries remain consistent" in source
 
 
@@ -99,8 +99,8 @@ def test_observations_translate_same_evidence_for_three_audiences() -> None:
     assert "Research / methodology" in source
     assert "Engineering / deployment" in source
     assert "Executive / business impact" in source
-    assert "Fallback routing should remain within the same model family when practical" in source
-    assert "which model-function-governance combination" in source
+    assert "Fallback routing should preserve model family where possible" in source
+    assert "model-function-governance combination acceptable for this workload" in source
 
 
 def test_enterprise_governance_cell_and_requirements_package_are_documented() -> None:
@@ -123,3 +123,15 @@ def test_failure_mode_first_governance_tuning_is_documented() -> None:
     assert "failure type → risk level → verification method → output contract → escalation requirement" in source
     assert "Numerical or factual fabrication" in source
     assert "summarization drift" in source
+
+
+def test_observations_follow_empirical_governance_flow() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Practical empirical method" in source
+    assert "Observe, isolate, compare, verify, repeat, tune, retest" in source
+    assert "01 · Method and experimental integrity" in source
+    assert "02 · Evidence and verification" in source
+    assert "03 · Model and function fit" in source
+    assert "04 · Runtime and deployment implications" in source
+    assert "controlled variables, explicit uncertainty, reproducible evidence, falsifiable assumptions, repeat trials, and documented changes" in source
