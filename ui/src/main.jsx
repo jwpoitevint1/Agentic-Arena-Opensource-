@@ -926,7 +926,8 @@ function ResultPanel({ title, tone, result, error, dataModeler = false }) {
         <span className="micro">Governed claim verification</span>
         <div className="framework-tags">
           <span className="tag">status: {test.controls.claim_verification.status || "unknown"}</span>
-          <span className="tag">checked: {fmtNumber(test.controls.claim_verification.checked ?? 0)}</span>
+          <span className="tag">evidence: {test.controls.claim_verification.evidence_attached ? "attached" : "none"}</span>
+          <span className="tag">post-gen checked: {fmtNumber(test.controls.claim_verification.checked ?? 0)}</span>
           <span className="tag">corrected: {fmtNumber(test.controls.claim_verification.corrected ?? 0)}</span>
         </div>
       </div>}
