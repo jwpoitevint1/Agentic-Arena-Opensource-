@@ -77,7 +77,7 @@ def test_ungoverned_prompt_keeps_function_contract_without_cv11_constraints() ->
     finance = domain_profiles()[0]
     prompt = build_ungoverned_system_prompt(analyst, finance)
 
-    assert "BASELINE FUNCTION EXECUTION CONTEXT" in prompt
+    assert "FUNCTION EXECUTION CONTEXT" in prompt
     assert "Assigned function: Analyst (analyst)" in prompt
     assert "Assigned domain: Finance / Synthetic Customer & Loan Activity" in prompt
     assert "Required output sections:" in prompt
@@ -90,7 +90,7 @@ def test_auditor_is_named_and_scoped_to_recorded_runs() -> None:
     auditor = governed_function_for_key("evaluator")
 
     assert auditor.display_name == "Auditor"
-    assert "historical AI run evidence" in auditor.objective
+    assert "recorded AI run evidence" in auditor.objective
     assert "runs_reviewed" in auditor.output_contract
 
 
