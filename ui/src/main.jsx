@@ -388,7 +388,7 @@ function App() {
         <div><div className="brand-title">Agentic Arena</div><div className="brand-subtitle">CV 1.1 governed lab</div></div>
       </button>
       <nav className="nav" aria-label="Primary navigation">
-        {NAV.map(([key, label, icon]) => <button key={key} className={`nav-button ${view === key ? "active" : ""}`} onClick={() => setView(key)}><span className="nav-icon">{icon}</span><span>{label}</span></button>)}
+        {NAV.map(([key, label, icon]) => <button key={key} className={`nav-button nav-${key} ${view === key ? "active" : ""}`} onClick={() => setView(key)}><span className="nav-icon">{icon}</span><span>{label}</span></button>)}
       </nav>
       <div className="sidebar-footer"><strong>Experimental posture</strong><span>Matched governed / ungoverned execution. Alignment only; no certification or legal compliance claim.</span></div>
     </aside>
