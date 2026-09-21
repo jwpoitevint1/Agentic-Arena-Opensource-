@@ -1069,3 +1069,42 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
 .comparison-cost-dot-key{display:inline-block;width:11px;height:11px;border-radius:50%;background:#ef4444;border:1px solid #fff}
 
 .chart-inline-legend .reasoning-legend-label{color:#fff !important}
+
+/* Mobile evidence comparison controls: stack every selector to prevent overlap. */
+@media (max-width: 820px) {
+  .evidence-comparison-controls-vertical,
+  .comparison-slicer-row,
+  .model-comparison-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .comparison-slicer-row {
+    gap: 12px;
+  }
+
+  .comparison-slicer-row .field,
+  .model-comparison-grid .field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .comparison-slicer-row .token-slicer {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 6px;
+    margin: 4px 0 10px;
+  }
+
+  .comparison-slicer-row .token-slicer-button {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .model-comparison-grid select {
+    width: 100%;
+    min-width: 0;
+  }
+}
