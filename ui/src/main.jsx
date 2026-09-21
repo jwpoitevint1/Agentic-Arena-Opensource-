@@ -1836,7 +1836,7 @@ function EnterpriseDeployment() {
     ["02", "Containerize bounded services", "Package each division API as a separately deployable service. Keep credentials, model-provider keys, and data bindings server-side."],
     ["03", "Run replicated workloads", "Deploy multiple API replicas in Kubernetes so a pod or node failure does not make the business function unavailable."],
     ["04", "Balance only healthy traffic", "Use ingress and load balancers with readiness and liveness checks so requests route only to healthy service replicas."],
-    ["05", "Fail over the model, not the policy", "Route a governed request envelope to an approved backup model when the primary provider is unavailable. Authorization, data scope, tool limits, and egress controls remain unchanged."],
+    ["05", "Fail over the model, not the policy", "Route a governed request envelope to an approved same-family fallback model when one exists. If same-family fallback is unavailable, any cross-family contingency must be explicit, separately governed, and visible in telemetry. Authorization, data scope, tool limits, and egress controls remain unchanged."],
     ["06", "Observe and prove execution", "Centralize health, latency, cost, policy decisions, failover events, output controls, and signed audit evidence without granting the model additional authority."],
   ];
 
@@ -1907,6 +1907,59 @@ function EnterpriseDeployment() {
     <section className="section">
       <div className="section-header">
         <div>
+          <div className="eyebrow">Enterprise operating model</div>
+          <div className="section-title">Cross-functional governance cell</div>
+          <div className="section-note">CV 1.1 deployment requirements are built as a blended matrix, not as a pure Scrum ceremony or a traditional project handoff. Technical configuration, business requirements, and legal or compliance constraints are developed together into one deployable control package.</div>
+        </div>
+        <span className="badge">Blended matrix governance</span>
+      </div>
+
+      <div className="grid-3">
+        <article className="card">
+          <div className="eyebrow">Configuration specialist</div>
+          <div className="section-title">Translate requirements into enforceable configuration</div>
+          <p className="body-copy">Define model routes, API boundaries, MCP tools, identity scopes, data bindings, fallback rules, policy modules, logging, redaction, telemetry, and technical enforcement points. Confirm what the deployed model and surrounding infrastructure can actually support.</p>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Business analyst / process owner</div>
+          <div className="section-title">Define the business function and acceptable outcome</div>
+          <p className="body-copy">Document the workflow, authorized purpose, required data, decision points, output expectations, exceptions, service levels, and success criteria. Separate what the AI may assist with from what remains a human or business authority.</p>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Legal / compliance officer</div>
+          <div className="section-title">Define obligations, restrictions, and evidence requirements</div>
+          <p className="body-copy">Identify applicable law, policy, contractual restrictions, privacy requirements, human-review points, retention rules, prohibited uses, required disclosures, and audit evidence. Convert these requirements into controls that can be tested and monitored.</p>
+        </article>
+      </div>
+
+      <div className="card enterprise-flow-card">
+        <div className="eyebrow">Requirements package</div>
+        <div className="section-title">From business need to governed deployment</div>
+        <div className="enterprise-flow">
+          {[
+            "Business requirement",
+            "Permitted function",
+            "Authorized data",
+            "Model capacity + capability",
+            "Governance controls",
+            "Evidence requirements",
+            "Fallback rules",
+            "Human approval points",
+            "Audit requirements",
+            "Deployment configuration",
+          ].map((item, index, items) => <React.Fragment key={item}>
+            <div className="enterprise-flow-node">{item}</div>
+            {index < items.length - 1 && <div className="enterprise-flow-arrow">→</div>}
+          </React.Fragment>)}
+        </div>
+      </div>
+
+      <div className="notice enterprise-inner-notice"><strong>Operating principle:</strong> each function or API path receives its own requirements and control package. The control package can be tuned to model capacity, capability, domain, and function while deterministic enforcement boundaries remain common across the platform.</div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
           <div className="eyebrow">Deployment sequence</div>
           <div className="section-title">Path from governed lab pattern to enterprise service</div>
           <div className="section-note">Each stage adds operational capability without moving authorization into the model.</div>
@@ -1938,9 +1991,9 @@ function EnterpriseDeployment() {
         <div className="eyebrow">Model resilience</div>
         <div className="section-title">Approved primary and backup AI</div>
         <div className="control-list">
-          <Control name="Model router" desc="Select only allowlisted models approved for the division, task type, and data sensitivity." state="Bounded" />
-          <Control name="Circuit breaker" desc="Repeated provider failures or timeouts can open the primary route and direct eligible requests to an approved backup." state="Fail over" />
-          <Control name="Governance invariant" desc="Failover changes the inference dependency, not identity, data authorization, tool permissions, policy evaluation, or egress controls." state="Fixed" />
+          <Control name="Model router" desc="Select only allowlisted models approved for the division, task type, data sensitivity, and function-specific governance profile." state="Bounded" />
+          <Control name="Circuit breaker" desc="Repeated provider failures or timeouts can open the primary route and direct eligible requests to an approved same-family fallback when one exists." state="Fail over" />
+          <Control name="Governance invariant" desc="Failover changes the inference dependency, not identity, data authorization, tool permissions, policy evaluation, or egress controls. Cross-family contingency is explicit and separately governed." state="Fixed" />
           <Control name="High-risk degradation" desc="Mutation-capable or high-impact workflows can degrade to read-only or require human approval instead of replaying automatically." state="Controlled" />
         </div>
       </div>
