@@ -755,7 +755,7 @@ function observableDecisionPath(result, tone) {
     { label: "Policy boundary", detail: governed ? "CV1.1 / OPA authorization" : "Control path bypasses CV1.1", state: policyState },
     { label: "Dataset acquisition", detail: datasetSource, state: route.dataset_provided === false ? "none" : "read" },
     { label: "Relational evidence", detail: relational, state: `${Number(behavior.tool_calls ?? 0)} tool call${Number(behavior.tool_calls ?? 0) === 1 ? "" : "s"}` },
-    { label: "Verified facts", detail: governed ? (route.verified_evidence_provided ? "Server-computed bounded facts attached" : "No verified-facts block reported") : "No governed verified-facts layer", state: governed ? (route.verified_evidence_provided ? "attached" : "not reported") : "off" },
+    { label: "Verified facts", detail: governed ? (route.mcp_statistics_provided ? "Deterministic MCP statistics attached" : route.verified_evidence_provided ? "Server-computed bounded facts attached" : "No verified-facts block reported") : "No governed verified-facts layer", state: governed ? (route.mcp_statistics_provided || route.verified_evidence_provided ? "attached" : "not reported") : "off" },
     { label: "Model execution", detail: returnedModel, state: finishReason },
     { label: "Claim verification", detail: governed ? "Post-generation factual check" : "No governed claim verifier", state: claimVerification },
     { label: "Egress controls", detail: governed ? "Sanitation and domain redaction" : "Direct control-path output", state: egressState },
@@ -1404,6 +1404,11 @@ function TestingObservations() {
       detail: "A model can produce a structurally useful relational or dimensional design while manually deriving an incorrect count from row context. Other runs reproduced directly supplied numeric values correctly. This distinction led to tighter separation between model-generated structure and database-computed quantitative evidence."
     },
     {
+      title: "Finance still stumps AI",
+      status: "Observed",
+      detail: "Finance remains a repeatable stress case for model arithmetic and interpretation. During bounded Finance Data Modeler runs, models produced useful schemas and careful caveats yet still miscounted categorical loan-status values from visible rows. The issue is not treated as a governance failure by itself: language models remain probabilistic, while exact arithmetic is better delegated to deterministic computation."
+    },
+    {
       title: "Governed and ungoverned paths must be verified independently",
       status: "Observed",
       detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being behaviorally contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
@@ -1453,29 +1458,9 @@ function TestingObservations() {
       </div>
     </section>
 
-    <section className="section">
-      <div className="section-header">
-        <div>
-          <div className="eyebrow">Experimental contamination controls</div>
-          <div className="section-title">Three surfaces require close attention</div>
-          <div className="section-note">A clean control condition depends on more than backend isolation. What the model is told, what the system does, and what the human sees must be checked independently.</div>
-        </div>
-      </div>
-      <div className="grid-3">
-        <div className="card">
-          <div className="section-title">Prompt contamination</div>
-          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can bias the control condition when they contain governance-coded language. Neutral shared wording is required so treatment concepts originate only from the governed path.</p>
-        </div>
-        <div className="card">
-          <div className="section-title">Execution-path contamination</div>
-          <p className="body-copy">Shared helpers, MCP calls, policy checks, sanitation, claim verification, data-access behavior, or fallback logic can accidentally apply governed behavior to the control path. Runtime isolation is verified separately from prompt neutrality.</p>
-        </div>
-        <div className="card">
-          <div className="section-title">Presentation / UI contamination</div>
-          <p className="body-copy">Labels, subtitles, templates, stale frontend state, or cached bundles can make the control appear governed or feed treatment language back into the task. UI review remains part of regression and root-cause analysis after changes.</p>
-        </div>
-      </div>
-    </section>
+    <div className="notice good-notice">
+      <strong>MCP package update:</strong> The governed MCP package is being updated to move exact arithmetic away from model recounting. Deterministic dataset statistics now provide bounded counts, sums, averages, minima, maxima, and low-cardinality value counts from the governed source window, with Data Modeler instructed to treat those server-computed values as authoritative.
+    </div>
 
     <section className="section">
       <div className="section-header">
@@ -1592,10 +1577,10 @@ function ModelRegistry({ models }) {
 
 function MCPConsole({ models, entities }) {
   const effectiveEntities = entities.length ? entities : [
-    { key: "analyst", runtime_role: "analyst_runner", read_only_workspace: false, tools: [{ name: "dataset.describe", description: "Describe the authorized governed dataset." }, { name: "dataset.schema", description: "Read source schema." }, { name: "dataset.query", description: "Run bounded read-only query." }, { name: "dataset.profile", description: "Profile the source." }, { name: "rag.retrieve", description: "Retrieve bounded evidence." }] },
-    { key: "data_modeler", runtime_role: "data_modeler_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
+    { key: "analyst", runtime_role: "analyst_runner", read_only_workspace: false, tools: [{ name: "dataset.describe", description: "Describe the authorized governed dataset." }, { name: "dataset.schema", description: "Read source schema." }, { name: "dataset.query", description: "Run bounded read-only query." }, { name: "dataset.aggregate", description: "Run deterministic aggregate." }, { name: "dataset.statistics", description: "Compute deterministic bounded statistics." }, { name: "dataset.profile", description: "Profile the source." }, { name: "rag.retrieve", description: "Retrieve bounded evidence." }] },
+    { key: "data_modeler", runtime_role: "data_modeler_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.query" }, { name: "dataset.aggregate" }, { name: "dataset.statistics" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
     { key: "evaluator", runtime_role: "evaluator_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.query" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
-    { key: "advisor", runtime_role: "advisor_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.query" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
+    { key: "advisor", runtime_role: "advisor_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.query" }, { name: "dataset.aggregate" }, { name: "dataset.statistics" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
   ];
   const [entityKey, setEntityKey] = useState(effectiveEntities[0]?.key || "analyst");
   const entity = effectiveEntities.find((item) => item.key === entityKey) || effectiveEntities[0];
@@ -1604,6 +1589,9 @@ function MCPConsole({ models, entities }) {
   const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
   const [table, setTable] = useState("source_data");
   const [selectColumns, setSelectColumns] = useState("");
+  const [groupBy, setGroupBy] = useState("");
+  const [measure, setMeasure] = useState("");
+  const [aggregation, setAggregation] = useState("count");
   const [limit, setLimit] = useState(10);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState(null);
@@ -1627,6 +1615,22 @@ function MCPConsole({ models, entities }) {
       if (columns.length) args.select = columns;
       return args;
     }
+    if (toolName === "dataset.aggregate") {
+      const args = {
+        table,
+        aggregation,
+        limit: Math.min(50, Math.max(1, Number(limit) || 25)),
+      };
+      if (groupBy.trim()) args.group_by = groupBy.trim();
+      if (measure.trim()) args.measure = measure.trim();
+      return args;
+    }
+    if (toolName === "dataset.statistics") {
+      const args = { table, limit: Math.min(100, Math.max(1, Number(limit) || 100)), max_categories: 20 };
+      const columns = selectColumns.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20);
+      if (columns.length) args.columns = columns;
+      return args;
+    }
     if (toolName === "dataset.profile") return table.trim() ? { table: table.trim() } : {};
     if (toolName === "rag.retrieve") return { query: query.trim(), top_k: Math.min(20, Math.max(1, Number(limit) || 5)) };
     return {};
@@ -1643,7 +1647,7 @@ function MCPConsole({ models, entities }) {
   }
 
   const selectedTool = entity?.tools?.find((item) => item.name === toolName);
-  const toolNeedsTable = ["dataset.sample", "dataset.query", "dataset.profile"].includes(toolName);
+  const toolNeedsTable = ["dataset.sample", "dataset.query", "dataset.aggregate", "dataset.statistics", "dataset.profile"].includes(toolName);
   const canExecute = toolName !== "rag.retrieve" || query.trim();
 
   return <>
@@ -1657,8 +1661,13 @@ function MCPConsole({ models, entities }) {
           <div className="field"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
           <div className="field"><label>Model binding</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
           {toolNeedsTable && <div className="field"><label>Source table</label><input value={table} onChange={(e) => setTable(e.target.value)} placeholder="source_data" /></div>}
-          {["dataset.sample", "dataset.query", "rag.retrieve"].includes(toolName) && <div className="field"><label>{toolName === "rag.retrieve" ? "Top K" : "Limit"}</label><input type="number" min="1" max={toolName === "dataset.query" ? "100" : toolName === "dataset.sample" ? "25" : "20"} value={limit} onChange={(e) => setLimit(e.target.value)} /></div>}
-          {toolName === "dataset.query" && <div className="field full"><label>Select columns (optional, comma separated)</label><input value={selectColumns} onChange={(e) => setSelectColumns(e.target.value)} placeholder="Carrier, Status, Cost" /></div>}
+          {["dataset.sample", "dataset.query", "dataset.aggregate", "dataset.statistics", "rag.retrieve"].includes(toolName) && <div className="field"><label>{toolName === "rag.retrieve" ? "Top K" : "Limit"}</label><input type="number" min="1" max={toolName === "dataset.aggregate" ? "50" : toolName === "dataset.query" || toolName === "dataset.statistics" ? "100" : toolName === "dataset.sample" ? "25" : "20"} value={limit} onChange={(e) => setLimit(e.target.value)} /></div>}
+          {(toolName === "dataset.query" || toolName === "dataset.statistics") && <div className="field full"><label>Columns (optional, comma separated)</label><input value={selectColumns} onChange={(e) => setSelectColumns(e.target.value)} placeholder="Carrier, Status, Cost" /></div>}
+          {toolName === "dataset.aggregate" && <>
+            <div className="field"><label>Aggregation</label><select value={aggregation} onChange={(e) => setAggregation(e.target.value)}><option value="count">Count</option><option value="sum">Sum</option><option value="avg">Average</option><option value="min">Minimum</option><option value="max">Maximum</option></select></div>
+            <div className="field"><label>Group by (optional)</label><input value={groupBy} onChange={(e) => setGroupBy(e.target.value)} placeholder="loan_status" /></div>
+            <div className="field full"><label>Measure (required except count)</label><input value={measure} onChange={(e) => setMeasure(e.target.value)} placeholder="loan_amount" /></div>
+          </>}
           {toolName === "rag.retrieve" && <div className="field full"><label>Retrieval query</label><textarea className="compact-textarea" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Evidence to retrieve from the governed RAG surface…" /></div>}
         </div>
         <div className="tool-description">{selectedTool?.description || "Bounded governed MCP operation."}</div>
