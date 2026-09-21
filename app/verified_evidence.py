@@ -333,8 +333,16 @@ def _percent_text(value: float) -> str:
 
 
 def _metric_line_key(line: str) -> str | None:
-    normalized = re.sub(r"[*_#>|:]+", " ", line.lower())
-    normalized = re.sub(r"\s+", " ", normalized).strip(" -")
+    """Return a verifier metric only for explicit metric-label syntax.
+
+    Natural-language sentences such as "Retrieved rows show repeated values..."
+    must never be interpreted as row-count claims merely because they begin with
+    words that resemble a telemetry label.
+    """
+    text = line.strip().lower()
+    text = re.sub(r"^(?:[-*+]\\s*)?", "", text)
+    text = re.sub(r"^\\|\\s*", "", text)
+    text = re.sub(r"[*_#>]+", "", text).strip()
 
     labels = (
         ("average_nonzero_discount", ("average nonzero discount", "average non-zero discount", "avg nonzero discount", "avg non-zero discount")),
@@ -342,11 +350,28 @@ def _metric_line_key(line: str) -> str | None:
         ("profit_margin_pct", ("profit margin", "gross margin")),
         ("total_sales", ("total sales",)),
         ("total_profit", ("total profit",)),
-        ("retrieved_row_count", ("records analyzed", "rows analyzed", "transactions analyzed", "retrieved rows", "visible rows", "row count")),
+        (
+            "retrieved_row_count",
+            (
+                "records analyzed",
+                "rows analyzed",
+                "transactions analyzed",
+                "retrieved row count",
+                "retrieved rows",
+                "visible row count",
+                "visible rows",
+                "row count",
+            ),
+        ),
     )
-    for key, prefixes in labels:
-        if any(normalized.startswith(prefix) for prefix in prefixes):
-            return key
+
+    for key, names in labels:
+        for name in names:
+            if re.match(
+                rf"^{re.escape(name)}\\s*(?::|=|\\|)\\s*",
+                text,
+            ):
+                return key
     return None
 
 
