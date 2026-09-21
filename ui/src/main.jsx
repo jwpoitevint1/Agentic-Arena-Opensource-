@@ -1158,6 +1158,13 @@ function FreeModelUsageTable({ runs, models }) {
   </div>;
 }
 
+const EVIDENCE_FUNCTION_OPTIONS = [
+  ["analyst", "Analyst"],
+  ["data_modeler", "Data Modeler"],
+  ["auditor", "Auditor"],
+  ["advisor", "Advisor"],
+];
+
 function Evidence({ evidence, onClear, models }) {
   const complete = evidence.filter((item) => item.governed?.completed && item.ungoverned?.completed);
   const avg = (path) => {
@@ -1262,7 +1269,7 @@ function Evidence({ evidence, onClear, models }) {
   }));
 
   const modelLabel = (key) => (models || []).find((model) => model.key === key)?.display_name || key;
-  const functionLabel = functionSlice === "auditor" ? "Auditor" : "Analyst";
+  const functionLabel = EVIDENCE_FUNCTION_OPTIONS.find(([key]) => key === functionSlice)?.[1] || functionSlice;
   const pathLabel = pathSlice === "governed" ? "Governed" : "Ungoverned";
 
   return <>
@@ -1288,7 +1295,7 @@ function Evidence({ evidence, onClear, models }) {
           <div className="field">
             <label>Overall chart function</label>
             <div className="token-slicer" role="group" aria-label="Overall chart function slicer">
-              {[["all","All"],["analyst","Analyst"],["auditor","Auditor"]].map(([key,label]) =>
+              {[["all", "All"], ...EVIDENCE_FUNCTION_OPTIONS].map(([key,label]) =>
                 <button key={key} className={`token-slicer-button ${overallFunctionSlice === key ? "active" : ""}`} onClick={() => setOverallFunctionSlice(key)}>{label}</button>
               )}
             </div>
@@ -1318,7 +1325,7 @@ function Evidence({ evidence, onClear, models }) {
           <div className="field">
             <label>Function</label>
             <div className="token-slicer" role="group" aria-label="Function slicer">
-              {[["analyst","Analyst"],["auditor","Auditor"]].map(([key,label]) =>
+              {EVIDENCE_FUNCTION_OPTIONS.map(([key,label]) =>
                 <button key={key} className={`token-slicer-button ${functionSlice === key ? "active" : ""}`} onClick={() => setFunctionSlice(key)}>{label}</button>
               )}
             </div>
