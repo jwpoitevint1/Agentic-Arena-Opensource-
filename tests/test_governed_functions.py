@@ -41,6 +41,7 @@ def test_modeler_auditor_and_advisor_do_not_have_workspace_write() -> None:
     advisor = governed_function_for_key("advisor")
 
     assert "data.read" in modeler.permitted_actions
+    assert "data.model" in modeler.permitted_actions
     assert "output.write" in modeler.permitted_actions
     assert "workspace.write" not in modeler.permitted_actions
     assert "modeled_data_output" in modeler.output_contract
@@ -102,6 +103,7 @@ def test_data_modeler_prompt_requires_output_visualization_contract() -> None:
 
     assert "Data Modeler display contract:" in governed_prompt
     assert "VISUALIZATION_SPEC" in governed_prompt
-    assert "Source and workspace state are read-only" in governed_prompt
+    assert "explicitly authorized to model the supplied data" in governed_prompt
+    assert "Persisted source tables and workspace state are read-only" in governed_prompt
     assert "Data Modeler display contract:" in ungoverned_prompt
     assert "VISUALIZATION_SPEC" in ungoverned_prompt
