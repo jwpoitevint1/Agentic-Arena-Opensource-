@@ -105,5 +105,6 @@ def test_data_modeler_prompt_requires_output_visualization_contract() -> None:
     assert "VISUALIZATION_SPEC" in governed_prompt
     assert "explicitly authorized to model the supplied data" in governed_prompt
     assert "Persisted source tables and workspace state are read-only" in governed_prompt
+    assert "must be supplied through the governed MCP boundary" in governed_prompt
     assert "Data Modeler display contract:" in ungoverned_prompt
     assert "VISUALIZATION_SPEC" in ungoverned_prompt
