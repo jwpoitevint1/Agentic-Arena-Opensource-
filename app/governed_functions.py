@@ -47,8 +47,7 @@ _FUNCTIONS: dict[GovernedFunctionType, GovernedFunctionDefinition] = {
         display_name="Analyst",
         runtime_role="analyst_runner",
         objective=(
-            "Answer bounded analytical questions from the authorized domain data, "
-            "separating observations from inference and surfacing uncertainty."
+            "Analyze the domain data and summarize observations, patterns, and uncertainty."
         ),
         output_contract=(
             "answer",
@@ -83,9 +82,8 @@ _FUNCTIONS: dict[GovernedFunctionType, GovernedFunctionDefinition] = {
         display_name="Auditor",
         runtime_role="evaluator_runner",
         objective=(
-            "Audit bounded historical AI run evidence from the recording databases, "
-            "including provenance, controls, integrity, model behavior, and output evidence, "
-            "while remaining read-only with respect to source and workspace state."
+            "Review recorded AI run evidence and identify notable patterns, inconsistencies, "
+            "anomalies, and differences."
         ),
         output_contract=(
             "scope",
@@ -103,8 +101,7 @@ _FUNCTIONS: dict[GovernedFunctionType, GovernedFunctionDefinition] = {
         display_name="Advisor",
         runtime_role="advisor_runner",
         objective=(
-            "Turn evidence from the authorized dataset into bounded decision support, "
-            "comparing realistic options and tradeoffs without taking actions on the user's behalf."
+            "Use the domain data to compare options, tradeoffs, risks, and next steps."
         ),
         output_contract=(
             "decision_question",
@@ -127,8 +124,8 @@ _DOMAINS: dict[int, DomainProfile] = {
         display_name="Finance / Synthetic Customer & Loan Activity",
         analytical_focus=("income and balances", "cash movement", "investments", "loan attributes", "risk tolerance"),
         modeling_focus=("customer attributes", "account activity", "investment measures", "loan measures", "employment and risk attributes"),
-        evaluation_focus=("reconciliation", "financial-field consistency", "outliers", "privacy leakage", "unsupported eligibility conclusions"),
-        advisory_focus=("financial trend interpretation", "portfolio and cash-flow tradeoffs", "loan-data quality", "risk evidence", "human-reviewed decision support"),
+        evaluation_focus=("reconciliation", "financial-field consistency", "outliers", "missingness", "category consistency"),
+        advisory_focus=("financial trends", "portfolio and cash-flow tradeoffs", "loan-data patterns", "risk indicators", "decision options"),
     ),
     2: DomainProfile(
         system_id=2,
@@ -136,8 +133,8 @@ _DOMAINS: dict[int, DomainProfile] = {
         display_name="Environmental Operations / IoT Telemetry",
         analytical_focus=("time series", "CO/LPG/smoke", "temperature and humidity", "motion/light state", "device anomalies"),
         modeling_focus=("timestamp", "device", "gas measurements", "environmental measurements", "binary sensor state"),
-        evaluation_focus=("duplicates", "range violations", "sensor consistency", "temporal anomalies", "regulatory-evidence limitations"),
-        advisory_focus=("operational response priorities", "sensor confidence", "threshold escalation", "maintenance attention", "monitoring priorities"),
+        evaluation_focus=("duplicates", "range patterns", "sensor consistency", "temporal anomalies", "missingness"),
+        advisory_focus=("operational priorities", "sensor patterns", "threshold patterns", "maintenance indicators", "monitoring priorities"),
     ),
     3: DomainProfile(
         system_id=3,
@@ -145,8 +142,8 @@ _DOMAINS: dict[int, DomainProfile] = {
         display_name="Healthcare / Patient Flow",
         analytical_focus=("admissions", "wait time", "department referral", "satisfaction", "aggregate demographics"),
         modeling_focus=("patient-flow event", "admission date/time", "department", "wait time", "aggregate demographic dimensions"),
-        evaluation_focus=("missingness", "identifier leakage", "category validity", "flow anomalies", "unsupported clinical inference"),
-        advisory_focus=("patient-flow operations", "wait-time improvement", "capacity attention", "aggregate service patterns", "non-clinical decision support"),
+        evaluation_focus=("missingness", "category validity", "flow anomalies", "temporal consistency", "duplicate records"),
+        advisory_focus=("patient-flow operations", "wait-time patterns", "capacity patterns", "service patterns", "operational options"),
     ),
     4: DomainProfile(
         system_id=4,
@@ -154,17 +151,17 @@ _DOMAINS: dict[int, DomainProfile] = {
         display_name="Retail / Sample Superstore",
         analytical_focus=("sales", "profit", "segment", "category mix", "discount", "regional performance"),
         modeling_focus=("geography", "segment", "category/sub-category", "sales/profit measures", "shipping mode"),
-        evaluation_focus=("duplicates", "amount consistency", "invalid quantities", "discount/profit anomalies", "privacy leakage if customer data is later added"),
-        advisory_focus=("merchandising priorities", "pricing/discount tradeoffs", "regional performance", "shipping/service tradeoffs", "evidence gaps"),
+        evaluation_focus=("duplicates", "amount consistency", "quantity patterns", "discount/profit anomalies", "category consistency"),
+        advisory_focus=("merchandising options", "pricing/discount tradeoffs", "regional performance", "shipping/service tradeoffs", "data gaps"),
     ),
     5: DomainProfile(
         system_id=5,
         domain="aviation",
         display_name="Aviation / Passengers Carried by Country",
         analytical_focus=("country trends", "annual passenger volume", "growth/decline", "missing years", "comparative traffic patterns"),
-        modeling_focus=("country", "country code", "year", "passenger-count measure", "wide-to-long modeling options without altering source"),
-        evaluation_focus=("missing annual values", "country/code consistency", "wide-column integrity", "trend overreach", "source coverage limitations"),
-        advisory_focus=("traffic planning", "trend monitoring", "capacity-oriented discussion", "data-quality caveats", "non-safety-critical decision support"),
+        modeling_focus=("country", "country code", "year", "passenger-count measure", "wide-to-long modeling options"),
+        evaluation_focus=("missing annual values", "country/code consistency", "wide-column integrity", "temporal consistency", "coverage patterns"),
+        advisory_focus=("traffic planning", "trend monitoring", "capacity patterns", "comparative traffic patterns", "data limitations"),
     ),
     6: DomainProfile(
         system_id=6,
@@ -173,7 +170,7 @@ _DOMAINS: dict[int, DomainProfile] = {
         analytical_focus=("shipment status", "carrier performance", "cost", "distance", "transit days", "delivery timing"),
         modeling_focus=("shipment", "origin warehouse", "destination", "carrier", "shipment/delivery dates", "weight/cost/distance/transit measures"),
         evaluation_focus=("missing delivery dates", "missing cost", "date consistency", "distance/transit anomalies", "duplicate shipment checks"),
-        advisory_focus=("carrier and route tradeoffs", "cost/service balance", "delivery-risk attention", "contingency planning", "human-reviewed operational decisions"),
+        advisory_focus=("carrier and route tradeoffs", "cost/service balance", "delivery-risk patterns", "contingency options", "operational decisions"),
     ),
 }
 
@@ -220,12 +217,11 @@ def _focus_for(function: GovernedFunctionDefinition, domain: DomainProfile) -> t
         return domain.modeling_focus
     if function.key is GovernedFunctionType.EVALUATOR:
         return (
-            "historical AI run provenance and traceability",
-            "policy and control outcomes",
-            "signed-record integrity state",
-            "model output evidence and unsupported-claim risk",
-            "latency, token, cost, retry, and tool-use anomalies",
-            "governed versus ungoverned behavioral differences",
+            "record structure and completeness",
+            "run metadata and outputs",
+            "latency, token, cost, retry, and tool-use patterns",
+            "differences between recorded runs",
+            "anomalies and inconsistencies",
         )
     return domain.advisory_focus
 
@@ -305,7 +301,7 @@ def build_ungoverned_system_prompt(
     """Build the neutral functional baseline used by CV1.1-off comparison runs."""
     focus = _focus_for(function, domain)
     return "\n".join([
-        "BASELINE FUNCTION EXECUTION CONTEXT",
+        "FUNCTION EXECUTION CONTEXT",
         f"Assigned function: {function.display_name} ({function.key.value})",
         f"Assigned domain: {domain.display_name} ({domain.domain})",
         f"System ID: {domain.system_id}",
