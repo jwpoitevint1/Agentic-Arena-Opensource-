@@ -82,3 +82,11 @@ def test_model_aware_governance_tuning_observation_is_documented() -> None:
     assert "Governance tuning should account for model capacity, capability, and function" in source
     assert "model- and function-aware" in source
     assert "deterministic enforcement boundaries remain consistent" in source
+
+
+def test_same_family_fallback_observation_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Fallback routing should preserve model family where possible" in source
+    assert "silent cross-family failover" in source
+    assert "cross-family contingency should be explicit" in source
