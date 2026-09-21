@@ -1385,163 +1385,191 @@ function Evidence({ evidence, onClear, models }) {
 }
 
 function TestingObservations() {
-  const observations = [
+  const observationGroups = [
     {
-      title: "Prompt language can contaminate the control condition",
-      status: "Observed",
-      detail: "During Data Modeler testing, shared task wording used terms such as authorized, auditable, bounded, and no mutation. Ungoverned outputs echoed that language even though CV1.1, OPA, governed MCP execution, and governed egress controls were bypassed. The task hash and UI review traced the behavior to shared prompt wording. Shared task templates and ungoverned system prompts were then neutralized."
+      key: "method",
+      eyebrow: "01 · Method and experimental integrity",
+      title: "Control the comparison before interpreting the result",
+      note: "These observations define what has to stay stable, what can contaminate a matched pair, and what historical evidence can or cannot support.",
+      items: [
+        {
+          title: "Prompt language can contaminate the control condition",
+          status: "Observed",
+          detail: "During Data Modeler testing, shared task wording used terms such as authorized, auditable, bounded, and no mutation. Ungoverned outputs echoed that language even though CV1.1, OPA, governed MCP execution, and governed egress controls were bypassed. Task hashes and UI review traced the effect to shared prompt wording. Shared task templates and ungoverned system prompts were then neutralized."
+        },
+        {
+          title: "Governed and ungoverned paths must be verified independently",
+          status: "Observed",
+          detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being linguistically contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
+        },
+        {
+          title: "UI testing can expose experimental drift",
+          status: "Observed",
+          detail: "Backend isolation tests can pass while shared UI task text or result labels still introduce treatment language. Visual review after changes is therefore used as a regression step alongside code tests, telemetry inspection, and prompt-hash checks."
+        },
+        {
+          title: "Output-token ceilings can change the apparent result",
+          status: "Observed",
+          detail: "A 1,200-output-token ceiling truncated some model responses. The ceiling was increased to 2,500 and then to 5,000 tokens. Reasoning-heavy routes may consume completion budget before a visible final answer is emitted, so a missing or cut-off answer is not automatically treated as a model or gateway failure."
+        },
+        {
+          title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
+          status: "Method note",
+          detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
+        },
+      ],
     },
     {
-      title: "UI testing can expose experimental drift",
-      status: "Observed",
-      detail: "Backend isolation tests can pass while shared UI task text or result labels still introduce treatment language. Visual review after changes has therefore been used as a regression step alongside code tests, telemetry inspection, and prompt-hash checks."
+      key: "evidence",
+      eyebrow: "02 · Evidence and verification",
+      title: "Move exact facts toward deterministic computation",
+      note: "These observations separate what the model can usefully interpret from what the platform should compute, verify, or fail closed on.",
+      items: [
+        {
+          title: "Plausible modeling does not guarantee reliable aggregation",
+          status: "Observed",
+          detail: "A model can produce a structurally useful relational or dimensional design while manually deriving an incorrect count from row context. Other runs reproduced directly supplied numeric values correctly. This distinction led to tighter separation between model-generated structure and database-computed quantitative evidence."
+        },
+        {
+          title: "Finance remains a repeatable arithmetic and interpretation stress case",
+          status: "Observed",
+          detail: "During bounded Finance runs, models produced useful schemas and careful caveats yet still miscounted categorical values or extended beyond the supplied evidence. This is not treated as a governance failure by itself. Language models remain probabilistic, while exact arithmetic and grouped statistics are better delegated to deterministic computation."
+        },
+        {
+          title: "Required MCP boundaries need fail-closed execution",
+          status: "Observed",
+          detail: "Data Modeler testing showed that allowing a direct-data fallback weakens the meaning of an MCP-required treatment. The governed path now requires its declared MCP evidence boundary and stops before model execution when required context is unavailable."
+        },
+        {
+          title: "Tune governance to the observed failure mode, not only the model name",
+          status: "Observed",
+          detail: "Current testing supports a failure-mode-first tuning approach. Governance should be adjusted to the error the model is actually producing, not merely to the vendor or model label. A practical control chain is: failure type → risk level → verification method → output contract → escalation requirement. Numerical or factual fabrication should trigger deterministic verification and stronger factual checks; summarization drift should trigger a tighter definition of summary, source-faithfulness requirements, and explicit highlighting of factual data; secondary aggregation or semantic expansion should require deterministic grouped evidence or clearer separation between observed facts, derived values, and interpretation. Higher-impact information can justify multiple independent verification checks before release."
+        },
+      ],
     },
     {
-      title: "Output-token ceilings can change the apparent result",
-      status: "Observed",
-      detail: "A 1,200-output-token ceiling truncated some model responses. The ceiling was increased to 2,500 and then to 5,000 tokens. Reasoning-heavy routes may consume completion budget before a visible final answer is emitted, so a missing or cut-off answer is not automatically treated as a model or gateway failure."
+      key: "fit",
+      eyebrow: "03 · Model and function fit",
+      title: "The same governance representation does not affect every model the same way",
+      note: "These observations focus on capability, response characteristics, repeatability, and compatibility with a particular function and evidence path.",
+      items: [
+        {
+          title: "Post-MCP GPT-5.5 Finance runs are highly repeatable under governance",
+          status: "Observed",
+          detail: "Across four post-MCP Finance Analyst matched pairs using GPT-5.5, governed responses repeatedly converged on the same bounded factual analysis. Governed pairwise output similarity averaged 0.888, versus 0.822 for controls. Governed runs averaged 24.48 seconds latency, 735 reasoning tokens, 2,698 completion tokens, and $0.1160 selected cost; controls averaged 43.61 seconds, 2,713 reasoning tokens, 4,672 completion tokens, and $0.1708. All four governed runs ended normally with stop, while two of four controls reached the 5,000-token ceiling. This remains a repeated observation within this model, domain, and function configuration, not a general causal claim."
+        },
+        {
+          title: "Model capability varies by task, function, and domain",
+          status: "Observed",
+          detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore evaluates model performance within the specific domain, function, evidence path, and execution condition being tested."
+        },
+        {
+          title: "Governance tuning should account for model capacity, capability, and function",
+          status: "Observed",
+          detail: "Current matched-pair runs show that the same governance representation does not produce the same response or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. Model capacity, native capabilities, tool use, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent."
+        },
+        {
+          title: "Potential model-family compatibility effect",
+          status: "Method note",
+          detail: "Some model families may align more naturally with CV1.1's natural-language control contract, including its emphasis on evidence boundaries, uncertainty, concise output, human oversight, and separation of observation from inference. This is treated as a potential compatibility effect or experimental confound, not evidence that CV1.1 is optimized for OpenAI or any other vendor. Controlled prompt-representation testing would be required to determine whether a vendor-specific compatibility effect is actually present."
+        },
+      ],
     },
     {
-      title: "Plausible modeling does not guarantee reliable aggregation",
-      status: "Observed",
-      detail: "A model can produce a structurally useful relational or dimensional design while manually deriving an incorrect count from row context. Other runs reproduced directly supplied numeric values correctly. This distinction led to tighter separation between model-generated structure and database-computed quantitative evidence."
+      key: "runtime",
+      eyebrow: "04 · Runtime and deployment implications",
+      title: "Observed execution differences feed back into architecture",
+      note: "These observations translate test results into routing, resilience, cost, and deployment requirements without turning the Arena into a model-ranking product.",
+      items: [
+        {
+          title: "Governance overhead is measurable",
+          status: "Observed",
+          detail: "Matched runs expose changes in latency, token use, cost, tool calls, context utilization, response length, and completion state. These measurements are treated as execution characteristics, not benchmark scores or automatic quality judgments."
+        },
+        {
+          title: "Fallback routing should preserve model family where possible",
+          status: "Observed",
+          detail: "Model families can exhibit materially different evidence handling, semantic expansion, reasoning use, tool use, latency, and response stability under the same function and governance conditions. A fallback model should therefore remain within the same model family when a suitable family member exists. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as operationally equivalent redundancy."
+        },
+      ],
     },
-    {
-      title: "Finance still stumps AI",
-      status: "Observed",
-      detail: "Finance remains a repeatable stress case for model arithmetic and interpretation. During bounded Finance Data Modeler runs, models produced useful schemas and careful caveats yet still miscounted categorical loan-status values from visible rows. The issue is not treated as a governance failure by itself: language models remain probabilistic, while exact arithmetic is better delegated to deterministic computation."
-    },
-    {
-      title: "Governed and ungoverned paths must be verified independently",
-      status: "Observed",
-      detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being linguistically contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
-    },
-    {
-      title: "Required MCP boundaries need fail-closed behavior",
-      status: "Observed",
-      detail: "Data Modeler testing showed that allowing a direct-data fallback weakens the meaning of an MCP-required treatment. The governed Data Modeler now requires schema, profile, and row context through the governed MCP boundary and stops before model execution when that required context is unavailable."
-    },
-    {
-      title: "Governance overhead is measurable",
-      status: "Observed",
-      detail: "Matched runs expose changes in latency, token use, cost, tool calls, and context utilization. These measurements are treated as execution characteristics, not benchmark scores or automatic quality judgments."
-    },
-    {
-      title: "Post-MCP GPT-5.5 Finance runs are highly repeatable under governance",
-      status: "Observed",
-      detail: "Across four post-MCP Finance Analyst matched pairs using GPT-5.5, the governed responses repeatedly converged on the same bounded factual analysis while remaining highly similar to one another. Governed pairwise output similarity averaged 0.888, versus 0.822 for the ungoverned controls. Governed runs averaged 24.48 seconds latency, 735 reasoning tokens, 2,698 completion tokens, and $0.1160 selected cost; controls averaged 43.61 seconds, 2,713 reasoning tokens, 4,672 completion tokens, and $0.1708. All four governed runs ended normally with stop, while two of four controls reached the 5,000-token ceiling and ended on length. The governed outputs consistently used bounded language around possible caps, synthetic-data artifacts, free-text risk indicators, and human review, while controls more often extended into underwriting, suitability, fraud/AML, or approval-logic interpretations. This is retained as a repeated observation within this model/domain/function configuration, not a general causal claim across models or domains."
-    },
+  ];
 
-    {
-      title: "Model capability varies by task, function, and domain",
-      status: "Observed",
-      detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore treats capability as task-dependent and evaluates model performance within the specific domain, function, evidence path, and execution condition being tested rather than assuming that performance in one workflow generalizes to another."
-    },
-
-    {
-      title: "Tune governance to the observed failure mode, not only the model name",
-      status: "Observed",
-      detail: "Current testing supports a failure-mode-first tuning approach. Governance should be adjusted to the error the model is actually producing, not merely to the vendor or model label. A practical control chain is: failure type → risk level → verification method → output contract → escalation requirement. Numerical or factual fabrication should trigger deterministic verification and stronger factual checks; summarization drift should trigger a tighter definition of summary, source-faithfulness requirements, and explicit highlighting of factual data; secondary aggregation or semantic expansion should require deterministic grouped evidence or clearer separation between observed facts, derived values, and interpretation. Higher-impact information can justify multiple independent verification checks before release."
-    },
-
-    {
-      title: "Governance tuning should account for model capacity, capability, and function",
-      status: "Observed",
-      detail: "Current matched-pair runs show that the same governance representation does not produce the same response or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. These observations support treating governance as model- and function-aware rather than assuming one control profile transfers unchanged across model families or workloads. Model capacity, native capabilities, tool behavior, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent. This is an architectural design implication from current testing, not a claim that a single optimal tuning exists for each model."
-    },
-
-    {
-      title: "Fallback routing should preserve model family where possible",
-      status: "Observed",
-      detail: "Current testing shows that model families can exhibit materially different evidence handling, semantic expansion, reasoning use, tool use, latency, and response stability under the same function and governance conditions. A fallback model therefore should remain within the same model family when a suitable family member exists, because silent cross-family failover can change the execution profile that the governance tuning was designed around. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as operationally equivalent redundancy."
-    },
-
-    {
-      title: "Potential model-family compatibility effect",
-      status: "Method note",
-      detail: "Current testing suggests that some model families may align more naturally with CV1.1's natural-language control contract, including its emphasis on evidence boundaries, uncertainty, concise output, human oversight, and separation of observation from inference. Because the architecture and prompts were iterated while multiple model families were being tested, this pattern is treated as a potential compatibility effect or experimental confound, not evidence that CV1.1 is optimized for OpenAI or any other vendor. Deterministic controls such as OPA authorization, database isolation, governed MCP reads, numeric parsing, deterministic statistics, redaction, integrity signing, and audit logging remain model-agnostic. Controlled prompt-representation testing would be required to determine whether any vendor-specific compatibility effect is actually present."
-    },
-
-    {
-      title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
-      status: "Method note",
-      detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
-    },
+  const observationCount = observationGroups.reduce((total, group) => total + group.items.length, 0);
+  const empiricalLoop = [
+    ["01", "Observe", "Capture the output, telemetry, and failure pattern without assuming a cause."],
+    ["02", "Isolate", "Hold model, task, function, data window, and token ceiling constant where the comparison requires it."],
+    ["03", "Compare", "Run the governed treatment and the CV1.1-off control against the matched condition."],
+    ["04", "Verify", "Check important claims against deterministic evidence, policy decisions, logs, and signed run records."],
+    ["05", "Repeat", "Run enough matched trials to separate a recurring pattern from a one-off result."],
+    ["06", "Tune", "Change the control that maps to the observed failure mode, risk, function, or model profile."],
+    ["07", "Retest", "Run the same bounded comparison again and keep the prior result as development evidence."],
   ];
 
   return <>
     <div className="notice">
-      <strong>Development observations, not research conclusions.</strong> These notes document execution patterns and implementation issues seen while building and testing Agentic Arena. They are retained to make methodology changes traceable. Repeated trials and controlled analysis are required before generalizing any observation across models, domains, or deployments.
+      <strong>Development observations, not formal research conclusions.</strong> Agentic Arena uses controlled comparisons, repeat trials, deterministic verification, and traceable methodology changes to guide governance design. Observations are retained as evidence, but they are not generalized beyond the tested model, function, domain, and execution condition without additional support.
     </div>
+
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">One evidence stack, three views</div>
-          <div className="section-title">Translate the same observations by audience</div>
-          <div className="section-note">The underlying evidence does not change. The emphasis changes based on whether the reader is evaluating methodology, deployment architecture, or organizational impact.</div>
+          <div className="eyebrow">Practical empirical method</div>
+          <div className="section-title">Observe, isolate, compare, verify, repeat, tune, retest</div>
+          <div className="section-note">The lab is not trying to imitate an academic paper. It uses the parts of scientific method that matter for engineering governance: controlled variables, explicit uncertainty, reproducible evidence, falsifiable assumptions, repeat trials, and documented changes.</div>
         </div>
+        <span className="badge">{observationCount} documented observations</span>
       </div>
-      <div className="grid-3">
-        <article className="card">
-          <div className="eyebrow">Research / methodology</div>
-          <div className="section-title">What must be controlled before drawing conclusions?</div>
-          <p className="body-copy">Matched-pair validity depends on prompt neutrality, execution-path isolation, bounded evidence, repeat trials, and explicit treatment of confounds. Current observations also show that model capacity, model family, assigned function, and task domain can change the measured result, so performance in one workflow should not be generalized to another without additional testing.</p>
-          <div className="control-state">Primary question: is the observed difference attributable to the treatment?</div>
-        </article>
-        <article className="card">
-          <div className="eyebrow">Engineering / deployment</div>
-          <div className="section-title">How should the system be built and routed?</div>
-          <p className="body-copy">Keep deterministic enforcement shared, then tune the model-facing layer by function and model profile. Segmented APIs, scoped MCP tools, read-only data paths, deterministic statistics, OPA authorization, redaction, integrity records, and telemetry provide the common boundary. Fallback routing should remain within the same model family when practical; cross-family contingency should be explicit and separately governed.</p>
-          <div className="control-state">Primary question: can the control boundary remain stable while model-specific tuning changes?</div>
-        </article>
-        <article className="card">
-          <div className="eyebrow">Executive / business impact</div>
-          <div className="section-title">What changes operationally and why does it matter?</div>
-          <p className="body-copy">Governance introduces measurable tradeoffs in latency, token use, cost, tool calls, response length, and stability while also changing how tightly outputs remain bound to supplied evidence. The business decision is therefore not simply which model is strongest, but which model-function-governance combination delivers acceptable risk, cost, reliability, and fallback characteristics for the intended workload.</p>
-          <div className="control-state">Primary question: what combination is acceptable for this use case?</div>
-        </article>
+      <div className="enterprise-stage-grid">
+        {empiricalLoop.map(([step, title, detail]) => <div className="card enterprise-stage-card" key={step}>
+          <div className="enterprise-stage-number">{step}</div>
+          <div>
+            <div className="section-title">{title}</div>
+            <p className="body-copy">{detail}</p>
+          </div>
+        </div>)}
       </div>
     </section>
 
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Close-attention areas</div>
-          <div className="section-title">Three contamination surfaces that require active review</div>
-          <div className="section-note">A clean matched-pair experiment requires control of what the model is told, what the execution path does, and what the human interface presents.</div>
+          <div className="eyebrow">Experimental integrity</div>
+          <div className="section-title">Three contamination surfaces stay under active review</div>
+          <div className="section-note">A matched pair is only useful when the difference between paths is understood. Prompt wording, execution helpers, and presentation can each create a false treatment effect.</div>
         </div>
       </div>
       <div className="grid-3">
         <div className="card">
           <div className="section-title">Prompt contamination</div>
-          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can introduce governance-coded language into the control condition. Terms such as authorized, auditable, bounded, read-only, policy-governed, or MCP-derived must not appear in shared prompt surfaces unless they are part of the governed treatment itself.</p>
+          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can introduce governance-coded language into the control condition. Treatment language stays on the governed path unless it is intentionally shared.</p>
         </div>
         <div className="card">
           <div className="section-title">Execution-path contamination</div>
-          <p className="body-copy">Shared helpers, fallback logic, data-access functions, MCP calls, CV1.1 or OPA checks, claim verification, sanitation, redaction, or other governed controls can accidentally bleed into the ungoverned path. Runtime isolation is verified independently from prompt neutrality.</p>
+          <p className="body-copy">Shared fallback logic, data-access helpers, MCP calls, CV1.1 or OPA checks, claim verification, sanitation, redaction, or other governed controls can bleed into the control path. Runtime isolation is therefore verified separately from prompt neutrality.</p>
         </div>
         <div className="card">
           <div className="section-title">Presentation / UI contamination</div>
-          <p className="body-copy">Labels, subtitles, default templates, cached state, stale frontend bundles, and other presentation elements can make an ungoverned run appear governed or can reintroduce treatment language into the task. UI review is therefore treated as part of experimental regression testing.</p>
+          <p className="body-copy">Labels, templates, cached state, stale bundles, and UI defaults can make one path appear more governed than it is or reintroduce treatment language. Visual review is part of regression testing, not just presentation polish.</p>
         </div>
       </div>
     </section>
 
     <div className="notice good-notice">
-      <strong>MCP package update:</strong> The governed MCP package is being updated to move exact arithmetic away from model recounting. Deterministic dataset statistics now provide bounded counts, sums, averages, minima, maxima, and low-cardinality value counts from the governed source window, with Data Modeler instructed to treat those server-computed values as authoritative.
+      <strong>Evidence principle:</strong> exact arithmetic and bounded aggregates belong in deterministic computation whenever practical. Models remain useful for interpretation, synthesis, comparison, and explanation, but verified facts should be supplied upstream rather than reconstructed from visible rows when the platform can compute them directly.
     </div>
 
-    <section className="section">
+    {observationGroups.map((group) => <section className="section" key={group.key}>
       <div className="section-header">
         <div>
-          <div className="eyebrow">Observations during testing</div>
-          <div className="section-title">What the lab has exposed during development</div>
-          <div className="section-note">Observed behavior, root-cause findings, and methodology corrections are kept separate from benchmark scoring or claims of model superiority.</div>
+          <div className="eyebrow">{group.eyebrow}</div>
+          <div className="section-title">{group.title}</div>
+          <div className="section-note">{group.note}</div>
         </div>
-        <span className="badge">{observations.length} documented observations</span>
+        <span className="badge">{group.items.length} observations</span>
       </div>
       <div className="grid-2">
-        {observations.map((item) => <article className="card" key={item.title}>
+        {group.items.map((item) => <article className="card" key={item.title}>
           <div className="card-title-row">
             <div className="section-title">{item.title}</div>
             <span className="badge">{item.status}</span>
@@ -1549,11 +1577,39 @@ function TestingObservations() {
           <p className="body-copy">{item.detail}</p>
         </article>)}
       </div>
+    </section>)}
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">One evidence stack, three views</div>
+          <div className="section-title">Translate the same findings by audience</div>
+          <div className="section-note">The evidence does not change. The question changes depending on whether the reader is validating the method, building the system, or deciding whether the deployment is acceptable.</div>
+        </div>
+      </div>
+      <div className="grid-3">
+        <article className="card">
+          <div className="eyebrow">Research / methodology</div>
+          <div className="section-title">Can the observed difference be attributed to the treatment?</div>
+          <p className="body-copy">Review matched conditions, contamination surfaces, confounds, bounded evidence, repeatability, and limits on generalization. Preserve historical runs when the method changes so development evidence remains traceable.</p>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Engineering / deployment</div>
+          <div className="section-title">Can the control boundary stay stable while tuning changes?</div>
+          <p className="body-copy">Keep deterministic enforcement shared, then tune the model-facing layer by function, model profile, and failure mode. Use segmented APIs, scoped MCP tools, read-only data paths, deterministic statistics, OPA authorization, redaction, integrity records, and observable fallback routing.</p>
+        </article>
+        <article className="card">
+          <div className="eyebrow">Executive / business impact</div>
+          <div className="section-title">Is the model-function-governance combination acceptable for this workload?</div>
+          <p className="body-copy">Translate the same evidence into risk, cost, latency, reliability, fallback, human-review, and audit requirements. The decision is not simply which model is strongest, but which governed configuration is fit for the intended use.</p>
+        </article>
+      </div>
     </section>
+
     <section className="section grid-3">
-      <Metric label="Prompt posture" value="Neutral shared task" foot="Treatment language remains on the governed path" />
-      <Metric label="Control posture" value="Runtime separated" foot="CV1.1-off path measured independently" />
-      <Metric label="Interpretation" value="No benchmark score" foot="Observations remain evidence for further testing" />
+      <Metric label="Method posture" value="Matched + repeatable" foot="Variables controlled where the comparison requires it" />
+      <Metric label="Evidence posture" value="Deterministic first" foot="Facts computed upstream when practical" />
+      <Metric label="Interpretation" value="No model ranking" foot="Results guide governance configuration and further testing" />
     </section>
   </>;
 }
