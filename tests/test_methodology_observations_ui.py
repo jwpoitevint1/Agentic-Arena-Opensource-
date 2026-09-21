@@ -13,8 +13,36 @@ def test_project_methodology_documents_neutral_prompt_programming() -> None:
 def test_testing_observations_tab_is_registered_and_rendered() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
-    assert '["observations", "Observations", "04"]' in source
+    assert '["observations", "Observations", "03"]' in source
     assert 'view === "observations" && <TestingObservations />' in source
     assert "function TestingObservations()" in source
     assert "Development observations, not research conclusions." in source
     assert "Pre-neutrality runs are development evidence, not clean treatment evidence" in source
+
+
+def test_observations_document_three_contamination_surfaces() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Prompt contamination" in source
+    assert "Execution-path contamination" in source
+    assert "Presentation / UI contamination" in source
+    assert "Three surfaces require close attention" in source
+
+
+def test_numbered_sidebar_navigation_matches_requested_order() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    expected = [
+        '["lab", "Arena Lab", "01"]',
+        '["evidence", "Evidence", "02"]',
+        '["observations", "Observations", "03"]',
+        '["models", "Models", "04"]',
+        '["enterprise", "Enterprise", "05"]',
+        '["mcp", "MCP", "06"]',
+        '["governance", "Governance", "07"]',
+        '["alignment", "Alignment", "08"]',
+        '["diagnostics", "Diagnostics", "09"]',
+    ]
+    for item in expected:
+        assert item in source
+    assert '["overview", "Project"' not in source
