@@ -420,7 +420,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
   .nav {
     grid-template-columns: repeat(20, minmax(0, 1fr));
     grid-auto-flow: row;
-    gap: 4px;
+    gap: 2px;
     overflow: visible;
     padding-bottom: 2px;
   }
@@ -433,10 +433,15 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
     white-space: normal;
     text-align: center;
     line-height: 1.15;
-    font-size: clamp(10px, 2.4vw, 12px);
-    overflow-wrap: anywhere;
+    font-size: clamp(9px, 2.25vw, 11px);
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
   }
-  .nav-button > span:last-child { min-width: 0; }
+  .nav-button > span:last-child {
+    min-width: 0;
+    white-space: nowrap;
+  }
   .nav-icon { display: none; }
   .sidebar-footer { display: none; }
   .main { padding: 20px 14px 42px; }
