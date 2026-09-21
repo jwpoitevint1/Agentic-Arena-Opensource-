@@ -4,7 +4,7 @@ from app.mcp.entities import entity_for_key, tool_for_entity
 def test_governed_mcp_function_read_matrix() -> None:
     expected = {
         "analyst": {"dataset.describe", "dataset.schema", "dataset.query", "dataset.profile", "rag.retrieve"},
-        "data_modeler": {"dataset.describe", "dataset.schema", "dataset.sample", "dataset.profile", "rag.retrieve"},
+        "data_modeler": {"dataset.describe", "dataset.schema", "dataset.sample", "dataset.query", "dataset.aggregate", "dataset.profile", "rag.retrieve"},
         "evaluator": {"dataset.describe", "dataset.schema", "dataset.query", "dataset.profile", "rag.retrieve"},
         "advisor": {"dataset.describe", "dataset.query", "dataset.profile", "rag.retrieve"},
     }
@@ -31,8 +31,5 @@ def test_function_specific_tools_cannot_cross_bind() -> None:
         assert False, "analyst must not receive dataset.sample"
     except KeyError:
         pass
-    try:
-        tool_for_entity(modeler, "dataset.query")
-        assert False, "data modeler must not receive dataset.query"
-    except KeyError:
-        pass
+    assert tool_for_entity(modeler, "dataset.query").name == "dataset.query"
+    assert tool_for_entity(modeler, "dataset.aggregate").name == "dataset.aggregate"
