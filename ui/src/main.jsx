@@ -1445,6 +1445,12 @@ function TestingObservations() {
     },
 
     {
+      title: "Fallback routing should preserve model family where possible",
+      status: "Observed",
+      detail: "Current testing shows that model families can exhibit materially different evidence handling, semantic expansion, reasoning behavior, tool use, latency, and response stability under the same function and governance conditions. A fallback model therefore should remain within the same model family when a suitable family member exists, because silent cross-family failover can change the behavioral profile that the governance tuning was designed around. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as behaviorally equivalent redundancy."
+    },
+
+    {
       title: "Potential model-family compatibility effect",
       status: "Method note",
       detail: "Current testing suggests that some model families may align more naturally with CV1.1's natural-language control contract, including its emphasis on evidence boundaries, uncertainty, concise output, human oversight, and separation of observation from inference. Because the architecture and prompts were iterated while multiple model families were being tested, this pattern is treated as a potential compatibility effect or experimental confound, not evidence that CV1.1 is optimized for OpenAI or any other vendor. Deterministic controls such as OPA authorization, database isolation, governed MCP reads, numeric parsing, deterministic statistics, redaction, integrity signing, and audit logging remain model-agnostic. Controlled prompt-representation testing would be required to determine whether any vendor-specific compatibility effect is actually present."
