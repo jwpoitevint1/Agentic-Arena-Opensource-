@@ -114,3 +114,12 @@ def test_enterprise_governance_cell_and_requirements_package_are_documented() ->
     assert "From business need to governed deployment" in source
     assert "approved same-family fallback model when one exists" in source
     assert "Cross-family contingency is explicit and separately governed" in source
+
+
+def test_failure_mode_first_governance_tuning_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Tune governance to the observed failure mode, not only the model name" in source
+    assert "failure type → risk level → verification method → output contract → escalation requirement" in source
+    assert "Numerical or factual fabrication" in source
+    assert "summarization drift" in source
