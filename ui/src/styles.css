@@ -441,6 +441,7 @@ textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
     min-width: 0;
     white-space: normal;
   }
+  .nav-observations > span:last-child { white-space: nowrap; }
 
   /* Explicit mobile row 1 */
   .nav-lab { grid-column: 1 / span 4; grid-row: 1; }
