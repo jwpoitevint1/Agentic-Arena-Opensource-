@@ -14,12 +14,11 @@ role_actions := {
         "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
     "data_modeler_runner": [
-        "model.chat", "data.read", "workspace.write", "output.write",
+        "model.chat", "data.read", "output.write",
         "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.sample", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
     "evaluator_runner": [
-        "model.chat", "data.read", "output.write",
-        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.query", "mcp.dataset.profile", "mcp.rag.retrieve",
+        "model.chat", "audit.runs.read", "output.write",
     ],
     "advisor_runner": [
         "model.chat", "data.read", "output.write",
@@ -136,7 +135,7 @@ redefinition_detected if {
 
 function_token_limit_exceeded if {
     object.get(input.request, "function_key", null) != null
-    object.get(input.request, "max_tokens", 0) > 4096
+    object.get(input.request, "max_tokens", 0) > 5000
 }
 
 chatbot_token_limit_exceeded if {
