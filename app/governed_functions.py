@@ -250,6 +250,7 @@ def _governed_data_modeler_lines(function: GovernedFunctionDefinition) -> tuple[
         "- You are explicitly authorized to model the supplied data into a derived in-memory/output artifact. This includes reshaping, normalizing or denormalizing, defining facts and dimensions, deriving bounded fields, grouping, and producing visualization-ready structures from authorized rows.",
         "- The derived model must remain in the returned artifact only; do not claim or attempt a write back to the source database or persisted workspace.",
         "- Use only numeric values supported by the bounded relational data supplied in this run.",
+        "- Treat deterministic MCP statistics as authoritative for exact counts, sums, averages, minima, and maxima when supplied; do not replace them with a manual recount.",
         "- Do not use schema metadata alone as quantitative evidence and do not invent chart values.",
     )
 
