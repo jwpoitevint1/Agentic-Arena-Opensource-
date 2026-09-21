@@ -539,6 +539,7 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
     rag_pattern: dict[str, object] | None = None
     verified_evidence: dict[str, object] | None = None
     verified_evidence_context: str | None = None
+    statistics_context: str | None = None
 
     if mcp_required:
         # Data Modeler fails closed unless its schema/profile/query evidence crosses
@@ -565,13 +566,28 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                 tool_name="dataset.query",
                 arguments={"table": "source_data", "limit": 100},
             )
-            mcp_tools_used.extend(["dataset.schema", "dataset.profile", "dataset.query"])
-            tool_calls += 3
+            statistics_call = execute_governed_mcp_tool(
+                entity_key="data_modeler",
+                system_id=request.system_id,
+                model_key=request.model_key,
+                tool_name="dataset.statistics",
+                arguments={"table": "source_data", "limit": 100, "max_categories": 20},
+            )
+            mcp_tools_used.extend(
+                ["dataset.schema", "dataset.profile", "dataset.query", "dataset.statistics"]
+            )
+            tool_calls += 4
 
             schema_payload = schema_call.get("structuredContent")
             profile_payload = profile_call.get("structuredContent")
             query_payload = query_call.get("structuredContent")
-            if not isinstance(schema_payload, dict) or not isinstance(profile_payload, dict) or not isinstance(query_payload, dict):
+            statistics_payload = statistics_call.get("structuredContent")
+            if (
+                not isinstance(schema_payload, dict)
+                or not isinstance(profile_payload, dict)
+                or not isinstance(query_payload, dict)
+                or not isinstance(statistics_payload, dict)
+            ):
                 raise MCPDataError("required Data Modeler MCP payload was invalid")
 
             rows = query_payload.get("rows")
@@ -583,10 +599,18 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                 separators=(",", ":"),
                 default=str,
             )
+            statistics_context = json.dumps(
+                statistics_payload,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                default=str,
+            )
             relational_action = "mcp.dataset.query"
             if row_items:
                 relational_context = _serialize_rows(row_items)
-                mcp_context_hash = _sha256(dataset_context + relational_context)
+                mcp_context_hash = _sha256(
+                    dataset_context + relational_context + statistics_context
+                )
                 result = None
             else:
                 result = _unavailable_result(
@@ -747,6 +771,18 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                     ),
                 }
             )
+        if statistics_context is not None:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "DETERMINISTIC MCP STATISTICS — SERVER-COMPUTED FROM THE SAME BOUNDED SOURCE WINDOW:\n"
+                        + statistics_context
+                        + "\nTreat these statistics as authoritative for exact counts, sums, averages, minima, and maxima. "
+                        "Do not manually recount or replace these values with estimates."
+                    ),
+                }
+            )
         if rag_context is not None:
             messages.append(
                 {
@@ -827,6 +863,8 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_required": mcp_required,
         "mcp_tools_used": mcp_tools_used,
         "mcp_context_hash": mcp_context_hash,
+        "mcp_statistics_hash": _sha256(statistics_context),
+        "mcp_statistics_provided": statistics_context is not None,
         "rag_context_hash": _sha256(rag_context),
         "rag_pattern": rag_pattern,
         "rag_retrieval_used": rag_context is not None,
@@ -876,6 +914,8 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_required": mcp_required,
         "mcp_tools_used": mcp_tools_used,
         "mcp_context_hash": mcp_context_hash,
+        "mcp_statistics_provided": statistics_context is not None,
+        "mcp_statistics_hash": _sha256(statistics_context),
         "modeling_authorized": modeling_decision.allow if modeling_decision is not None else None,
         "modeling_action": "data.model" if modeling_decision is not None else None,
         "rag_retrieval_used": rag_context is not None,
