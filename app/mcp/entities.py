@@ -90,6 +90,22 @@ AGGREGATE = MCPTool(
         "additionalProperties": False,
     },
 )
+STATISTICS = MCPTool(
+    name="dataset.statistics",
+    description="Compute deterministic bounded counts and numeric statistics from governed source rows.",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "table": {"type": "string"},
+            "columns": {"type": "array", "items": {"type": "string"}, "maxItems": 20},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+            "max_categories": {"type": "integer", "minimum": 2, "maximum": 20},
+        },
+        "required": ["table"],
+        "additionalProperties": False,
+    },
+)
+
 PROFILE = MCPTool(
     name="dataset.profile",
     description="Return bounded source-table profile metadata from the governed database.",
@@ -119,13 +135,13 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
         key=MCPEntity.ANALYST,
         runtime_role="analyst_runner",
         read_only_workspace=False,
-        tools=(DESCRIBE, SCHEMA, QUERY, AGGREGATE, PROFILE, RAG_RETRIEVE),
+        tools=(DESCRIBE, SCHEMA, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
     ),
     MCPEntity.DATA_MODELER: MCPEntityDefinition(
         key=MCPEntity.DATA_MODELER,
         runtime_role="data_modeler_runner",
         read_only_workspace=True,
-        tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, PROFILE, RAG_RETRIEVE),
+        tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
     ),
     MCPEntity.EVALUATOR: MCPEntityDefinition(
         key=MCPEntity.EVALUATOR,
@@ -137,7 +153,7 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
         key=MCPEntity.ADVISOR,
         runtime_role="advisor_runner",
         read_only_workspace=True,
-        tools=(DESCRIBE, QUERY, PROFILE, RAG_RETRIEVE),
+        tools=(DESCRIBE, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
     ),
 }
 
