@@ -185,6 +185,12 @@ Four legacy harness databases remain physically present in the Neon project but 
 
 ## Telemetry and integrity
 
+### Telemetry epochs
+
+The current analytical epoch begins after the deterministic MCP statistics tuning completed on 2026-09-21 at 03:23:31 UTC. The 265 earlier signed records (145 governed and 120 ungoverned) remain in their original evidence tables so the HMAC/SHA-256 integrity chains and audit history are preserved. They are archived from current token, latency, and comparison summaries because they were produced by an earlier execution architecture. Audit functions may still inspect the historical evidence.
+
+
+
 The active evidence layer writes new governed and ungoverned runs to `telemetry.agentic_runs`.
 
 New records use:
