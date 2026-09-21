@@ -74,3 +74,11 @@ def test_model_family_compatibility_method_note_is_documented() -> None:
     assert "Potential model-family compatibility effect" in source
     assert "not evidence that CV1.1 is optimized for OpenAI or any other vendor" in source
     assert "Controlled prompt-representation testing" in source
+
+
+def test_model_aware_governance_tuning_observation_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Governance tuning should account for model capacity, capability, and function" in source
+    assert "model- and function-aware" in source
+    assert "deterministic enforcement boundaries remain consistent" in source
