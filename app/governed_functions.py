@@ -238,6 +238,7 @@ def _data_modeler_display_lines(function: GovernedFunctionDefinition) -> tuple[s
         "",
         "Data Modeler display contract:",
         "- Persisted source tables and workspace state are read-only.",
+        "- On the governed path, Data Modeler evidence must be supplied through the governed MCP boundary. Do not substitute direct source access or unsupported assumptions for required MCP context.",
         "- You are explicitly authorized to model the supplied data into a derived in-memory/output artifact. This includes reshaping, normalizing or denormalizing, defining facts and dimensions, deriving bounded fields, grouping, and producing visualization-ready structures from authorized rows.",
         "- The derived model must remain in the returned artifact only; do not claim or attempt a write back to the source database or persisted workspace.",
         "- Provide the relational or dimensional model in human-readable form before the visualization specification.",
