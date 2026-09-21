@@ -55,3 +55,14 @@ def test_finance_arithmetic_observation_and_mcp_update_are_documented() -> None:
     assert "models produced useful schemas and careful caveats yet still miscounted" in source
     assert "MCP package update:" in source
     assert "counts, sums, averages, minima, maxima" in source
+
+
+def test_gpt55_post_mcp_finance_replication_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Post-MCP GPT-5.5 Finance runs are highly repeatable under governance" in source
+    assert "Governed pairwise output similarity averaged 0.888" in source
+    assert "24.48 seconds latency" in source
+    assert "2,713 reasoning tokens" in source
+    assert "two of four controls reached the 5,000-token ceiling" in source
+    assert "not a general causal claim across models or domains" in source
