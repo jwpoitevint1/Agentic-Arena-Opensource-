@@ -1,4 +1,6 @@
+from collections import Counter
 from contextlib import contextmanager
+import re
 from typing import Any, Iterator
 
 import psycopg
@@ -331,6 +333,122 @@ def aggregate_table(
         "aggregation": aggregation_key,
         "rows": normalized,
     }
+
+_NUMERIC_TEXT_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
+
+
+def _parse_numeric_like(value: Any) -> float | None:
+    """Parse common dataset numeric encodings without guessing from free text."""
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip()
+    if not text:
+        return None
+
+    negative_parentheses = text.startswith("(") and text.endswith(")")
+    if negative_parentheses:
+        text = text[1:-1].strip()
+
+    if text.endswith("%"):
+        text = text[:-1].strip()
+
+    text = text.replace(",", "").strip()
+    if text[:1] in {"$", "€", "£"}:
+        text = text[1:].strip()
+
+    if not _NUMERIC_TEXT_RE.fullmatch(text):
+        return None
+
+    number = float(text)
+    return -abs(number) if negative_parentheses else number
+
+
+def table_statistics(
+    target: DatabaseTarget,
+    *,
+    table: str,
+    columns: list[str] | None = None,
+    limit: int = 100,
+    max_categories: int = 20,
+) -> dict[str, Any]:
+    """Compute deterministic bounded statistics from source rows.
+
+    Numeric-like text supports currency symbols, commas, percentages, whitespace,
+    and accounting parentheses. Low-cardinality text receives exact value counts.
+    High-cardinality text is summarized without returning its raw distinct values.
+    """
+    _validate_source_identifier(table)
+    selected = columns or []
+    if len(selected) > 20:
+        raise MCPDataError("statistics columns cannot exceed 20")
+    for column in selected:
+        _validate_source_identifier(column)
+
+    safe_limit = max(1, min(int(limit), 100))
+    safe_categories = max(2, min(int(max_categories), 20))
+    rows = query_table(
+        target,
+        table=table,
+        columns=selected or None,
+        limit=safe_limit,
+    )
+    if not rows:
+        return {
+            "table": table,
+            "sample_row_count": 0,
+            "sample_limit": safe_limit,
+            "columns": {},
+        }
+
+    column_names = selected or list(rows[0].keys())[:20]
+    summaries: dict[str, Any] = {}
+
+    for column in column_names:
+        values = [row.get(column) for row in rows]
+        present = [value for value in values if value is not None and str(value).strip() != ""]
+        numeric_values = [
+            parsed
+            for value in present
+            if (parsed := _parse_numeric_like(value)) is not None
+        ]
+        item: dict[str, Any] = {
+            "non_null_count": len(present),
+            "null_count": len(values) - len(present),
+        }
+
+        if present and len(numeric_values) == len(present):
+            total = sum(numeric_values)
+            item["numeric"] = {
+                "count": len(numeric_values),
+                "sum": round(total, 6),
+                "avg": round(total / len(numeric_values), 6),
+                "min": round(min(numeric_values), 6),
+                "max": round(max(numeric_values), 6),
+                "parser": "numeric_currency_percent_parentheses",
+            }
+        else:
+            counts = Counter(str(value) for value in present)
+            item["distinct_count"] = len(counts)
+            if counts and len(counts) <= safe_categories:
+                item["value_counts"] = dict(
+                    sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+                )
+
+        summaries[column] = item
+
+    return {
+        "table": table,
+        "sample_row_count": len(rows),
+        "sample_limit": safe_limit,
+        "max_categories": safe_categories,
+        "columns": summaries,
+    }
+
 
 def profile_source(target: DatabaseTarget, table: str | None = None) -> dict[str, Any]:
     if table is None:
