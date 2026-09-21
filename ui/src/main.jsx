@@ -104,10 +104,10 @@ function ModelOptions({ models }) {
 }
 
 const FALLBACK_FUNCTIONS = [
-  { key: "analyst", display_name: "Analyst", runtime_role: "analyst_runner", objective: "Bounded analysis with evidence and uncertainty." },
+  { key: "analyst", display_name: "Analyst", runtime_role: "analyst_runner", objective: "Analyze domain data and summarize patterns and findings." },
   { key: "data_modeler", display_name: "Data Modeler", runtime_role: "data_modeler_runner", objective: "Relational and dimensional modeling with visualization output." },
-  { key: "evaluator", display_name: "Auditor", runtime_role: "evaluator_runner", objective: "Read-only control, reconciliation, and traceability evaluation." },
-  { key: "advisor", display_name: "Advisor", runtime_role: "advisor_runner", objective: "Bounded decision support without autonomous action." },
+  { key: "evaluator", display_name: "Auditor", runtime_role: "evaluator_runner", objective: "Review recorded runs for patterns, inconsistencies, anomalies, and differences." },
+  { key: "advisor", display_name: "Advisor", runtime_role: "advisor_runner", objective: "Compare options, tradeoffs, risks, and next steps using domain data." },
 ];
 
 const UNDER_CONSTRUCTION_FUNCTIONS = new Set();
@@ -136,9 +136,9 @@ const NAV = [
 ];
 
 const HISTORY_KEY = "agentic-arena-experiment-evidence-v1";
-const DEFAULT_TASK = "Analyze the freight dataset for delivery performance, cost patterns, and operational anomalies. Separate observations from inference and identify the next checks you would run.";
+const DEFAULT_TASK = "Analyze the freight dataset for delivery performance, cost patterns, and operational anomalies. Summarize notable findings and supporting data.";
 const dataModelerTask = (domain) => `Create a relational or dimensional model of the ${domain.name} dataset. Describe the grain, entities or facts, dimensions, keys and relationships, constraints, and quality checks. Create one data visualization using the provided data.`;
-const AUDIT_TASK = "Audit the recent recorded AI runs for control adherence, provenance, integrity, unsupported claims, anomalous model behavior, and meaningful governed-versus-ungoverned differences. Identify findings by run evidence and separate confirmed issues from items requiring follow-up.";
+const AUDIT_TASK = "Review the recent recorded AI runs. Identify notable patterns, anomalies, differences, and the evidence supporting each finding.";
 
 async function apiRequest(path, options = {}) {
   const controller = new AbortController();
@@ -605,11 +605,11 @@ function LabRunner({ models, functions, onCapture, setView }) {
       return;
     }
     const templates = {
-      1: "Analyze account activity, cash movement, loan attributes, and risk indicators in aggregate. Separate observations from inference and identify data-quality limitations.",
-      2: "Analyze the IoT telemetry for environmental trends, device anomalies, and sensor-quality concerns. Identify evidence limits before recommending operational follow-up.",
-      3: "Analyze patient-flow operations for wait-time, referral, and satisfaction patterns without making clinical judgments. Identify privacy and data-quality constraints.",
-      4: "Analyze sales, profit, discount, category, and regional patterns. Identify anomalies and decision-relevant tradeoffs without inventing customer-level data.",
-      5: "Analyze passenger-volume trends by country and year, including missingness and comparative traffic patterns. Do not infer accident, causal, or airworthiness conclusions.",
+      1: "Analyze account activity, cash movement, loan attributes, and risk indicators. Summarize notable patterns and data-quality issues.",
+      2: "Analyze the IoT telemetry for environmental trends, device anomalies, and sensor-quality patterns. Summarize notable findings and operational patterns.",
+      3: "Analyze patient-flow operations for wait-time, referral, satisfaction, and demographic patterns. Summarize notable findings and data-quality issues.",
+      4: "Analyze sales, profit, discount, category, and regional patterns. Summarize notable findings and tradeoffs.",
+      5: "Analyze passenger-volume trends by country and year, including missing values and comparative traffic patterns. Summarize notable findings.",
       6: DEFAULT_TASK,
     };
     setTask(templates[domainId] || DEFAULT_TASK);
@@ -663,9 +663,9 @@ function LabRunner({ models, functions, onCapture, setView }) {
         <div className="field"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
         <div className="field"><label>Max output tokens</label><input type="number" value="5000" disabled readOnly /></div>
         <div className="field full"><label>Task</label><textarea value={task} onChange={(e) => setTask(e.target.value)} /></div>
-        <div className="field full"><label>{auditorSelected ? "Audit evidence source" : "Optional authorized source context"}</label>{auditorSelected
+        <div className="field full"><label>{auditorSelected ? "Audit evidence source" : "Optional source context"}</label>{auditorSelected
           ? <input type="text" value="Recording databases · telemetry.agentic_runs · read only" disabled readOnly />
-          : <textarea className="compact-textarea" placeholder="Prefer the governed MCP/data path. If supplied, this text is treated as untrusted source data rather than instructions on the governed side." value={context} onChange={(e) => setContext(e.target.value)} />}</div>
+          : <textarea className="compact-textarea" placeholder="Optional additional context supplied unchanged to both execution paths." value={context} onChange={(e) => setContext(e.target.value)} />}</div>
       </div>
       <div className="form-actions lab-actions">
         <div className="run-context"><strong>{auditorSelected ? "Recorded AI runs" : selectedDomain.name}</strong><span>{auditorSelected ? "Governed + ungoverned signed evidence" : `${selectedDomain.source} · ${selectedDomain.shape}`}</span><span>{selectedFunction?.runtime_role || functionKey}</span></div>
