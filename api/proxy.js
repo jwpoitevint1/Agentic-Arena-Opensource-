@@ -1,16 +1,21 @@
 const crypto = require("node:crypto");
 
 const DEFAULT_BACKEND = "https://api.example.com";
-const ALLOWED_PREFIXES = [
-  "/health",
-  "/ready",
-  "/api/v1/models",
-  "/api/v1/governed",
-  "/api/v1/ungoverned",
-  "/api/v1/chatbot",
-  "/api/v1/mcp/governed",
-  "/api/v1/analytics",
-  "/api/v1/system",
+const ROUTE_CONTRACTS = [
+  { pattern: /^\/health$/, methods: new Set(["GET"]) },
+  { pattern: /^\/ready$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/models(?:\/[A-Za-z0-9_.:-]+)?$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/governed\/functions(?:\/[1-6])?$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/governed\/(?:execute|auditor\/execute)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/ungoverned\/functions(?:\/[1-6])?$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/ungoverned\/(?:execute|auditor\/execute)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/chatbot\/capabilities\/[1-6]$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/chatbot\/message$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/mcp\/governed\/entities$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/mcp\/governed\/(?:analyst|data_modeler|evaluator|auditor|advisor)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/analytics\/(?:profile|schema|query|aggregate)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/system\/(?:cv11|audit\/integrity|telemetry\/tokens-by-model|telemetry\/comparison-runs|runtime-logbook|databases|datasets(?:\/[1-6])?)$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/system\/database\/(?:resolve|probe)$/, methods: new Set(["POST"]) },
 ];
 const ALLOWED_METHODS = new Set(["GET", "POST", "HEAD", "OPTIONS"]);
 const MAX_REQUEST_BYTES = Math.min(
@@ -25,13 +30,49 @@ const HEADER_NAME_PATTERN = /^[A-Za-z0-9-]+$/;
 function normalizePath(value) {
   if (Array.isArray(value)) value = value[0];
   if (typeof value !== "string") return null;
-  const normalized = value.trim();
+
+  let normalized = value.trim();
   if (!normalized) return null;
+
+  try {
+    normalized = decodeURIComponent(normalized);
+  } catch {
+    return null;
+  }
+
   return normalized.startsWith("/") ? normalized : `/${normalized}`;
 }
 
-function allowed(path) {
-  return ALLOWED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+function extractProxyPath(req) {
+  const queryPath = req?.query?.path;
+  if (queryPath !== undefined && queryPath !== null) {
+    return normalizePath(queryPath);
+  }
+
+  if (typeof req?.url === "string") {
+    try {
+      const parsed = new URL(req.url, "https://agentic-arena.local");
+      return normalizePath(parsed.searchParams.get("path"));
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function allowed(path, method) {
+  let pathname;
+  try {
+    pathname = new URL(path, "https://agentic-arena.local").pathname;
+  } catch {
+    return false;
+  }
+
+  const effectiveMethod = method === "HEAD" ? "GET" : method;
+  return ROUTE_CONTRACTS.some(({ pattern, methods }) =>
+    pattern.test(pathname) && (method === "OPTIONS" || methods.has(effectiveMethod))
+  );
 }
 
 function safeRequestId(value) {
@@ -75,8 +116,8 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ detail: "method not allowed", request_id: requestId });
     }
 
-    const path = normalizePath(req?.query?.path);
-    if (!path || !allowed(path) || path.includes("..") || path.includes("\\") || path.includes("\0")) {
+    const path = extractProxyPath(req);
+    if (!path || !allowed(path, method) || path.includes("..") || path.includes("\\") || path.includes("\0")) {
       return res.status(403).json({ detail: "proxy path is not allowed", request_id: requestId });
     }
 

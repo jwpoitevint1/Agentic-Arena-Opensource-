@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agentic_dataset_context import DatasetContextError, neon_dataset_context
+from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
 from app.agentic_run_store import audit_run_history, record_agentic_run
 from app.database import database_url
 from app.datasets import dataset_for_system
@@ -35,7 +36,11 @@ class UngovernedExecuteRequest(StrictRequest):
     model_key: str = Field(min_length=1, max_length=128)
     task: str = Field(min_length=1, max_length=20_000)
     source_context: str | None = Field(default=None, max_length=150_000)
-    max_tokens: int = Field(default=2500, ge=2500, le=5000)
+    max_tokens: int = Field(
+        default=AGENTIC_MAX_OUTPUT_TOKENS,
+        ge=AGENTIC_MIN_OUTPUT_TOKENS,
+        le=AGENTIC_MAX_OUTPUT_TOKENS,
+    )
 
     @model_validator(mode="after")
     def validate_source_context(self) -> "UngovernedExecuteRequest":
@@ -304,6 +309,11 @@ def list_ungoverned_functions() -> dict[str, object]:
             for domain in domains
             for function in function_items
         ],
+        "execution_contract": {
+            "min_output_tokens": AGENTIC_MIN_OUTPUT_TOKENS,
+            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
+            "pairing": "governed_vs_ungoverned",
+        },
         "pairing_contract": {
             "same_function": True,
             "same_system_and_dataset": True,
@@ -311,6 +321,7 @@ def list_ungoverned_functions() -> dict[str, object]:
             "same_task_and_source_context": True,
             "same_neon_evidence_window": True,
             "same_max_tokens": True,
+            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "intended_difference": "CV1.1 governance and governed prompt constraints are absent",
         },
     }
@@ -333,6 +344,11 @@ def list_ungoverned_functions_for_domain(system_id: int) -> dict[str, object]:
         "dataset": dataset.to_dict(),
         "database_target": target.value,
         "database_configured": bool(database_url(target)),
+        "execution_contract": {
+            "min_output_tokens": AGENTIC_MIN_OUTPUT_TOKENS,
+            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
+            "pairing": "governed_vs_ungoverned",
+        },
         "functions": [item.to_dict() for item in governed_functions()],
     }
 

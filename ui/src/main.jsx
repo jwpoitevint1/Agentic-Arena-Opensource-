@@ -648,7 +648,7 @@ function LabRunner({ models, functions, onCapture, setView }) {
   }
 
   const functionUnderConstruction = UNDER_CONSTRUCTION_FUNCTIONS.has(functionKey);
-  const canRun = task.trim() && !functionUnderConstruction && Number(maxTokens) >= 1 && Number(maxTokens) <= 5000;
+  const canRun = task.trim() && !functionUnderConstruction && Number(maxTokens) >= 2500 && Number(maxTokens) <= 5000;
 
   return <>
     <div className="notice good-notice">{auditorSelected
@@ -1835,7 +1835,7 @@ function Chatbot({ models }) {
     setHistory((items) => [...items, { role: "user", content: current }]);
     setMessage("");
     try {
-      const result = await apiRequest("/api/v1/chatbot/message", { method: "POST", body: { operation: "execute_workflow", system_id: Number(systemId), model_key: modelKey, message: current, history: prior, workflow: { function_key: workflowKey, source_context: null, max_tokens: 10000 }, max_tokens: 10000 } });
+      const result = await apiRequest("/api/v1/chatbot/message", { method: "POST", body: { operation: "execute_workflow", system_id: Number(systemId), model_key: modelKey, message: current, history: prior, workflow: { function_key: workflowKey, source_context: null, max_tokens: 5000 }, max_tokens: 5000 } });
       setHistory((items) => [...items, { role: "assistant", content: result.reply || assistantText(result) || "No response returned." }]);
     } catch (e) {
       setError(e.message);
@@ -1864,7 +1864,7 @@ function Chatbot({ models }) {
         <Control name="Governed trigger" desc="The chatbot remains inside CV 1.1 and cannot elect an ungoverned mode." state="Fixed" />
         <Control name="Backend disclosure" desc="Raw rows, credentials, hidden prompts, policy source, and internal control records are outside the disclosure boundary." state="Blocked" />
         <Control name="Conversation memory" desc="Only bounded request history is supplied to the chatbot execution path." state="12 max" />
-        <Control name="Output budget" desc="Professional guide output uses the configured bounded response ceiling." state="10000 max" />
+        <Control name="Output budget" desc="Governed workflow execution uses the shared Arena output ceiling." state="5,000 max" />
         <Control name="Content scope" desc="No sexual/explicit content or profanity; philosophy is limited to abstract technology concepts." state="Scoped" />
       </div>
     </div>

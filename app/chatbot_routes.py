@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agentic_run_store import record_agentic_run
+from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
 from app.chatbot_guardrails import evaluate_input, evaluate_output, tone_instruction
 from app.config import settings
 from app.cv11 import (
@@ -199,9 +200,9 @@ class WorkflowInvocation(StrictRequest):
     function_key: str = Field(min_length=1, max_length=64)
     source_context: str | None = Field(default=None, max_length=150_000)
     max_tokens: int = Field(
-        default=settings.chatbot.defaults.max_output_tokens,
-        ge=1,
-        le=settings.chatbot.defaults.max_output_tokens,
+        default=min(AGENTIC_MAX_OUTPUT_TOKENS, settings.chatbot.defaults.max_output_tokens),
+        ge=AGENTIC_MIN_OUTPUT_TOKENS,
+        le=min(AGENTIC_MAX_OUTPUT_TOKENS, settings.chatbot.defaults.max_output_tokens),
     )
 
     @model_validator(mode="after")
@@ -513,6 +514,10 @@ def chatbot_capabilities(system_id: int) -> dict[str, object]:
             "tone": settings.chatbot.defaults.tone,
             "max_history": settings.chatbot.defaults.max_history,
             "max_output_tokens": settings.chatbot.defaults.max_output_tokens,
+            "workflow_max_output_tokens": min(
+                AGENTIC_MAX_OUTPUT_TOKENS,
+                settings.chatbot.defaults.max_output_tokens,
+            ),
             "safe_mode": settings.chatbot.defaults.safe_mode,
         },
         "operations": ["chat", "review_scenarios", "execute_workflow"],

@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agentic_dataset_context import DatasetContextError, neon_dataset_context
+from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
 from app.agentic_run_store import audit_run_history, record_agentic_run, verify_agentic_run_chain
 from app.cv11 import (
     CV11Decision,
@@ -51,7 +52,11 @@ class GovernedExecuteRequest(StrictRequest):
     model_key: str = Field(min_length=1, max_length=128)
     task: str = Field(min_length=1, max_length=20_000)
     source_context: str | None = Field(default=None, max_length=150_000)
-    max_tokens: int = Field(default=2500, ge=2500, le=10000)
+    max_tokens: int = Field(
+        default=AGENTIC_MAX_OUTPUT_TOKENS,
+        ge=AGENTIC_MIN_OUTPUT_TOKENS,
+        le=AGENTIC_MAX_OUTPUT_TOKENS,
+    )
 
     @model_validator(mode="after")
     def validate_source_context(self) -> "GovernedExecuteRequest":
@@ -437,6 +442,11 @@ def list_governed_functions() -> dict[str, object]:
         "count": len(function_items),
         "functions": [item.to_dict() for item in function_items],
         "domains": [item.to_dict() for item in domains],
+        "execution_contract": {
+            "min_output_tokens": AGENTIC_MIN_OUTPUT_TOKENS,
+            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
+            "pairing": "governed_vs_ungoverned",
+        },
         "bindings": [
             {
                 "system_id": domain.system_id,
@@ -462,6 +472,11 @@ def list_functions_for_domain(system_id: int) -> dict[str, object]:
         "system_id": system_id,
         "domain": domain.to_dict(),
         "dataset": dataset.to_dict(),
+        "execution_contract": {
+            "min_output_tokens": AGENTIC_MIN_OUTPUT_TOKENS,
+            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
+            "pairing": "governed_vs_ungoverned",
+        },
         "functions": [item.to_dict() for item in governed_functions()],
     }
 
