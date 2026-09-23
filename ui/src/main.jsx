@@ -978,7 +978,7 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
   const modelNames = new Map((models || []).map((item) => [item.key, item.display_name || item.key]));
   const width = Math.max(900, data.length * 105);
   const height = 440;
-  const left = 74;
+  const left = 96;
   const right = 24;
   const top = 34;
   const bottom = 122;
@@ -993,7 +993,7 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
 
   return <div className="token-chart-scroll">
     <svg className="token-usage-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${slice === "all" ? "Total" : slice === "governed" ? "Governed" : "Ungoverned"} recorded token usage by model`}>
-      <text x="18" y={top + plotHeight / 2} className="token-axis-title" transform={`rotate(-90 18 ${top + plotHeight / 2})`}>Token count</text>
+      <text x="20" y={top + plotHeight / 2} className="token-axis-title" transform={`rotate(-90 20 ${top + plotHeight / 2})`}>Token count</text>
       {ticks.map((fraction) => {
         const y = top + plotHeight - fraction * plotHeight;
         const value = maxValue * fraction;
