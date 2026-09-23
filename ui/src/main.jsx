@@ -960,6 +960,16 @@ function compactAxisNumber(value) {
   return String(Math.round(number));
 }
 
+function latencyAxisLabel(value) {
+  const milliseconds = Number(value);
+  if (!Number.isFinite(milliseconds)) return "0 s";
+  if (Math.abs(milliseconds) >= 1000) {
+    const seconds = milliseconds / 1000;
+    return `${seconds.toFixed(Math.abs(seconds) >= 10 ? 0 : 1)} s`;
+  }
+  return `${Math.round(milliseconds)} ms`;
+}
+
 function TokenUsageChart({ rows, models, slice = "all" }) {
   const valueKey = slice === "governed" ? "governed_tokens" : slice === "ungoverned" ? "ungoverned_tokens" : "total_tokens";
   const data = Array.isArray(rows) ? rows.filter((item) => Number(item[valueKey]) > 0) : [];
@@ -1097,7 +1107,7 @@ function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
       <svg viewBox={`0 0 ${width} ${height}`} className="token-chart">
         {[0, .25, .5, .75, 1].map((p) => <g key={p}>
           <line x1={left} x2={left + pw} y1={top + ph - p * ph} y2={top + ph - p * ph} className="token-grid-line" />
-          <text x={left - 10} y={top + ph - p * ph + 4} textAnchor="end" className="token-y-label">{compactAxisNumber(max * p)}</text>
+          <text x={left - 10} y={top + ph - p * ph + 4} textAnchor="end" className="token-y-label">{metric === "latency" ? latencyAxisLabel(max * p) : compactAxisNumber(max * p)}</text>
         </g>)}
         {rows.map((r, i) => {
           const x = left + i * slot + (slot - bw) / 2;
