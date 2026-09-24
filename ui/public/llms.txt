@@ -1,0 +1,33 @@
+# Agentic Arena
+
+> Agentic Arena is a public governed-AI runtime lab for CV 1.1 (Compliance Verification 1.1). It compares matched governed and ungoverned AI execution while exposing runtime evidence, policy behavior, and architectural controls.
+
+Canonical site: https://agenticarena.space/
+Open-source repository: https://github.com/jwpoitevint1/Agentic-Arena-Opensource-
+License: Apache-2.0
+
+## Start here
+- [Agentic Arena — Governed AI Runtime Lab](https://agenticarena.space/): Run live governed vs. ungoverned AI comparisons across six business domains. Inspect policy decisions, runtime telemetry, bounded authority, and tamper-evident audit evidence.
+- [Arena Lab — Run Governed vs. Ungoverned AI](https://agenticarena.space/arena/): Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence.
+- [CV 1.1 Runtime Governance Project](https://agenticarena.space/project/): Technical overview of CV 1.1: deterministic AI runtime governance, bounded authority, fail-closed controls, scoped MCP tools, evidence, and enterprise adaptation.
+- [Governed vs. Ungoverned Runtime Evidence](https://agenticarena.space/evidence/): Inspect governed and ungoverned AI execution evidence, including responses, latency, token usage, cost telemetry, policy outcomes, and captured comparison records.
+- [Agentic Arena Runtime Logbook](https://agenticarena.space/runtime-logbook/): Inspect recent Agentic Arena execution records and runtime evidence from governed and ungoverned AI paths.
+- [Agentic Arena Testing Observations](https://agenticarena.space/observations/): Review documented observations from governed and ungoverned AI testing across models, functions, and business-domain datasets.
+- [Agentic Arena Model Registry](https://agenticarena.space/models/): Explore the curated Agentic Arena model registry, model classes, parameter information, access classes, and runtime risk categories.
+- [Enterprise AI Governance Reference Architecture](https://agenticarena.space/enterprise/): Reference architecture for adapting CV 1.1 to enterprise AI services with segmented APIs, Kubernetes, failover, bounded authority, and cross-functional governance.
+- [CV 1.1 Governance and MCP Controls](https://agenticarena.space/governance/): Inspect CV 1.1 governance controls, OPA/Rego policy enforcement, role boundaries, MCP tool scope, fail-closed behavior, and runtime authorization.
+- [AI Regulatory and Framework Alignment](https://agenticarena.space/regulatory-alignment/): Engineering alignment mappings for AI governance, privacy, security, and risk frameworks. Alignment only; no certification or legal compliance claim.
+- [Agentic Arena Runtime Diagnostics](https://agenticarena.space/diagnostics/): Read-only diagnostics for Agentic Arena backend readiness, CV 1.1 status, audit integrity, model registry, governed functions, and MCP entities.
+
+## Core concepts
+- Deterministic authorization and policy outside the model.
+- Bounded business functions, data targets, and MCP tools.
+- Governed and ungoverned paths using matched tasks and source data.
+- Fail-closed governance for protected operations.
+- Runtime telemetry and evidence capture.
+- Tamper-evident integrity using SHA-256 and HMAC-SHA256.
+- Separation between source data, execution, and recorded evidence.
+- Human accountability remains outside the model.
+
+## Scope note
+Agentic Arena is a bounded implementation and reference architecture. Regulatory mappings are alignment references, not a certification, audit opinion, legal advice, or compliance determination.

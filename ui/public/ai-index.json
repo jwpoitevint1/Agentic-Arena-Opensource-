@@ -1,0 +1,89 @@
+{
+  "name": "Agentic Arena",
+  "canonical_url": "https://agenticarena.space/",
+  "project": "Compliance Verification 1.1 (CV 1.1)",
+  "description": "Public governed-AI runtime lab comparing matched governed and ungoverned execution with deterministic policy, bounded authority, runtime telemetry, and tamper-evident audit evidence.",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/jwpoitevint1/Agentic-Arena-Opensource-",
+  "scope": {
+    "implementation": "bounded reference implementation and public lab",
+    "regulatory_posture": "alignment only; no certification or legal-compliance claim",
+    "audit_integrity": "cryptographically verifiable and tamper-evident; storage immutability depends on surrounding storage and authority controls"
+  },
+  "core_controls": [
+    "OPA/Rego deterministic policy",
+    "role and scope binding",
+    "bounded MCP tools",
+    "server-resolved execution context",
+    "fail-closed protected operations",
+    "runtime telemetry",
+    "SHA-256 payload and event hashing",
+    "HMAC-SHA256 authentication",
+    "predecessor hash chaining"
+  ],
+  "domains": [
+    "finance",
+    "environmental operations",
+    "healthcare",
+    "retail",
+    "aviation",
+    "supply chain / freight"
+  ],
+  "pages": [
+    {
+      "name": "Agentic Arena — Governed AI Runtime Lab",
+      "url": "https://agenticarena.space/",
+      "description": "Run live governed vs. ungoverned AI comparisons across six business domains. Inspect policy decisions, runtime telemetry, bounded authority, and tamper-evident audit evidence."
+    },
+    {
+      "name": "Arena Lab — Run Governed vs. Ungoverned AI",
+      "url": "https://agenticarena.space/arena/",
+      "description": "Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence."
+    },
+    {
+      "name": "CV 1.1 Runtime Governance Project",
+      "url": "https://agenticarena.space/project/",
+      "description": "Technical overview of CV 1.1: deterministic AI runtime governance, bounded authority, fail-closed controls, scoped MCP tools, evidence, and enterprise adaptation."
+    },
+    {
+      "name": "Governed vs. Ungoverned Runtime Evidence",
+      "url": "https://agenticarena.space/evidence/",
+      "description": "Inspect governed and ungoverned AI execution evidence, including responses, latency, token usage, cost telemetry, policy outcomes, and captured comparison records."
+    },
+    {
+      "name": "Agentic Arena Runtime Logbook",
+      "url": "https://agenticarena.space/runtime-logbook/",
+      "description": "Inspect recent Agentic Arena execution records and runtime evidence from governed and ungoverned AI paths."
+    },
+    {
+      "name": "Agentic Arena Testing Observations",
+      "url": "https://agenticarena.space/observations/",
+      "description": "Review documented observations from governed and ungoverned AI testing across models, functions, and business-domain datasets."
+    },
+    {
+      "name": "Agentic Arena Model Registry",
+      "url": "https://agenticarena.space/models/",
+      "description": "Explore the curated Agentic Arena model registry, model classes, parameter information, access classes, and runtime risk categories."
+    },
+    {
+      "name": "Enterprise AI Governance Reference Architecture",
+      "url": "https://agenticarena.space/enterprise/",
+      "description": "Reference architecture for adapting CV 1.1 to enterprise AI services with segmented APIs, Kubernetes, failover, bounded authority, and cross-functional governance."
+    },
+    {
+      "name": "CV 1.1 Governance and MCP Controls",
+      "url": "https://agenticarena.space/governance/",
+      "description": "Inspect CV 1.1 governance controls, OPA/Rego policy enforcement, role boundaries, MCP tool scope, fail-closed behavior, and runtime authorization."
+    },
+    {
+      "name": "AI Regulatory and Framework Alignment",
+      "url": "https://agenticarena.space/regulatory-alignment/",
+      "description": "Engineering alignment mappings for AI governance, privacy, security, and risk frameworks. Alignment only; no certification or legal compliance claim."
+    },
+    {
+      "name": "Agentic Arena Runtime Diagnostics",
+      "url": "https://agenticarena.space/diagnostics/",
+      "description": "Read-only diagnostics for Agentic Arena backend readiness, CV 1.1 status, audit integrity, model registry, governed functions, and MCP entities."
+    }
+  ]
+}

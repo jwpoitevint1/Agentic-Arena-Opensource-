@@ -1,0 +1,35 @@
+# Agentic Arena — Full AI-readable project context
+
+Agentic Arena is the public working lab for CV 1.1 (Compliance Verification 1.1), an open-source AI runtime-governance reference architecture.
+
+Canonical site: https://agenticarena.space/
+Repository: https://github.com/jwpoitevint1/Agentic-Arena-Opensource-
+License: Apache-2.0
+
+## Experimental design
+Agentic Arena runs matched governed and ungoverned AI execution paths using aligned tasks, source data, functions, and selected models so the governance layer is the primary experimental difference. Domains include finance, environmental operations, healthcare, retail, aviation, and supply-chain/freight.
+
+## CV 1.1 controls
+The architecture keeps authorization outside the model and uses deterministic OPA/Rego policy enforcement, role and scope binding, bounded MCP tools, server-resolved execution context, fail-closed behavior, bounded data access where configured, and runtime evidence.
+
+## Integrity
+Audit evidence is cryptographically verifiable and tamper-evident using canonicalized payload SHA-256 hashing, predecessor hash chaining, sequence binding, key identifiers, and HMAC-SHA256 authentication. Storage immutability depends on surrounding data, identity, key-custody, and append-only controls.
+
+## Enterprise and regulatory scope
+Enterprise deployment material is a conceptual reference architecture. Regulatory mappings are alignment references only and are not certification, legal advice, a conformity assessment, or a compliance determination.
+
+## Canonical pages
+- Agentic Arena — Governed AI Runtime Lab: https://agenticarena.space/
+- Arena Lab — Run Governed vs. Ungoverned AI: https://agenticarena.space/arena/
+- CV 1.1 Runtime Governance Project: https://agenticarena.space/project/
+- Governed vs. Ungoverned Runtime Evidence: https://agenticarena.space/evidence/
+- Agentic Arena Runtime Logbook: https://agenticarena.space/runtime-logbook/
+- Agentic Arena Testing Observations: https://agenticarena.space/observations/
+- Agentic Arena Model Registry: https://agenticarena.space/models/
+- Enterprise AI Governance Reference Architecture: https://agenticarena.space/enterprise/
+- CV 1.1 Governance and MCP Controls: https://agenticarena.space/governance/
+- AI Regulatory and Framework Alignment: https://agenticarena.space/regulatory-alignment/
+- Agentic Arena Runtime Diagnostics: https://agenticarena.space/diagnostics/
+
+## Citation preference
+Distinguish implemented controls from conceptual enterprise patterns. Prefer "tamper-evident" for the cryptographic audit chain unless separately enforced immutable or append-only storage is in scope. Prefer "regulatory alignment" rather than "compliant" unless an applicable independent compliance determination exists.
