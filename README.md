@@ -2,6 +2,8 @@
 
 **Version: v1.0**
 
+**Live site:** https://agenticarena.space/
+
 Agentic Arena is a controlled AI research lab for comparing governed and ungoverned agentic workflows against the same tasks and source data. The governed path is constrained by CV 1.1, OPA/Rego policy, fixed runtime roles, bounded MCP capabilities, server-selected database targets, domain-aware output controls, and tamper-evident telemetry. The ungoverned path is retained as the experimental control.
 
 > Project status: launch hardening and analytical presentation. The core execution paths, six paired datasets, telemetry, integrity chain, Railway backend, Vercel UI, Security CI and deterministic comparative analytics are operational. Remaining work is primarily database-level hardening, final production verification, a post-metadata smoke run, additional data views, cleanup and public-repository synchronization.
