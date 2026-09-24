@@ -1,9 +1,10 @@
 import logging
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agentic_run_store import audit_integrity_ready, comparison_runs, token_usage_by_model, verify_agentic_run_chain
+from app.agentic_run_store import audit_integrity_ready, comparison_runs, runtime_logbook_runs, token_usage_by_model, verify_agentic_run_chain
 from app.analytics_routes import router as analytics_router
 from app.chatbot_routes import router as chatbot_router
 from app.config import settings
@@ -75,17 +76,24 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": settings.app.name, "environment": settings.app.environment}
 
 
-@app.get("/ready", tags=["system"])
-def ready() -> dict[str, str | bool]:
-    return {
-        "status": "ready",
-        "service": settings.app.name,
-        "version": settings.app.version,
+@app.get("/ready", tags=["system"], response_model=None)
+def ready():
+    checks = {
         "databases_configured": all_databases_configured(),
         "openrouter_configured": openrouter_configured(),
         "cv11_opa_healthy": opa_healthy(),
         "audit_integrity_configured": audit_integrity_ready(),
     }
+    is_ready = all(checks.values())
+    payload: dict[str, str | bool] = {
+        "status": "ready" if is_ready else "not_ready",
+        "service": settings.app.name,
+        "version": settings.app.version,
+        **checks,
+    }
+    if not is_ready:
+        return JSONResponse(status_code=503, content=payload)
+    return payload
 
 
 @app.get(f"{settings.api.prefix}/system/cv11", tags=["system"])
@@ -120,6 +128,11 @@ def telemetry_tokens_by_model() -> dict[str, object]:
 @app.get(f"{settings.api.prefix}/system/telemetry/comparison-runs", tags=["system"])
 def telemetry_comparison_runs(limit: int = 1000) -> dict[str, object]:
     return comparison_runs(limit)
+
+
+@app.get(f"{settings.api.prefix}/system/runtime-logbook", tags=["system"])
+def runtime_logbook(limit: int = 25) -> dict[str, object]:
+    return runtime_logbook_runs(limit)
 
 
 @app.get(f"{settings.api.prefix}/system/databases", tags=["database"])

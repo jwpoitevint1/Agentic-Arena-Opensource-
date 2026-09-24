@@ -1,6 +1,6 @@
-const crypto = require("node:crypto");
+import crypto from "node:crypto";
 
-const DEFAULT_BACKEND = "https://api.example.com";
+const DEFAULT_BACKEND = "https://agentic-arena-api-production.up.railway.app";
 const ROUTE_CONTRACTS = [
   { pattern: /^\/health$/, methods: new Set(["GET"]) },
   { pattern: /^\/ready$/, methods: new Set(["GET"]) },
@@ -106,7 +106,7 @@ function backendTarget(path) {
   return target.toString();
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const requestId = safeRequestId(req?.headers?.["x-request-id"]);
   let timeout = null;
 

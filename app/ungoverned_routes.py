@@ -275,6 +275,7 @@ def _execute_ungoverned_auditor(
         governance="ungoverned",
         record=test_metrics,
         route_metadata=route_metadata,
+        prompt_text=request.task,
     )
     result["run_recorded"] = recorded
     emit_test_record(test_metrics)
@@ -541,10 +542,17 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
         retries=0,
     )
     result["test_metrics"] = test_metrics
-    result["run_recorded"] = record_agentic_run(
+    recorded = record_agentic_run(
         governance="ungoverned",
         record=test_metrics,
         route_metadata=result["ungoverned_function"],
+        prompt_text=request.task,
     )
+    result["run_recorded"] = recorded
     emit_test_record(test_metrics)
+    if not recorded:
+        raise HTTPException(
+            status_code=503,
+            detail="Ungoverned execution failed because its recording-database write did not complete.",
+        )
     return result

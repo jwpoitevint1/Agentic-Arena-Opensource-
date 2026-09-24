@@ -48,6 +48,7 @@ _INSERT_SQL = """
         function_key,
         dataset_source,
         task_hash,
+        prompt_text,
         source_context_hash,
         dataset_context_hash,
         model_key,
@@ -65,6 +66,7 @@ _INSERT_SQL = """
         tool_calls,
         retries,
         error,
+        model_response,
         record
     ) VALUES (
         %(run_id)s,
@@ -77,6 +79,7 @@ _INSERT_SQL = """
         %(function_key)s,
         %(dataset_source)s,
         %(task_hash)s,
+        %(prompt_text)s,
         %(source_context_hash)s,
         %(dataset_context_hash)s,
         %(model_key)s,
@@ -94,6 +97,7 @@ _INSERT_SQL = """
         %(tool_calls)s,
         %(retries)s,
         %(error)s,
+        %(model_response)s,
         %(record)s
     )
     ON CONFLICT (run_id) DO NOTHING
@@ -163,6 +167,18 @@ _COMPARISON_RUN_SQL = """
       AND coalesce(record #>> '{outcome,completed}', 'false') = 'true'
       AND coalesce((record #>> '{behavior,model_calls}')::int, 0) = 1
     ORDER BY recorded_at DESC
+    LIMIT %s
+"""
+
+
+_RUNTIME_LOGBOOK_SQL = """
+    SELECT
+        run_id,
+        governance,
+        recorded_at,
+        record
+    FROM telemetry.agentic_runs
+    ORDER BY recorded_at DESC, run_id DESC
     LIMIT %s
 """
 
@@ -250,6 +266,7 @@ def _signed_record(
     *,
     governance: str,
     route_metadata: dict[str, Any],
+    prompt_text: str | None,
     previous_event_hash: str,
     sequence: int,
     key_id: str,
@@ -257,6 +274,13 @@ def _signed_record(
 ) -> dict[str, Any]:
     persisted = deepcopy(record)
     persisted.pop("integrity", None)
+    persisted["input"] = {
+        "prompt_text": prompt_text,
+        "sha256": route_metadata.get("task_hash"),
+        "characters": len(prompt_text) if prompt_text is not None else 0,
+        "storage": "full_text",
+        "user_supplied": True,
+    }
     persisted["provenance"] = _provenance(route_metadata)
     persisted["audit_recorded_at"] = datetime.now(timezone.utc).isoformat()
     persisted["integrity"] = build_integrity_envelope(
@@ -275,6 +299,7 @@ def record_agentic_run(
     governance: str,
     record: dict[str, Any],
     route_metadata: dict[str, Any],
+    prompt_text: str | None = None,
 ) -> bool:
     env_var = _ENV_BY_GOVERNANCE.get(governance)
     if env_var is None:
@@ -351,11 +376,14 @@ def record_agentic_run(
                     record,
                     governance=governance,
                     route_metadata=route_metadata,
+                    prompt_text=prompt_text,
                     previous_event_hash=previous_event_hash,
                     sequence=sequence,
                     key_id=key_id,
                     master_key=master_key,
                 )
+
+                persisted_output = _section(persisted_record, "output")
 
                 params = {
                     "run_id": persisted_record.get("run_id"),
@@ -368,6 +396,7 @@ def record_agentic_run(
                     "function_key": execution.get("function_key"),
                     "dataset_source": route_metadata.get("dataset_source"),
                     "task_hash": route_metadata.get("task_hash"),
+                    "prompt_text": prompt_text,
                     "source_context_hash": route_metadata.get("source_context_hash"),
                     "dataset_context_hash": route_metadata.get("dataset_context_hash"),
                     "model_key": model.get("key"),
@@ -385,6 +414,7 @@ def record_agentic_run(
                     "tool_calls": behavior.get("tool_calls", 0),
                     "retries": behavior.get("retries", 0),
                     "error": persisted_record.get("error"),
+                    "model_response": persisted_output.get("text"),
                     "record": Jsonb(persisted_record),
                 }
 
@@ -555,6 +585,55 @@ def comparison_runs(limit: int = 1000) -> dict[str, object]:
             "archived_runs": ARCHIVED_TELEMETRY_RUNS,
             "archive_policy": "retained_for_audit_excluded_from_current_analytics",
         },
+    }
+
+
+def runtime_logbook_runs(limit: int = 25) -> dict[str, object]:
+    """Return the newest complete signed run records across both evidence databases."""
+    safe_limit = max(1, min(int(limit), 25))
+    runs: list[dict[str, object]] = []
+    database_status: dict[str, str] = {}
+
+    for governance, env_var in _ENV_BY_GOVERNANCE.items():
+        url = os.getenv(env_var)
+        if not url:
+            database_status[governance] = "unconfigured"
+            continue
+
+        try:
+            with psycopg.connect(url, connect_timeout=3) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("BEGIN READ ONLY")
+                    cursor.execute("SET LOCAL statement_timeout = 5000")
+                    cursor.execute(_RUNTIME_LOGBOOK_SQL, (safe_limit,))
+                    rows = cursor.fetchall()
+                    connection.rollback()
+        except psycopg.Error:
+            logger.exception("runtime_logbook_runs_failed governance=%s", governance)
+            database_status[governance] = "database_error"
+            continue
+
+        database_status[governance] = "ok"
+        for row in rows:
+            record = row[3] if len(row) > 3 and isinstance(row[3], dict) else {}
+            runs.append(
+                {
+                    "run_id": row[0],
+                    "governance": row[1],
+                    "recorded_at": row[2].isoformat() if row[2] is not None else None,
+                    "record": record,
+                }
+            )
+
+    runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
+    return {
+        "source": "neon_evidence_databases",
+        "table": "telemetry.agentic_runs",
+        "mode": "read_only",
+        "limit": safe_limit,
+        "run_count": min(len(runs), safe_limit),
+        "runs": runs[:safe_limit],
+        "database_status": database_status,
     }
 
 

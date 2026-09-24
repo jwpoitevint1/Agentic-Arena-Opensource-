@@ -61,8 +61,9 @@ def test_healthcare_free_text_fallback_redacts_phi_patterns() -> None:
     assert counts["PHONE"] == 1
 
 
-def test_ungoverned_or_other_domains_are_not_redacted_by_healthcare_profile() -> None:
+def test_other_domains_apply_baseline_privacy_without_healthcare_semantics() -> None:
     payload = {"Patient Id": "780-96-6113", "Merged": "W. Breede"}
-    unchanged, counts = redact_governed_payload(2, payload)
-    assert unchanged == payload
-    assert counts == {}
+    redacted, counts = redact_governed_payload(2, payload)
+    assert redacted["Patient Id"] == "[REDACTED_SSN]"
+    assert redacted["Merged"] == "W. Breede"
+    assert counts == {"SSN": 1}

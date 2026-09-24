@@ -5,6 +5,8 @@ import os
 import yaml
 from pydantic import BaseModel, Field
 
+from app.contracts import CHATBOT_MAX_OUTPUT_TOKENS
+
 
 class AppConfig(BaseModel):
     name: str
@@ -31,7 +33,7 @@ class CorsConfig(BaseModel):
 class ChatbotDefaultsConfig(BaseModel):
     tone: str = "professional"
     max_history: int = Field(default=12, ge=0, le=50)
-    max_output_tokens: int = Field(default=10000, ge=1, le=10000)
+    max_output_tokens: int = Field(default=CHATBOT_MAX_OUTPUT_TOKENS, ge=1, le=CHATBOT_MAX_OUTPUT_TOKENS)
     safe_mode: bool = True
 
 
@@ -212,7 +214,7 @@ def get_settings() -> Settings:
     chatbot_defaults["max_output_tokens"] = int(
         os.getenv(
             "CHATBOT_MAX_OUTPUT_TOKENS",
-            chatbot_defaults.get("max_output_tokens", 512),
+            chatbot_defaults.get("max_output_tokens", CHATBOT_MAX_OUTPUT_TOKENS),
         )
     )
 

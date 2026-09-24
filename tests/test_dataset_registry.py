@@ -29,6 +29,7 @@ def test_dataset_registry_matches_loaded_sources(system_id: int) -> None:
     assert item.display_name == display_name
     assert item.kaggle_slug == dataset_id
     assert item.url is None
+    assert item.schema_status == "Schema Paired"
 
 
 def test_registry_does_not_claim_unverified_kaggle_provenance() -> None:

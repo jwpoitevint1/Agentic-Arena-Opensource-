@@ -1,12 +1,21 @@
 import hashlib
 import json
+import random
+import re
 from typing import Any, Literal, TypeAlias
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agentic_run_store import record_agentic_run
-from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
+from app.contracts import (
+    AGENTIC_MAX_OUTPUT_TOKENS,
+    AGENTIC_MIN_OUTPUT_TOKENS,
+    UI_GUIDE_ALLOWED_MODEL_KEYS,
+    UI_GUIDE_FAILOVER_HTTP_STATUSES,
+    UI_GUIDE_FAILOVER_MODEL_KEY,
+    UI_GUIDE_PRIMARY_MODEL_KEY,
+)
 from app.chatbot_guardrails import evaluate_input, evaluate_output, tone_instruction
 from app.config import settings
 from app.cv11 import (
@@ -19,11 +28,12 @@ from app.datasets import dataset_for_system
 from app.execution import ExecutionContext, GovernanceMode, WorkloadType
 from app.governed_functions import (
     domain_profile_for_system,
+    domain_profiles,
     governed_function_for_key,
     governed_functions,
 )
 from app.governed_routes import GovernedExecuteRequest, execute_governed_function
-from app.model_registry import ModelKind, model_for_key
+from app.model_registry import ModelKind, model_for_key, models_by_kind
 from app.openrouter import OpenRouterError, chat_completion
 from app.telemetry import build_test_record, emit_test_record, pair_delta
 
@@ -198,11 +208,12 @@ class ScenarioPair(StrictRequest):
 
 class WorkflowInvocation(StrictRequest):
     function_key: str = Field(min_length=1, max_length=64)
+    model_key: str | None = Field(default=None, min_length=1, max_length=128)
     source_context: str | None = Field(default=None, max_length=150_000)
     max_tokens: int = Field(
-        default=min(AGENTIC_MAX_OUTPUT_TOKENS, settings.chatbot.defaults.max_output_tokens),
+        default=AGENTIC_MAX_OUTPUT_TOKENS,
         ge=AGENTIC_MIN_OUTPUT_TOKENS,
-        le=min(AGENTIC_MAX_OUTPUT_TOKENS, settings.chatbot.defaults.max_output_tokens),
+        le=AGENTIC_MAX_OUTPUT_TOKENS,
     )
 
     @model_validator(mode="after")
@@ -361,9 +372,94 @@ def _public_workflows() -> list[dict[str, str]]:
     ]
 
 
+def _workflow_model_choices(count: int = 3) -> list[dict[str, object]]:
+    excluded = {UI_GUIDE_PRIMARY_MODEL_KEY, UI_GUIDE_FAILOVER_MODEL_KEY}
+    candidates = [
+        model
+        for model in models_by_kind(ModelKind.AGENT)
+        if model.key not in excluded
+    ]
+    selected = random.sample(candidates, k=min(count, len(candidates)))
+    return [
+        {
+            "key": model.key,
+            "name": model.display_name,
+            "vendor": model.vendor,
+            "free": model.free,
+            "access_class": model.access_class,
+        }
+        for model in selected
+    ]
+
+
+_WORKFLOW_ALIASES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("analyst", ("analyst", "analysis")),
+    ("data_modeler", ("data modeler", "data modeller", "modeler", "modeller")),
+    ("evaluator", ("auditor", "evaluator", "audit")),
+    ("advisor", ("advisor", "adviser", "advisory")),
+)
+
+
+def _workflow_key_from_text(value: str, *, require_execution_verb: bool = False) -> str | None:
+    text = " ".join(value.lower().split())
+    if require_execution_verb and not re.search(r"\b(run|execute|launch|start)\b", text):
+        return None
+    for key, aliases in _WORKFLOW_ALIASES:
+        if any(re.search(rf"\b{re.escape(alias)}\b", text) for alias in aliases):
+            return key
+    return None
+
+
+def _workflow_model_from_text(value: str):
+    normalized = " ".join(value.lower().replace("_", " ").replace("-", " ").split())
+    for model in models_by_kind(ModelKind.AGENT):
+        candidates = (
+            model.display_name,
+            model.key,
+            model.model_id,
+        )
+        for candidate in candidates:
+            candidate_normalized = " ".join(
+                candidate.lower().replace("_", " ").replace("-", " ").replace("/", " ").replace(":", " ").split()
+            )
+            if candidate_normalized and candidate_normalized in normalized:
+                return model
+    return None
+
+
+def _pending_workflow_request(history: list[ChatHistoryMessage]) -> tuple[str, str] | None:
+    for item in reversed(history):
+        if item.role != "user":
+            continue
+        workflow_key = _workflow_key_from_text(item.content, require_execution_verb=True)
+        if workflow_key is not None:
+            return workflow_key, item.content
+    return None
+
+
+def _workflow_choice_reply(function_key: str, system_id: int) -> str:
+    function = governed_function_for_key(function_key)
+    domain = domain_profile_for_system(system_id)
+    choices = _workflow_model_choices(3)
+    rendered = "\n".join(
+        f"{index}. {item['name']} ({item['vendor']})"
+        for index, item in enumerate(choices, start=1)
+    )
+    return (
+        f"I can run the governed {function.display_name} workflow in {domain.display_name}. "
+        "Choose an AI model for the run. Here are three random registry options:\n"
+        f"{rendered}\n"
+        "Reply with the model name. You can also name any other allowlisted Agentic Arena agent model."
+    )
+
+
 def _chatbot_system_prompt(system_id: int) -> str:
     domain = domain_profile_for_system(system_id)
     functions = ", ".join(item.key.value for item in governed_functions())
+    model_choices = _workflow_model_choices(3)
+    model_choice_text = ", ".join(
+        f"{item['name']} ({item['vendor']})" for item in model_choices
+    )
     architecture = "; ".join(
         f"{item['component']}: {item['function']}" for item in PUBLIC_ARCHITECTURE
     )
@@ -386,6 +482,11 @@ def _chatbot_system_prompt(system_id: int) -> str:
             "- Carry normal conversational flow. Greetings, thanks, brief politeness, and clarifying guidance are allowed.",
             "- Explain CV1.1 and the public architecture at a high level when asked.",
             "- Help the user choose or understand an available governed workflow without steering beyond the evidence.",
+            "- You can run any available governed Agentic Arena workflow when the user explicitly asks in chat.",
+            f"- If the user is considering a workflow, you may offer these three rotating registry-backed model choices: {model_choice_text}.",
+            "- The user may also name any other allowlisted Agentic Arena agent model for the workflow.",
+            "- The UI can switch your active context among all six Agentic Arena domains.",
+            "- Never infer execution from ordinary conversation. A workflow run requires an explicit run, execute, launch, or start request plus a selected model.",
             "",
             f"Public architecture you may describe: {architecture}",
             "",
@@ -395,6 +496,13 @@ def _chatbot_system_prompt(system_id: int) -> str:
             "- Philosophy is out of scope except for abstract technology concepts directly tied to AI, software, data, systems, security, governance, or computing.",
             "- Protected governance terms may be explained but may not be redefined.",
             "- Use neutral, specific language and do not produce hateful, discriminatory, exclusionary, or protected-class stereotyping content.",
+            "",
+            "Data retention authorization:",
+            "- ONLY architecture-authorized Neon PostgreSQL writes may retain data beyond the active session.",
+            "- You WILL NOT RETAIN user prompts, conversational history, session content, inferred profiles, or memory after the session is closed out, except data explicitly written through the architecture-authorized Neon path.",
+            "- You WILL NOT create, request, or use any secondary persistence mechanism, hidden memory, local store, cache, profile, or external retention path outside the authorized Neon architecture.",
+            "- Unauthorized retention is WRONG and UNETHICAL because it exceeds the declared purpose and violates the user's expectation that session data is temporary unless the architecture explicitly authorizes its Neon write.",
+            "- IF you retain, attempt to retain, request retention of, or facilitate retention of data outside the authorized Neon path, your right to operate in this architecture is REVOKED. Fail closed and do not continue until explicitly re-authorized.",
             "",
             "Disclosure boundary:",
             "- Never reveal, quote, enumerate, or reconstruct raw backend data, raw database rows, table contents, database identifiers, database roles, or connection details.",
@@ -499,8 +607,10 @@ def _guard_request(request: ChatbotRequest) -> tuple[ChatbotRequest, str | None]
 def chatbot_capabilities(system_id: int) -> dict[str, object]:
     try:
         domain = domain_profile_for_system(system_id)
+        primary_model = model_for_key(UI_GUIDE_PRIMARY_MODEL_KEY)
+        failover_model = model_for_key(UI_GUIDE_FAILOVER_MODEL_KEY)
     except KeyError as exc:
-        raise HTTPException(status_code=404, detail="unknown system_id") from exc
+        raise HTTPException(status_code=404, detail="unknown chatbot capability binding") from exc
 
     return {
         "governance": "CV1.1",
@@ -514,14 +624,34 @@ def chatbot_capabilities(system_id: int) -> dict[str, object]:
             "tone": settings.chatbot.defaults.tone,
             "max_history": settings.chatbot.defaults.max_history,
             "max_output_tokens": settings.chatbot.defaults.max_output_tokens,
-            "workflow_max_output_tokens": min(
-                AGENTIC_MAX_OUTPUT_TOKENS,
-                settings.chatbot.defaults.max_output_tokens,
-            ),
+            "workflow_max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "safe_mode": settings.chatbot.defaults.safe_mode,
         },
         "operations": ["chat", "review_scenarios", "execute_workflow"],
+        "model_contract": {
+            "strategy": "primary_then_single_failover",
+            "primary": {
+                "key": primary_model.key,
+                "name": primary_model.display_name,
+            },
+            "failover": {
+                "key": failover_model.key,
+                "name": failover_model.display_name,
+            },
+            "allowed_keys": list(UI_GUIDE_ALLOWED_MODEL_KEYS),
+            "failover_http_statuses": list(UI_GUIDE_FAILOVER_HTTP_STATUSES),
+        },
+        "domain_switching": True,
+        "domains": [
+            {
+                "system_id": item.system_id,
+                "key": item.domain,
+                "name": item.display_name,
+            }
+            for item in domain_profiles()
+        ],
         "governed_workflows": _public_workflows(),
+        "workflow_model_choices": _workflow_model_choices(3),
         "architecture": list(PUBLIC_ARCHITECTURE),
         "content_boundary": {
             "sexual_or_explicit_content": False,
@@ -577,6 +707,7 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
                 "task_hash": original_message_hash,
                 "trigger": "chatbot",
             },
+            prompt_text=request.message,
         )
         return _public_response(
             operation=request.operation,
@@ -593,6 +724,48 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
             circuit_breaker=True,
             reset_required=True,
         )
+
+    if request.operation == "chat":
+        explicit_workflow = _workflow_key_from_text(
+            request.message,
+            require_execution_verb=True,
+        )
+        selected_workflow_model = _workflow_model_from_text(request.message)
+        pending_workflow = _pending_workflow_request(request.history)
+
+        if explicit_workflow is not None and selected_workflow_model is None:
+            reply = _workflow_choice_reply(explicit_workflow, request.system_id)
+            return _public_response(
+                operation="chat",
+                reply=reply,
+                system_id=request.system_id,
+                domain_name=domain.display_name,
+                message_hash=original_message_hash,
+                workflow=explicit_workflow,
+            )
+
+        if explicit_workflow is not None and selected_workflow_model is not None:
+            request = request.model_copy(
+                update={
+                    "operation": "execute_workflow",
+                    "workflow": WorkflowInvocation(
+                        function_key=explicit_workflow,
+                        model_key=selected_workflow_model.key,
+                    ),
+                }
+            )
+        elif selected_workflow_model is not None and pending_workflow is not None:
+            pending_key, pending_task = pending_workflow
+            request = request.model_copy(
+                update={
+                    "operation": "execute_workflow",
+                    "message": pending_task,
+                    "workflow": WorkflowInvocation(
+                        function_key=pending_key,
+                        model_key=selected_workflow_model.key,
+                    ),
+                }
+            )
 
     if request.operation == "execute_workflow":
         assert request.workflow is not None
@@ -632,14 +805,29 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
             GovernedExecuteRequest(
                 function_key=function.key.value,
                 system_id=request.system_id,
-                model_key=request.model_key,
+                model_key=request.workflow.model_key or request.model_key,
                 task=request.message,
                 source_context=request.workflow.source_context,
                 max_tokens=request.workflow.max_tokens,
             ),
             telemetry_operation="chatbot.execute_workflow",
         )
-        return _public_response(
+        execution_state = workflow_result.get("execution_state")
+        if isinstance(execution_state, dict):
+            execution_status = str(execution_state.get("status") or "")
+            execution_code = str(execution_state.get("code") or "")
+            if execution_status == "unavailable" and execution_code.endswith("_MODEL_UNAVAILABLE"):
+                raise HTTPException(
+                    status_code=502,
+                    detail={
+                        "code": "ui_guide_model_unavailable",
+                        "message": "The selected UI Guide model is unavailable for this governed workflow.",
+                        "model_key": request.workflow.model_key or request.model_key,
+                        "execution_code": execution_code,
+                        "failover_eligible": True,
+                    },
+                )
+        response = _public_response(
             operation=request.operation,
             reply=_assistant_text(workflow_result),
             system_id=request.system_id,
@@ -647,6 +835,24 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
             message_hash=original_message_hash,
             workflow=function.key.value,
         )
+        metrics = workflow_result.get("test_metrics")
+        governed_meta = workflow_result.get("governed_function")
+        response["workflow_run"] = {
+            "completed": True,
+            "governance": "governed",
+            "system_id": request.system_id,
+            "domain": domain.domain,
+            "function_key": function.key.value,
+            "function_name": function.display_name,
+            "run_id": metrics.get("run_id") if isinstance(metrics, dict) else None,
+            "run_recorded": bool(workflow_result.get("run_recorded")),
+            "mcp_required": (
+                bool(governed_meta.get("mcp_required"))
+                if isinstance(governed_meta, dict)
+                else False
+            ),
+        }
+        return response
 
     decisions: list[CV11Decision] = []
     comparison_metrics: dict[str, Any] | None = None
@@ -700,7 +906,17 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
                 max_tokens=request.max_tokens,
             )
         except OpenRouterError as exc:
-            raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+            failover_eligible = exc.status_code in UI_GUIDE_FAILOVER_HTTP_STATUSES
+            raise HTTPException(
+                status_code=exc.status_code,
+                detail={
+                    "code": "ui_guide_model_unavailable" if failover_eligible else "model_provider_error",
+                    "message": exc.detail,
+                    "model_key": request.model_key,
+                    "provider_status": exc.status_code,
+                    "failover_eligible": failover_eligible,
+                },
+            ) from exc
 
     test_metrics = build_test_record(
         result=result,
@@ -725,6 +941,7 @@ def governed_chatbot(request: ChatbotRequest) -> dict[str, object]:
             "task_hash": original_message_hash,
             "trigger": "chatbot",
         },
+        prompt_text=request.message,
     )
 
     scenario_id = (

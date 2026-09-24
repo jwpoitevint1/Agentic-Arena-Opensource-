@@ -1,19 +1,19 @@
 from pathlib import Path
 
 
-def test_project_methodology_documents_neutral_prompt_programming() -> None:
+def test_project_overview_documents_matched_comparison_contract() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
-    assert "Neutral programming and prompt language" in source
-    assert "Shared experimental code and task language are kept functionally descriptive" in source
-    assert "Those treatment concepts are introduced only inside the governed execution path." in source
-    assert "Regression tests check the ungoverned system prompts and shared UI task templates" in source
+    assert "matched models, tasks, domains, and source data" in source
+    assert "the governance layer is the intended experimental variable" in source
+    assert "Governed and ungoverned paths are run against matched tasks and source data" in source
+    assert "without intentionally changing the business problem" in source
 
 
 def test_testing_observations_tab_is_registered_and_rendered() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
-    assert '["observations", "Observations", "03"]' in source
+    assert '["observations", "Observations", "04"]' in source
     assert 'view === "observations" && <TestingObservations />' in source
     assert "function TestingObservations()" in source
     assert "Development observations, not formal research conclusions." in source
@@ -35,11 +35,11 @@ def test_numbered_sidebar_navigation_matches_requested_order() -> None:
     expected = [
         '["lab", "Arena Lab", "01"]',
         '["evidence", "Evidence", "02"]',
-        '["observations", "Observations", "03"]',
-        '["models", "Models", "04"]',
-        '["enterprise", "Enterprise", "05"]',
-        '["mcp", "MCP", "06"]',
-        '["governance", "Governance", "07"]',
+        '["logbook", "Runtime Logbook", "03"]',
+        '["observations", "Observations", "04"]',
+        '["models", "Models", "05"]',
+        '["enterprise", "Enterprise", "06"]',
+        '["governance", "Governance + MCP", "07"]',
         '["alignment", "Alignment", "08"]',
         '["diagnostics", "Diagnostics", "09"]',
     ]
@@ -88,7 +88,7 @@ def test_same_family_fallback_observation_is_documented() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert "Fallback routing should preserve model family where possible" in source
-    assert "silent cross-family failover" in source
+    assert "cross-family contingency should be explicit" in source
     assert "cross-family contingency should be explicit" in source
 
 
@@ -135,3 +135,19 @@ def test_observations_follow_empirical_governance_flow() -> None:
     assert "03 · Model and function fit" in source
     assert "04 · Runtime and deployment implications" in source
     assert "controlled variables, explicit uncertainty, reproducible evidence, falsifiable assumptions, repeat trials, and documented changes" in source
+
+
+def test_private_observation_notes_model_capacity_by_function() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Model capacity appears to matter differently by function" in source
+    assert "heavier reasoning-capable models are better suited to Analyst work" in source
+    assert "model the data only, do not perform analytics" in source
+
+
+def test_chatbot_model_substitution_observation_is_documented() -> None:
+    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+
+    assert "Model substitution can leave the governance architecture unchanged" in source
+    assert "Observed · September 21, 2026" in source
+    assert "Different model, same box, same rules, same authorized paths." in source

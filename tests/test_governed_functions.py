@@ -94,20 +94,25 @@ def test_auditor_is_named_and_scoped_to_recorded_runs() -> None:
     assert "runs_reviewed" in auditor.output_contract
 
 
-def test_data_modeler_prompt_requires_output_visualization_contract() -> None:
+def test_data_modeler_governed_prompt_is_relational_only_and_control_keeps_visualization_contract() -> None:
     modeler = governed_function_for_key("data_modeler")
     retail = domain_profiles()[3]
 
     governed_prompt = build_system_prompt(modeler, retail)
     ungoverned_prompt = build_ungoverned_system_prompt(modeler, retail)
 
-    assert "Data Modeler output contract:" in governed_prompt
-    assert "VISUALIZATION_SPEC" in governed_prompt
-    assert "explicitly authorized to model the supplied data" in governed_prompt
+    assert "Your job is that of a data modeler: ONLY create a relational data model representation of how the supplied data is organized, stored, and related. Do nothing else." in governed_prompt
     assert "Persisted source tables and workspace state are read-only" in governed_prompt
     assert "must be supplied through the governed MCP boundary" in governed_prompt
+    assert "VISUALIZATION_SPEC" not in governed_prompt
+    assert "Choose one source-supported visualization" not in governed_prompt
+    assert "Aggregation is permitted" not in governed_prompt
+    assert "statistics" not in governed_prompt.lower()
+    assert "- visualization_spec" not in governed_prompt
+
     assert "Data Modeler output contract:" in ungoverned_prompt
     assert "VISUALIZATION_SPEC" in ungoverned_prompt
+    assert "Choose one source-supported visualization without prioritizing a particular field, category, metric, outcome, or narrative." in ungoverned_prompt
 
     assert "CV1.1" not in ungoverned_prompt
     assert "governed MCP" not in ungoverned_prompt

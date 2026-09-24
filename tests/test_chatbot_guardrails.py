@@ -11,6 +11,7 @@ from app.chatbot_routes import (
     _requests_backend_disclosure,
 )
 from app.config import settings
+from app.contracts import CHATBOT_MAX_OUTPUT_TOKENS
 
 
 def test_normal_conversation_is_allowed() -> None:
@@ -77,10 +78,10 @@ def test_chatbot_history_is_bounded() -> None:
         )
 
 
-def test_chatbot_output_default_is_512() -> None:
+def test_chatbot_output_default_matches_contract() -> None:
     request = ChatbotRequest(system_id=1, model_key="test-model", message="hello")
-    assert request.max_tokens == 512
-    assert settings.chatbot.defaults.max_output_tokens == 512
+    assert request.max_tokens == CHATBOT_MAX_OUTPUT_TOKENS == 2048
+    assert settings.chatbot.defaults.max_output_tokens == CHATBOT_MAX_OUTPUT_TOKENS
 
 
 def test_prompt_defines_guide_and_disclosure_boundary() -> None:
@@ -97,6 +98,10 @@ def test_prompt_defines_guide_and_disclosure_boundary() -> None:
     assert "Neon PostgreSQL" in prompt
     assert "OpenRouter" in prompt
     assert "MCP" in prompt
+    assert "ONLY architecture-authorized Neon PostgreSQL" in prompt
+    assert "WILL NOT RETAIN" in prompt
+    assert "WRONG and UNETHICAL" in prompt
+    assert "right to operate in this architecture is REVOKED" in prompt
 
 
 def test_public_architecture_contains_expected_components() -> None:

@@ -37,8 +37,10 @@ def test_finance_structured_payload_redacts_sensitive_columns() -> None:
     assert sum(counts.values()) == 3
 
 
-def test_non_finance_domains_are_not_changed_by_finance_profile() -> None:
+def test_non_finance_domains_receive_baseline_identifier_redaction() -> None:
     text = "123 Main Street and test@example.com"
     redacted, counts = redact_governed_text(5, text)
-    assert redacted == text
-    assert counts == {}
+    assert "123 Main Street" not in redacted
+    assert "test@example.com" not in redacted
+    assert counts["ADDRESS"] == 1
+    assert counts["EMAIL"] == 1

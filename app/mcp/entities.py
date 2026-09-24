@@ -25,12 +25,14 @@ class MCPEntityDefinition:
     runtime_role: str
     read_only_workspace: bool
     tools: tuple[MCPTool, ...]
+    scope_instruction: str = ""
 
     def to_dict(self) -> dict[str, object]:
         return {
             "key": self.key.value,
             "runtime_role": self.runtime_role,
             "read_only_workspace": self.read_only_workspace,
+            "scope_instruction": self.scope_instruction,
             "tools": [tool.to_dict() for tool in self.tools],
         }
 
@@ -142,6 +144,9 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
         runtime_role="data_modeler_runner",
         read_only_workspace=True,
         tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
+        scope_instruction=(
+            "Your job is that of a data modeler: ONLY create a relational data model representation of how the supplied data is organized, stored, and related. Do nothing else."
+        ),
     ),
     MCPEntity.EVALUATOR: MCPEntityDefinition(
         key=MCPEntity.EVALUATOR,

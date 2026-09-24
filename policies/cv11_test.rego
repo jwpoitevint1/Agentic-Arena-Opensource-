@@ -73,13 +73,19 @@ test_denies_governed_function_over_5000_tokens if {
     "governed_function_token_limit_exceeded" in decision.reasons
 }
 
-test_allows_governed_chatbot_chat if {
+test_allows_governed_chatbot_primary_model if {
     request := object.union(base_request, {"action": "model.chat", "model_key": "ling_3_0_flash_vl_free", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     decision.allow
 }
 
-test_denies_chatbot_non_ling_model if {
+test_allows_governed_chatbot_failover_model if {
+    request := object.union(base_request, {"action": "model.chat", "model_key": "mistral_small_3_2_24b", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
+    decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
+    decision.allow
+}
+
+test_denies_chatbot_non_bound_model if {
     request := object.union(base_request, {"action": "model.chat", "model_key": "gpt_5_6_sol", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     not decision.allow

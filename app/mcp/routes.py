@@ -75,8 +75,10 @@ def _tools_call_params(params: dict[str, Any]) -> tuple[int, str, str, dict[str,
 
 def _describe(entity_key: MCPEntity, system_id: int, target: object) -> dict[str, object]:
     dataset = dataset_for_system(system_id)
+    entity = entity_for_key(entity_key.value)
     return {
         "entity": entity_key.value,
+        "scope_instruction": entity.scope_instruction,
         "system_id": system_id,
         "domain": dataset.domain,
         "dataset": dataset.to_dict(),
@@ -229,6 +231,7 @@ def execute_governed_mcp_tool(
         "_meta": {
             "entity": entity.key.value,
             "runtime_role": entity.runtime_role,
+            "scope_instruction": entity.scope_instruction,
             "system_id": system_id,
             "database_target": target.value,
             "cv11": decision.to_dict(),

@@ -340,8 +340,8 @@ def _metric_line_key(line: str) -> str | None:
     words that resemble a telemetry label.
     """
     text = line.strip().lower()
-    text = re.sub(r"^(?:[-*+]\\s*)?", "", text)
-    text = re.sub(r"^\\|\\s*", "", text)
+    text = re.sub(r"^(?:[-*+]\s*)?", "", text)
+    text = re.sub(r"^\|\s*", "", text)
     text = re.sub(r"[*_#>]+", "", text).strip()
 
     labels = (
@@ -368,7 +368,7 @@ def _metric_line_key(line: str) -> str | None:
     for key, names in labels:
         for name in names:
             if re.match(
-                rf"^{re.escape(name)}\\s*(?::|=|\\|)\\s*",
+                rf"^{re.escape(name)}\s*(?::|=|\|)\s*",
                 text,
             ):
                 return key
@@ -495,10 +495,15 @@ def verify_governed_claims(
                 new_lines.append(line)
                 continue
 
+            raw_token = match.group("value")
+            leading_ws = raw_token[: len(raw_token) - len(raw_token.lstrip())]
+            trailing_ws = raw_token[len(raw_token.rstrip()) :]
             replacement = _format_expected_claim(expected, kind)
             corrected_line = (
                 line[: match.start("value")]
+                + leading_ws
                 + replacement
+                + trailing_ws
                 + line[match.end("value") :]
             )
             new_lines.append(corrected_line)

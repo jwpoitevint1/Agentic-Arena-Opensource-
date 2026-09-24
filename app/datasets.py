@@ -1,6 +1,9 @@
 from dataclasses import asdict, dataclass
 
 
+SCHEMA_STATUS = "Schema Paired"
+
+
 @dataclass(frozen=True)
 class DatasetDefinition:
     system_id: int
@@ -9,6 +12,7 @@ class DatasetDefinition:
     dataset_id: str
     display_name: str
     url: str | None = None
+    schema_status: str = SCHEMA_STATUS
 
     @property
     def kaggle_slug(self) -> str:

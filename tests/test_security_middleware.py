@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 
@@ -79,3 +80,23 @@ def test_large_request_body_is_rejected() -> None:
         headers={"content-type": "application/json"},
     )
     assert response.status_code == 413
+
+
+def test_production_requires_host_allowlist_by_default(monkeypatch) -> None:
+    monkeypatch.setattr(settings.app, "environment", "production")
+    monkeypatch.delenv("ALLOWED_HOSTS", raising=False)
+
+    response = client.get("/api/v1/system/datasets", headers={"host": "arena.example"})
+
+    assert response.status_code == 400
+
+
+def test_production_requires_api_auth_by_default(monkeypatch) -> None:
+    monkeypatch.setattr(settings.app, "environment", "production")
+    monkeypatch.delenv("API_AUTH_REQUIRED", raising=False)
+    monkeypatch.delenv("ARENA_API_KEY", raising=False)
+    monkeypatch.setenv("ALLOWED_HOSTS", "arena.example")
+
+    response = client.get("/api/v1/system/datasets", headers={"host": "arena.example"})
+
+    assert response.status_code == 503

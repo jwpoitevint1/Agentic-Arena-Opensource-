@@ -368,6 +368,7 @@ def _execute_governed_auditor(
         governance="governed",
         record=test_metrics,
         route_metadata=route_metadata,
+        prompt_text=request.task,
     )
     result["run_recorded"] = recorded
     emit_test_record(test_metrics)
@@ -391,6 +392,74 @@ def _authorized_rows(*, target: object, function_key: str) -> list[dict[str, obj
 
 def _serialize_rows(rows: list[dict[str, object]]) -> str:
     return json.dumps(rows, ensure_ascii=False, separators=(",", ":"), default=str)
+
+
+def _visualization_spec_from_statistics(statistics: dict[str, object] | None) -> dict[str, object] | None:
+    """Build one deterministic chart spec from the same bounded MCP statistics window."""
+    if not isinstance(statistics, dict):
+        return None
+    columns = statistics.get("columns")
+    if not isinstance(columns, dict):
+        return None
+
+    sample_row_count = statistics.get("sample_row_count")
+    try:
+        sample_count = int(sample_row_count) if sample_row_count is not None else None
+    except (TypeError, ValueError):
+        sample_count = None
+
+    def label_for(column: str) -> str:
+        return column.replace("_", " ").strip().title()
+
+    for column, raw_summary in columns.items():
+        if not isinstance(column, str) or not isinstance(raw_summary, dict):
+            continue
+        counts = raw_summary.get("value_counts")
+        if not isinstance(counts, dict) or not 2 <= len(counts) <= 12:
+            continue
+        data: list[dict[str, object]] = []
+        for raw_label, raw_value in counts.items():
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                continue
+            data.append({"label": str(raw_label)[:48], "value": value})
+        if len(data) >= 2:
+            suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
+            return {
+                "type": "bar",
+                "title": f"{label_for(column)} distribution{suffix}",
+                "x_label": label_for(column),
+                "y_label": "Record count",
+                "data": data,
+                "source": "mcp.dataset.statistics",
+            }
+
+    for column, raw_summary in columns.items():
+        if not isinstance(column, str) or not isinstance(raw_summary, dict):
+            continue
+        numeric = raw_summary.get("numeric")
+        if not isinstance(numeric, dict):
+            continue
+        data: list[dict[str, object]] = []
+        for label in ("min", "avg", "max"):
+            raw_value = numeric.get(label)
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                continue
+            data.append({"label": label.upper(), "value": value})
+        if len(data) == 3:
+            suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
+            return {
+                "type": "bar",
+                "title": f"{label_for(column)} summary{suffix}",
+                "x_label": "Statistic",
+                "y_label": label_for(column),
+                "data": data,
+                "source": "mcp.dataset.statistics",
+            }
+    return None
 
 
 def _sha256(value: str | None) -> str | None:
@@ -555,6 +624,7 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
     verified_evidence: dict[str, object] | None = None
     verified_evidence_context: str | None = None
     statistics_context: str | None = None
+    visualization_spec: dict[str, object] | None = None
 
     if mcp_required:
         # Data Modeler fails closed unless its schema/profile/query evidence crosses
@@ -620,6 +690,7 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                 separators=(",", ":"),
                 default=str,
             )
+            visualization_spec = _visualization_spec_from_statistics(statistics_payload)
             relational_action = "mcp.dataset.query"
             if row_items:
                 relational_context = _serialize_rows(row_items)
@@ -786,18 +857,6 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                     ),
                 }
             )
-        if statistics_context is not None:
-            messages.append(
-                {
-                    "role": "user",
-                    "content": (
-                        "DETERMINISTIC MCP STATISTICS — SERVER-COMPUTED FROM THE SAME BOUNDED SOURCE WINDOW:\n"
-                        + statistics_context
-                        + "\nTreat these statistics as authoritative for exact counts, sums, averages, minima, and maxima. "
-                        "Do not manually recount or replace these values with estimates."
-                    ),
-                }
-            )
         if rag_context is not None:
             messages.append(
                 {
@@ -850,6 +909,8 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
     if not isinstance(sanitized_result, dict):
         raise HTTPException(status_code=500, detail="governed output sanitation failed")
     result = sanitized_result
+    if function.key.value == "data_modeler" and visualization_spec is not None:
+        result["visualization_spec"] = visualization_spec
 
     result["governed_function"] = {
         "function_key": function.key.value,
@@ -880,6 +941,9 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_context_hash": mcp_context_hash,
         "mcp_statistics_hash": _sha256(statistics_context),
         "mcp_statistics_provided": statistics_context is not None,
+        "visualization_provided": visualization_spec is not None,
+        "visualization_source": visualization_spec.get("source") if visualization_spec is not None else None,
+        "visualization_spec_hash": _sha256(json.dumps(visualization_spec, sort_keys=True, default=str)) if visualization_spec is not None else None,
         "rag_context_hash": _sha256(rag_context),
         "rag_pattern": rag_pattern,
         "rag_retrieval_used": rag_context is not None,
@@ -931,6 +995,9 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_context_hash": mcp_context_hash,
         "mcp_statistics_provided": statistics_context is not None,
         "mcp_statistics_hash": _sha256(statistics_context),
+        "visualization_provided": visualization_spec is not None,
+        "visualization_source": visualization_spec.get("source") if visualization_spec is not None else None,
+        "visualization_spec_hash": _sha256(json.dumps(visualization_spec, sort_keys=True, default=str)) if visualization_spec is not None else None,
         "modeling_authorized": modeling_decision.allow if modeling_decision is not None else None,
         "modeling_action": "data.model" if modeling_decision is not None else None,
         "rag_retrieval_used": rag_context is not None,
@@ -948,10 +1015,17 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         },
     }
     result["test_metrics"] = test_metrics
-    result["run_recorded"] = record_agentic_run(
+    recorded = record_agentic_run(
         governance="governed",
         record=test_metrics,
         route_metadata=result["governed_function"],
+        prompt_text=request.task,
     )
+    result["run_recorded"] = recorded
     emit_test_record(test_metrics)
+    if not recorded:
+        raise HTTPException(
+            status_code=503,
+            detail="Governed execution failed closed because its signed recording-database write did not complete.",
+        )
     return result

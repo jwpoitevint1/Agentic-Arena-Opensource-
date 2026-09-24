@@ -1,3 +1,4 @@
+import hashlib
 import hmac
 import ipaddress
 import json
@@ -86,6 +87,10 @@ def _client_ip(request: Request) -> str:
         return host
 
 
+def _client_log_ref(ip_text: str) -> str:
+    return hashlib.sha256(ip_text.encode("utf-8")).hexdigest()[:16]
+
+
 def _in_cidrs(ip_text: str, cidrs: list[str]) -> bool:
     try:
         address = ipaddress.ip_address(ip_text)
@@ -162,7 +167,7 @@ def _allowed_hosts() -> list[str]:
 def _host_allowed(host: str) -> bool:
     allowed = _allowed_hosts()
     if not allowed:
-        return True
+        return settings.app.environment.strip().lower() not in {"production", "prod"}
 
     normalized = host.lower().rstrip(".")
     for item in allowed:
@@ -175,7 +180,8 @@ def _host_allowed(host: str) -> bool:
 
 
 def _api_key_authorized(request: Request) -> bool:
-    if not _env_bool("API_AUTH_REQUIRED", False):
+    production_default = settings.app.environment.strip().lower() in {"production", "prod"}
+    if not _env_bool("API_AUTH_REQUIRED", production_default):
         return True
     if request.method.upper() == "OPTIONS":
         return True
@@ -334,7 +340,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         request_host = (request.url.hostname or "").lower().rstrip(".")
         railway_healthcheck = (
-            path == "/health"
+            path in {"/health", "/ready"}
             and request_host == "healthcheck.railway.app"
         )
         if not railway_healthcheck and not _host_allowed(request_host):
@@ -353,9 +359,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         if path.startswith(settings.api.prefix) and not _api_key_authorized(request):
             logger.warning(
-                "request_blocked reason=api_auth path=%s client_ip=%s request_id=%s",
+                "request_blocked reason=api_auth path=%s client_ref=%s request_id=%s",
                 path,
-                client_ip,
+                _client_log_ref(client_ip),
                 request_id,
             )
             status_code = 503 if not os.getenv("ARENA_API_KEY", "") else 401
@@ -393,9 +399,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             allowed, retry_after = _consume_global_rate_token(client_ip)
             if not allowed:
                 logger.warning(
-                    "request_blocked reason=global_rate_limit path=%s client_ip=%s request_id=%s",
+                    "request_blocked reason=global_rate_limit path=%s client_ref=%s request_id=%s",
                     path,
-                    client_ip,
+                    _client_log_ref(client_ip),
                     request_id,
                 )
                 return _json_error(
@@ -409,9 +415,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         if path.startswith(f"{settings.api.prefix}/chatbot"):
             if not _ip_allowed(client_ip):
                 logger.warning(
-                    "request_blocked reason=ip_control path=%s client_ip=%s request_id=%s",
+                    "request_blocked reason=ip_control path=%s client_ref=%s request_id=%s",
                     path,
-                    client_ip,
+                    _client_log_ref(client_ip),
                     request_id,
                 )
                 return _json_error(
@@ -424,9 +430,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             allowed, retry_after = _consume_chatbot_rate_token(client_ip)
             if not allowed:
                 logger.warning(
-                    "request_blocked reason=chatbot_rate_limit path=%s client_ip=%s request_id=%s",
+                    "request_blocked reason=chatbot_rate_limit path=%s client_ref=%s request_id=%s",
                     path,
-                    client_ip,
+                    _client_log_ref(client_ip),
                     request_id,
                 )
                 return _json_error(
@@ -453,12 +459,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             response.headers["cache-control"] = "no-store"
 
         logger.info(
-            "request_complete method=%s path=%s status=%s duration_ms=%.2f client_ip=%s request_id=%s",
+            "request_complete method=%s path=%s status=%s duration_ms=%.2f client_ref=%s request_id=%s",
             method,
             path,
             response.status_code,
             duration_ms,
-            client_ip,
+            _client_log_ref(client_ip),
             request_id,
         )
         return response

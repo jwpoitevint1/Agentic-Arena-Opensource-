@@ -5,7 +5,10 @@ import rego.v1
 default allow := false
 
 policy_version := "1.1"
-ui_guide_model_key := "ling_3_0_flash_vl_free"
+ui_guide_model_keys := {
+    "ling_3_0_flash_vl_free",
+    "mistral_small_3_2_24b",
+}
 
 role_actions := {
     "agentic_runner": ["model.chat", "model.embed", "model.rerank", "model.safety", "model.speech"],
@@ -144,9 +147,13 @@ chatbot_token_limit_exceeded if {
     object.get(input.request, "max_tokens", 0) > 2048
 }
 
+chatbot_model_allowed if {
+    object.get(input.request, "model_key", "") in ui_guide_model_keys
+}
+
 chatbot_model_mismatch if {
     input.actor.role == "chatbot_runner"
-    object.get(input.request, "model_key", "") != ui_guide_model_key
+    not chatbot_model_allowed
 }
 
 mcp_request if {

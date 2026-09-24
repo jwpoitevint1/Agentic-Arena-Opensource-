@@ -123,12 +123,13 @@ HEALTHCARE_SENSITIVE_FIELD_KEYS = {
     "admission_time": "ENCOUNTER_TIME",
 }
 
-HEALTHCARE_OUTPUT_PATTERNS: tuple[tuple[str, re.Pattern[str], str], ...] = BASELINE_OUTPUT_PATTERNS + (
+HEALTHCARE_OUTPUT_PATTERNS: tuple[tuple[str, re.Pattern[str], str], ...] = (
     (
         "PATIENT_ID",
         re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)"),
         "[REDACTED_PATIENT_ID]",
     ),
+) + BASELINE_OUTPUT_PATTERNS + (
     (
         "MRN",
         re.compile(r"(?i)(\b(?:mrn|medical\s+record\s+number)\s*[:=#-]?\s*)[A-Z0-9-]{4,32}\b"),

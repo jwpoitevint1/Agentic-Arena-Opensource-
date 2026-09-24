@@ -11,16 +11,16 @@ def test_model_catalog_lists_allowlisted_models() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["count"] == 31
-    assert len(payload["models"]) == 31
+    assert payload["count"] == 28
+    assert len(payload["models"]) == 28
     assert "openrouter_configured" in payload
 
 
 def test_model_catalog_returns_one_model() -> None:
-    response = client.get("/api/v1/models/gpt_sol_latest")
+    response = client.get("/api/v1/models/gpt_5_6_sol")
 
     assert response.status_code == 200
-    assert response.json()["model_id"] == "~openai/gpt-sol-latest"
+    assert response.json()["model_id"] == "openai/gpt-5.6-sol"
 
 
 def test_model_catalog_rejects_unknown_model() -> None:
