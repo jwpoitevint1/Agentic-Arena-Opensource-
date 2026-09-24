@@ -314,7 +314,8 @@ function Control({ name, desc, state, tone = "good" }) {
 
 function App() {
   const initialHash = window.location.hash.replace("#", "");
-  const [view, setViewState] = useState(initialHash === "overview" || NAV.some(([key]) => key === initialHash) ? initialHash : "overview");
+  const validInitialView = initialHash === "home" || initialHash === "overview" || NAV.some(([key]) => key === initialHash);
+  const [view, setViewState] = useState(validInitialView ? initialHash : "home");
   const [ready, setReady] = useState(null);
   const [cv11, setCv11] = useState(null);
   const [models, setModels] = useState(FALLBACK_MODELS);
@@ -333,7 +334,7 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const next = window.location.hash.replace("#", "");
-      if (next === "overview" || NAV.some(([key]) => key === next)) setViewState(next);
+      if (next === "home" || next === "overview" || NAV.some(([key]) => key === next)) setViewState(next);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -379,11 +380,11 @@ function App() {
     saveEvidence([]);
   }
 
-  const title = view === "overview" ? "Project" : (NAV.find(([key]) => key === view)?.[1] || "Agentic Arena");
+  const title = view === "home" ? "Home" : view === "overview" ? "Project" : (NAV.find(([key]) => key === view)?.[1] || "Agentic Arena");
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <button className="brand brand-button" onClick={() => setView("overview")} aria-label="Agentic Arena overview">
+      <button className="brand brand-button" onClick={() => setView("home")} aria-label="Agentic Arena home">
         <div className="brand-mark">AA</div>
         <div><div className="brand-title">Agentic Arena</div><div className="brand-subtitle">CV 1.1 governed lab</div></div>
       </button>
@@ -404,6 +405,7 @@ function App() {
       </header>
 
       {bootstrapError && <div className="notice error-notice page-notice">{bootstrapError}</div>}
+      {view === "home" && <Home setView={setView} models={models} functions={functions} />}
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
       {view === "lab" && <LabRunner models={models} functions={functions} onCapture={capturePair} setView={setView} />}
       {view === "evidence" && <Evidence evidence={evidence} onClear={clearEvidence} models={models} />}
@@ -416,6 +418,65 @@ function App() {
       {view === "diagnostics" && <Diagnostics models={models} functions={functions} entities={mcpEntities} />}
     </main>
   </div>;
+}
+
+function Home({ setView, models, functions }) {
+  return <>
+    <section className="hero">
+      <div className="eyebrow">Live governed AI lab</div>
+      <h2>Run the experiment. Inspect the evidence.</h2>
+      <p>Agentic Arena compares the same task through governed and ungoverned AI execution paths using matched models, business functions, domain data, and source context. Start with a live run, then inspect what the control layer changed and what evidence it produced.</p>
+      <div className="hero-actions">
+        <button className="primary" onClick={() => setView("lab")}>Open Arena Lab</button>
+        <button className="secondary" onClick={() => setView("overview")}>View Project</button>
+      </div>
+    </section>
+
+    <section className="section grid-4">
+      <Metric label="Domains" value="6" foot="Finance · environmental · healthcare · retail · aviation · freight" />
+      <Metric label="Functions" value={String(functions.length)} foot="Bounded business functions" />
+      <Metric label="Models" value={String(models.length)} foot="Curated backend allowlist" />
+      <Metric label="Comparison" value="Matched" foot="Governed vs. ungoverned execution" />
+    </section>
+
+    <section className="section grid-3">
+      <div className="card">
+        <div className="eyebrow">01 · Choose</div>
+        <div className="section-title">Pick a domain, function, and model</div>
+        <p className="body-copy">Use one of the six paired business domains and select the model and function you want to test.</p>
+      </div>
+      <div className="card">
+        <div className="eyebrow">02 · Run</div>
+        <div className="section-title">Execute the matched comparison</div>
+        <p className="body-copy">The Arena sends the same task through governed and ungoverned paths so the governance layer is the intended experimental variable.</p>
+      </div>
+      <div className="card">
+        <div className="eyebrow">03 · Inspect</div>
+        <div className="section-title">Review output and runtime evidence</div>
+        <p className="body-copy">Compare responses, latency, tokens, cost telemetry, policy decisions, and the evidence left behind by each execution path.</p>
+      </div>
+    </section>
+
+    <section className="section grid-2">
+      <div className="card">
+        <div className="eyebrow">Start here</div>
+        <div className="section-title">Experience the control before reading the architecture</div>
+        <p className="body-copy">Run a comparison first. The Project page documents CV 1.1, the trust boundaries, control architecture, deployment model, and regulatory-alignment posture when you want the deeper explanation.</p>
+        <div className="hero-actions">
+          <button className="primary" onClick={() => setView("lab")}>Go to Arena Lab</button>
+        </div>
+      </div>
+      <div className="card">
+        <div className="eyebrow">Evidence path</div>
+        <div className="section-title">The result does not end at model output</div>
+        <p className="body-copy">After a run, use Evidence for the side-by-side comparison and Runtime Logbook for recent recorded executions. Source datasets remain separate from the AI runtime.</p>
+        <div className="hero-actions">
+          <button className="secondary" onClick={() => setView("evidence")}>Open Evidence</button>
+          <button className="ghost" onClick={() => setView("logbook")}>Runtime Logbook</button>
+        </div>
+      </div>
+    </section>
+  </>;
 }
 
 function Overview({ setView, ready, cv11, models, functions, evidence }) {
