@@ -30,7 +30,7 @@ def test_governed_output_is_not_released_when_signed_audit_write_fails(monkeypat
             GovernedExecuteRequest(
                 function_key="analyst",
                 system_id=6,
-                model_key="ling_3_0_flash_vl_free",
+                model_key="ling_3_0_flash",
                 task="Analyze freight.",
             )
         )
@@ -51,7 +51,7 @@ def test_control_output_is_not_released_when_audit_write_fails(monkeypatch) -> N
             UngovernedExecuteRequest(
                 function_key="analyst",
                 system_id=6,
-                model_key="ling_3_0_flash_vl_free",
+                model_key="ling_3_0_flash",
                 task="Analyze freight.",
             )
         )

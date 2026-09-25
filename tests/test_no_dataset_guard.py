@@ -15,7 +15,7 @@ def _assistant_content(result: dict[str, object]) -> str:
 
 def _model_result(content: str = "grounded") -> dict[str, object]:
     return {
-        "model_key": "ling_3_0_flash_vl_free",
+        "model_key": "ling_3_0_flash",
         "model_id": "test-model",
         "result": {
             "choices": [
@@ -70,7 +70,7 @@ def test_governed_execute_without_manual_context_uses_authorized_neon(monkeypatc
         GovernedExecuteRequest(
             function_key="analyst",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze the freight dataset.",
             source_context=None,
         )
@@ -104,7 +104,7 @@ def test_ungoverned_execute_without_any_dataset_is_unavailable(monkeypatch) -> N
         UngovernedExecuteRequest(
             function_key="analyst",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze the freight dataset.",
             source_context=None,
         )
@@ -136,7 +136,7 @@ def test_governed_empty_neon_without_manual_context_fails_closed(monkeypatch) ->
         GovernedExecuteRequest(
             function_key="analyst",
             system_id=5,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze passenger trends by country and year.",
             source_context=None,
         )
@@ -174,7 +174,7 @@ def test_governed_with_actual_source_context_can_use_neon_schema(monkeypatch) ->
         GovernedExecuteRequest(
             function_key="analyst",
             system_id=5,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze passenger trends by country and year.",
             source_context="Country Name,2019\nExampleland,12345",
         )
@@ -214,7 +214,7 @@ def test_ungoverned_execute_uses_matched_neon_rows_without_manual_context(monkey
         UngovernedExecuteRequest(
             function_key="analyst",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze the freight dataset.",
             source_context=None,
         )
@@ -252,7 +252,7 @@ def test_governed_dataset_error_is_unavailable(monkeypatch) -> None:
         GovernedExecuteRequest(
             function_key="analyst",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze the freight dataset.",
             source_context=None,
         )
@@ -301,7 +301,7 @@ def test_data_modeler_requires_bounded_mcp_evidence_path(monkeypatch) -> None:
         GovernedExecuteRequest(
             function_key="data_modeler",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Inspect the freight data model.",
         )
     )
@@ -334,7 +334,7 @@ def test_relational_read_failure_is_unavailable(monkeypatch) -> None:
         GovernedExecuteRequest(
             function_key="analyst",
             system_id=6,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             task="Analyze freight.",
         )
     )
