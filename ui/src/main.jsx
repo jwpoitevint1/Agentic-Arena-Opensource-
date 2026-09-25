@@ -40,6 +40,8 @@ const FALLBACK_MODELS = [
   { key: "qwen_3_6_flash", display_name: "Qwen3.6 Flash", vendor: "Qwen", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
 ];
 
+const ARENA_MODEL_KEYS = new Set(FALLBACK_MODELS.map((model) => model.key));
+
 const MODEL_GROUPS = [
   ["frontier", "Frontier / hosted models"],
   ["open_dynamic", "Open weights · published / unspecified size"],
@@ -428,7 +430,8 @@ function App() {
       if (results[0].status === "fulfilled") setReady(results[0].value);
       if (results[1].status === "fulfilled") setCv11(results[1].value);
       if (results[2].status === "fulfilled") {
-        const agents = (results[2].value.models || []).filter((item) => item.kind === "agent");
+        const agents = (results[2].value.models || [])
+          .filter((item) => item.kind === "agent" && ARENA_MODEL_KEYS.has(item.key));
         if (agents.length) setModels(agents);
       }
       if (results[3].status === "fulfilled" && results[3].value.functions?.length) setFunctions(results[3].value.functions);
