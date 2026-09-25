@@ -2017,15 +2017,19 @@ function MCPConsole({ models, entities }) {
 }
 
 function Chatbot({ models }) {
+  const chatbotModels = useMemo(
+    () => models.filter((item) => ARENA_MODEL_KEYS.has(item.key)),
+    [models],
+  );
   const [systemId, setSystemId] = useState(1);
   const [workflowKey, setWorkflowKey] = useState("analyst");
-  const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
+  const [modelKey, setModelKey] = useState(chatbotModels[0]?.key || FALLBACK_MODELS[0].key);
   const [history, setHistory] = useState([{ role: "assistant", content: "Agentic Arena guide ready. I can explain the public architecture, CV 1.1 controls, or help route you to a governed workflow." }]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { if (!models.some((item) => item.key === modelKey) && models[0]) setModelKey(models[0].key); }, [models, modelKey]);
+  useEffect(() => { if (!chatbotModels.some((item) => item.key === modelKey) && chatbotModels[0]) setModelKey(chatbotModels[0].key); }, [chatbotModels, modelKey]);
 
   async function send() {
     const current = message.trim();
@@ -2056,7 +2060,7 @@ function Chatbot({ models }) {
       <div className="chat-composer"><textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder="Enter a task for the selected governed domain and workflow…" /><button className="primary" onClick={send} disabled={sending || !message.trim()}>{sending ? "Sending…" : "Send"}</button></div>
     </div>
     <div className="form-panel side-config">
-      <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
+      <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={chatbotModels} /></select></div>
       <div className="field config-gap"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((domain) => <option key={domain.id} value={domain.id}>{domain.name}</option>)}</select></div>
       <div className="field config-gap"><label>Workflow</label><select value={workflowKey} onChange={(e) => setWorkflowKey(e.target.value)}><option value="analyst">Analyst</option><option value="auditor">Auditor</option><option value="data_modeler">Data Modeler</option><option value="evaluator">Evaluator</option><option value="advisor">Advisor</option></select></div>
       <div className="section-title config-title">Chatbot boundaries</div>
