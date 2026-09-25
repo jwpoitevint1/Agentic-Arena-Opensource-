@@ -248,18 +248,6 @@ _MODELS: tuple[ModelDefinition, ...] = (
         tool_capable=True,
     ),
     ModelDefinition(
-        key="ternary_bonsai_2_27b",
-        display_name="Ternary Bonsai 2 27B",
-        vendor="PrismML",
-        model_id="prism-ml/ternary-bonsai-2-27b",
-        kind=ModelKind.AGENT,
-        tool_capable=True,
-        access_class="open_weights",
-        parameter_size="27B dense",
-        parameter_total_b=27,
-        parameter_active_b=27,
-    ),
-    ModelDefinition(
         key="muse_spark_1_3",
         display_name="Muse Spark 1.3",
         vendor="Meta",

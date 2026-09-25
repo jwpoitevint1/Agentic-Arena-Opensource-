@@ -33,7 +33,6 @@ const FALLBACK_MODELS = [
   { key: "mercury_2_5", display_name: "Mercury 2.5", vendor: "Inception", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "ling_3_0_flash", display_name: "Ling 3.0 Flash", vendor: "inclusionAI", kind: "agent", access_class: "open_weights", parameter_size: "124B total / 5.1B active", parameter_total_b: 124 },
   { key: "glm_5_3_prime", display_name: "GLM 5.3 Prime", vendor: "Z.ai", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
-  { key: "ternary_bonsai_2_27b", display_name: "Ternary Bonsai 2 27B", vendor: "PrismML", kind: "agent", access_class: "open_weights", parameter_size: "27B dense", parameter_total_b: 27 },
   { key: "muse_spark_1_3", display_name: "Muse Spark 1.3", vendor: "Meta", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "qwen_3_8_27b", display_name: "Qwen3.8 27B", vendor: "Qwen", kind: "agent", access_class: "open_weights", parameter_size: "27B dense", parameter_total_b: 27 },
   { key: "qwen_3_7_plus", display_name: "Qwen3.7 Plus", vendor: "Qwen", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
