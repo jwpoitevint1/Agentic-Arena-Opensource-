@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-const DEFAULT_BACKEND = "https://api.example.com";
+const DEFAULT_BACKEND = "https://agentic-arena-api-production.up.railway.app";
 const ROUTE_CONTRACTS = [
   { pattern: /^\/health$/, methods: new Set(["GET"]) },
   { pattern: /^\/ready$/, methods: new Set(["GET"]) },

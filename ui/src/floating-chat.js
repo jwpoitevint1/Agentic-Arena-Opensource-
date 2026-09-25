@@ -1,8 +1,25 @@
 import "./floating-chat.css";
 
-const UI_GUIDE_MODEL_KEY = "ling_3_0_flash_vl_free";
-const UI_GUIDE_MODEL_NAME = "Ling 3.0 Flash VL";
-const START_MESSAGE = "UI Guide ready. Ask about CV 1.1, the control architecture, the Arena interface, or governed workflows.";
+const UI_GUIDE_PRIMARY_MODEL = Object.freeze({
+  key: "ling_3_0_flash",
+  name: "Ling 3.0 Flash",
+});
+const UI_GUIDE_FAILOVER_MODEL = Object.freeze({
+  key: "mistral_small_4",
+  name: "Mistral Small 4",
+});
+const UI_GUIDE_CHAT_TOKENS = 512;
+const UI_GUIDE_DOMAINS = [
+  [1, "Finance"],
+  [2, "Environmental Operations"],
+  [3, "Healthcare"],
+  [4, "Retail"],
+  [5, "Aviation"],
+  [6, "Supply Chain / Freight"],
+];
+
+const START_MESSAGE =
+  "UI Guide ready. Talk with me about CV 1.1, the architecture, any of the six domains, or the governed agentic workflows available in Agentic Arena.";
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(`/api/proxy?path=${encodeURIComponent(path)}`, {
@@ -19,6 +36,8 @@ async function apiRequest(path, options = {}) {
     const message = typeof detail === "string" ? detail : detail?.message || JSON.stringify(detail);
     const error = new Error(message || `Request failed with ${response.status}`);
     error.status = response.status;
+    error.code = typeof detail === "object" ? detail?.code || null : null;
+    error.failoverEligible = typeof detail === "object" ? detail?.failover_eligible === true : false;
     throw error;
   }
   return payload;
@@ -42,6 +61,12 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function optionMarkup(items) {
+  return items
+    .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+    .join("");
+}
+
 function mountFloatingChat() {
   if (document.getElementById("cv-floating-chat")) return;
   if (window.location.hash === "#chat") window.location.hash = "#overview";
@@ -52,7 +77,7 @@ function mountFloatingChat() {
   shell.innerHTML = `
     <button class="cv-chat-launcher" type="button" aria-label="Open UI Guide" aria-expanded="false">
       <span class="cv-chat-launcher-mark">UI</span>
-      <span class="cv-chat-launcher-copy"><strong>UI Guide</strong><small>${escapeHtml(UI_GUIDE_MODEL_NAME)} · CV 1.1</small></span>
+      <span class="cv-chat-launcher-copy"><strong>UI Guide</strong><small>${escapeHtml(UI_GUIDE_PRIMARY_MODEL.name)} · CV 1.1</small></span>
     </button>
     <section class="cv-chat-panel" aria-label="UI Guide">
       <header class="cv-chat-header">
@@ -66,15 +91,16 @@ function mountFloatingChat() {
         </div>
       </header>
       <div class="cv-chat-settings">
-        <label>Model<div class="cv-chat-model-fixed" title="UI Guide model is fixed by policy">${escapeHtml(UI_GUIDE_MODEL_NAME)}</div></label>
+        <label class="cv-chat-model-label">Model<div class="cv-chat-model-fixed" title="UI Guide models are bounded by the CV 1.1 contract">${escapeHtml(UI_GUIDE_PRIMARY_MODEL.name)}</div></label>
+        <label>Domain<select class="cv-chat-domain">${optionMarkup(UI_GUIDE_DOMAINS)}</select></label>
       </div>
       <div class="cv-chat-log" aria-live="polite"></div>
       <div class="cv-chat-error" hidden></div>
       <div class="cv-chat-composer">
-        <textarea rows="2" maxlength="20000" placeholder="Ask UI Guide about CV 1.1, controls, architecture, or governed workflows…"></textarea>
-        <button class="cv-chat-send" type="button">Send</button>
+        <textarea rows="2" maxlength="20000" placeholder="Ask about CV 1.1, the architecture, domains, or governed agentic workflows…"></textarea>
+        <button class="cv-chat-send" type="button">Talk</button>
       </div>
-      <footer>${escapeHtml(UI_GUIDE_MODEL_NAME)} · bounded history · 512-token response ceiling · CV 1.1 governed · guard trip requires Reset</footer>
+      <footer>${escapeHtml(UI_GUIDE_PRIMARY_MODEL.name)} · 6 domains · governed workflow guidance · bounded history · CV 1.1</footer>
     </section>
   `;
   document.body.appendChild(shell);
@@ -85,10 +111,97 @@ function mountFloatingChat() {
   const log = shell.querySelector(".cv-chat-log");
   const textarea = shell.querySelector("textarea");
   const sendButton = shell.querySelector(".cv-chat-send");
+  const domainSelect = shell.querySelector(".cv-chat-domain");
   const errorBox = shell.querySelector(".cv-chat-error");
+  const modelDisplay = shell.querySelector(".cv-chat-model-fixed");
+  const launcherModel = shell.querySelector(".cv-chat-launcher-copy small");
+  const footer = shell.querySelector("footer");
+  domainSelect.value = "6";
+
+  let primaryModel = UI_GUIDE_PRIMARY_MODEL;
+  let failoverModel = UI_GUIDE_FAILOVER_MODEL;
+  let activeModel = primaryModel;
+  let modelContractLoaded = false;
   let history = [{ role: "assistant", content: START_MESSAGE }];
   let sending = false;
   let circuitBroken = false;
+
+  function selectedDomain() {
+    const id = Number(domainSelect.value);
+    return {
+      id,
+      name: UI_GUIDE_DOMAINS.find(([value]) => value === id)?.[1] || "Unknown",
+    };
+  }
+
+  function updateModelDisplay() {
+    modelDisplay.textContent = activeModel.name;
+    modelDisplay.title = activeModel.key === primaryModel.key
+      ? "Primary UI Guide model"
+      : "Automatic failover model";
+    launcherModel.textContent = `${activeModel.name} · CV 1.1`;
+    footer.textContent = `${activeModel.name} · 6 domains · governed workflow guidance · bounded history · CV 1.1`;
+  }
+
+  async function syncModelContract(systemId) {
+    if (modelContractLoaded) return;
+    const capabilities = await apiRequest(`/api/v1/chatbot/capabilities/${systemId}`);
+    const contract = capabilities?.model_contract;
+    const primary = contract?.primary;
+    const failover = contract?.failover;
+    const allowedKeys = Array.isArray(contract?.allowed_keys) ? contract.allowed_keys : [];
+
+    if (
+      primary?.key && primary?.name &&
+      failover?.key && failover?.name &&
+      allowedKeys.includes(primary.key) &&
+      allowedKeys.includes(failover.key)
+    ) {
+      const wasPrimary = activeModel.key === primaryModel.key;
+      primaryModel = Object.freeze({ key: primary.key, name: primary.name });
+      failoverModel = Object.freeze({ key: failover.key, name: failover.name });
+      if (wasPrimary) activeModel = primaryModel;
+      updateModelDisplay();
+    }
+    modelContractLoaded = true;
+  }
+
+  function isFailoverEligible(error) {
+    if (error?.failoverEligible === true) return true;
+    if (String(error?.code || "").startsWith("cv11_")) return false;
+    const status = Number(error?.status || 0);
+    return [404, 408, 429, 500, 502, 503, 504].includes(status);
+  }
+
+  async function requestWithFailover(body) {
+    try {
+      await syncModelContract(body.system_id);
+    } catch {
+      // Fall back to the local mirror of the published API/CV1.1 contract.
+    }
+
+    try {
+      return await apiRequest("/api/v1/chatbot/message", {
+        method: "POST",
+        body: { ...body, model_key: activeModel.key },
+      });
+    } catch (error) {
+      if (activeModel.key !== primaryModel.key || !isFailoverEligible(error)) throw error;
+
+      activeModel = failoverModel;
+      updateModelDisplay();
+      history = [...history, {
+        role: "assistant",
+        content: `Ling 3.0 is unavailable. UI Guide automatically switched to ${activeModel.name}.`,
+      }];
+      renderHistory();
+
+      return apiRequest("/api/v1/chatbot/message", {
+        method: "POST",
+        body: { ...body, model_key: activeModel.key },
+      });
+    }
+  }
 
   function renderHistory() {
     log.innerHTML = history.map((item) => `
@@ -109,13 +222,15 @@ function mountFloatingChat() {
 
   function setSending(value) {
     sending = value;
-    sendButton.disabled = circuitBroken || value || !textarea.value.trim();
-    sendButton.textContent = value ? "…" : "Send";
+    const blocked = circuitBroken || value || !textarea.value.trim();
+    sendButton.disabled = blocked;
+    sendButton.textContent = value ? "…" : "Talk";
   }
 
   function setCircuitBreaker(tripped) {
     circuitBroken = tripped;
     textarea.disabled = tripped;
+    domainSelect.disabled = tripped;
     shell.classList.toggle("circuit-broken", tripped);
     if (tripped) {
       textarea.value = "";
@@ -129,31 +244,38 @@ function mountFloatingChat() {
     errorBox.textContent = message || "";
   }
 
-  async function send() {
+  function resetConversation(message = START_MESSAGE) {
+    history = [{ role: "assistant", content: message }];
+    setCircuitBreaker(false);
+    showError("");
+    renderHistory();
+  }
+
+  async function submit() {
     const current = textarea.value.trim();
     if (!current || sending || circuitBroken) return;
-    showError("");
+
+    const domain = selectedDomain();
     const prior = history.slice(-12);
+    showError("");
     history = [...history, { role: "user", content: current }];
     textarea.value = "";
     renderHistory();
     setSending(true);
+
+    const body = {
+      operation: "chat",
+      system_id: domain.id,
+      model_key: activeModel.key,
+      message: current,
+      history: prior,
+      max_tokens: UI_GUIDE_CHAT_TOKENS,
+    };
+
     try {
-      const result = await apiRequest("/api/v1/chatbot/message", {
-        method: "POST",
-        body: {
-          operation: "chat",
-          system_id: 6,
-          model_key: UI_GUIDE_MODEL_KEY,
-          message: current,
-          history: prior,
-          max_tokens: 512,
-        },
-      });
-      history = [...history, {
-        role: "assistant",
-        content: result.reply || assistantText(result) || "No response returned.",
-      }];
+      const result = await requestWithFailover(body);
+      const reply = result.reply || assistantText(result) || "No response returned.";
+      history = [...history, { role: "assistant", content: reply }];
       if (result?.chatbot?.reset_required || result?.chatbot?.circuit_breaker) {
         setCircuitBreaker(true);
       }
@@ -174,21 +296,25 @@ function mountFloatingChat() {
   launcher.addEventListener("click", () => setOpen(true));
   minimize.addEventListener("click", () => setOpen(false));
   reset.addEventListener("click", () => {
-    history = [{ role: "assistant", content: START_MESSAGE }];
-    setCircuitBreaker(false);
-    showError("");
-    renderHistory();
+    resetConversation();
     textarea.focus();
+  });
+  domainSelect.addEventListener("change", () => {
+    const domain = selectedDomain();
+    resetConversation(
+      `Domain context switched to ${domain.name}. Ask about the domain, CV 1.1, or any available governed agentic workflow.`
+    );
   });
   textarea.addEventListener("input", () => setSending(sending));
   textarea.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      send();
+      submit();
     }
   });
-  sendButton.addEventListener("click", send);
+  sendButton.addEventListener("click", () => submit());
 
+  updateModelDisplay();
   renderHistory();
 }
 

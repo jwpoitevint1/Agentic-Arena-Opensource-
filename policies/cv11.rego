@@ -6,8 +6,8 @@ default allow := false
 
 policy_version := "1.1"
 ui_guide_model_keys := {
-    "ling_3_0_flash_vl_free",
-    "mistral_small_3_2_24b",
+    "ling_3_0_flash",
+    "mistral_small_4",
 }
 
 role_actions := {

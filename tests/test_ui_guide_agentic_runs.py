@@ -68,7 +68,7 @@ def test_ui_guide_launches_selected_domain_through_governed_executor(monkeypatch
         ChatbotRequest(
             operation="execute_workflow",
             system_id=1,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             message="Analyze the finance dataset for notable patterns.",
             workflow=WorkflowInvocation(function_key="analyst", model_key="gemini_3_8_flash"),
             max_tokens=512,
@@ -111,8 +111,8 @@ def test_floating_ui_guide_is_chat_only_and_keeps_model_failover() -> None:
     assert "cv-chat-run" not in source
     assert "UI_GUIDE_WORKFLOWS" not in source
     assert "UI_GUIDE_RUN_TOKENS" not in source
-    assert 'ling_3_0_flash_vl_free' in source
-    assert 'mistral_small_3_2_24b' in source
+    assert 'ling_3_0_flash' in source
+    assert 'mistral_small_4' in source
     assert 'requestWithFailover' in source
     assert 'isFailoverEligible' in source
     assert 'automatically switched' in source
@@ -143,7 +143,7 @@ def test_ui_guide_converts_recorded_model_unavailable_workflow_to_failover_http_
             ChatbotRequest(
                 operation="execute_workflow",
                 system_id=3,
-                model_key="ling_3_0_flash_vl_free",
+                model_key="ling_3_0_flash",
                 message="Audit the recorded model runs.",
                 workflow=WorkflowInvocation(function_key="evaluator"),
                 max_tokens=512,
@@ -153,7 +153,7 @@ def test_ui_guide_converts_recorded_model_unavailable_workflow_to_failover_http_
     exc = exc_info.value
     assert exc.status_code == 502
     assert exc.detail["code"] == "ui_guide_model_unavailable"
-    assert exc.detail["model_key"] == "ling_3_0_flash_vl_free"
+    assert exc.detail["model_key"] == "ling_3_0_flash"
     assert exc.detail["execution_code"] == "AUDITOR_MODEL_UNAVAILABLE"
     assert exc.detail["failover_eligible"] is True
 
@@ -164,7 +164,7 @@ def test_ui_guide_capabilities_offer_three_registry_workflow_models() -> None:
 
     assert len(choices) == 3
     assert len({item["key"] for item in choices}) == 3
-    assert all(item["key"] not in {"ling_3_0_flash_vl_free", "mistral_small_3_2_24b"} for item in choices)
+    assert all(item["key"] not in {"ling_3_0_flash", "mistral_small_4"} for item in choices)
 
 
 def test_chat_workflow_request_returns_three_model_choices_before_execution() -> None:
@@ -172,7 +172,7 @@ def test_chat_workflow_request_returns_three_model_choices_before_execution() ->
         ChatbotRequest(
             operation="chat",
             system_id=4,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             message="Run the analyst workflow on this retail domain.",
             max_tokens=512,
         )
@@ -221,7 +221,7 @@ def test_chat_model_selection_executes_pending_workflow(monkeypatch) -> None:
         ChatbotRequest(
             operation="chat",
             system_id=4,
-            model_key="ling_3_0_flash_vl_free",
+            model_key="ling_3_0_flash",
             message="Use Gemini 3.8 Flash.",
             history=[
                 {

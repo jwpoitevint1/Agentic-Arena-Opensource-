@@ -74,13 +74,13 @@ test_denies_governed_function_over_5000_tokens if {
 }
 
 test_allows_governed_chatbot_primary_model if {
-    request := object.union(base_request, {"action": "model.chat", "model_key": "ling_3_0_flash_vl_free", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
+    request := object.union(base_request, {"action": "model.chat", "model_key": "ling_3_0_flash", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     decision.allow
 }
 
 test_allows_governed_chatbot_failover_model if {
-    request := object.union(base_request, {"action": "model.chat", "model_key": "mistral_small_3_2_24b", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
+    request := object.union(base_request, {"action": "model.chat", "model_key": "mistral_small_4", "content": "Compare the test results without changing them.", "message_roles": ["user"], "max_tokens": 1536})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     decision.allow
 }
@@ -93,20 +93,20 @@ test_denies_chatbot_non_bound_model if {
 }
 
 test_allows_chatbot_read_ungoverned_scenario if {
-    request := object.union(base_request, {"action": "scenario.read.ungoverned", "model_key": "ling_3_0_flash_vl_free", "system_id": 3})
+    request := object.union(base_request, {"action": "scenario.read.ungoverned", "model_key": "ling_3_0_flash", "system_id": 3})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     decision.allow
 }
 
 test_chatbot_cannot_write_workspace if {
-    request := object.union(base_request, {"action": "workspace.write", "model_key": "ling_3_0_flash_vl_free", "system_id": 2})
+    request := object.union(base_request, {"action": "workspace.write", "model_key": "ling_3_0_flash", "system_id": 2})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     not decision.allow
     "action_not_permitted_for_role" in decision.reasons
 }
 
 test_denies_chatbot_over_2048_tokens if {
-    request := object.union(base_request, {"action": "model.chat", "model_key": "ling_3_0_flash_vl_free", "system_id": 4, "message_roles": ["user"], "max_tokens": 3000})
+    request := object.union(base_request, {"action": "model.chat", "model_key": "ling_3_0_flash", "system_id": 4, "message_roles": ["user"], "max_tokens": 3000})
     decision := data.cv11.gatekeeper.decision with input as {"actor": {"role": "chatbot_runner"}, "request": request}
     not decision.allow
     "governed_chatbot_token_limit_exceeded" in decision.reasons
