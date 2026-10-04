@@ -89,7 +89,7 @@ def test_governed_execute_without_manual_context_uses_authorized_neon(monkeypatc
 
 def test_ungoverned_execute_without_any_dataset_is_unavailable(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.ungoverned_routes.neon_dataset_context",
+        "app.ungoverned_routes.ungoverned_dataset_context",
         lambda target: (None, {"row_count": 0}),
     )
     monkeypatch.setattr(
@@ -194,7 +194,7 @@ def test_ungoverned_execute_uses_matched_neon_rows_without_manual_context(monkey
         '"columns":[{"column_name":"Shipment_ID","data_type":"text","is_nullable":"YES"}]}'
     )
     monkeypatch.setattr(
-        "app.ungoverned_routes.neon_dataset_context",
+        "app.ungoverned_routes.ungoverned_dataset_context",
         lambda target: (neon_context, {"row_count": 2000}),
     )
     monkeypatch.setattr(
