@@ -20,6 +20,10 @@ role_actions := {
         "model.chat", "data.read", "data.model", "output.write",
         "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.sample", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.statistics", "mcp.dataset.profile", "mcp.rag.retrieve",
     ],
+    "mixed_capability_runner": [
+        "model.chat", "data.read", "data.model", "output.write",
+        "mcp.dataset.describe", "mcp.dataset.schema", "mcp.dataset.sample", "mcp.dataset.query", "mcp.dataset.aggregate", "mcp.dataset.statistics", "mcp.dataset.profile", "mcp.rag.retrieve",
+    ],
     "evaluator_runner": [
         "model.chat", "audit.runs.read", "output.write",
     ],
@@ -37,6 +41,7 @@ role_actions := {
 function_roles := {
     "analyst": "analyst_runner",
     "data_modeler": "data_modeler_runner",
+    "mixed_capability": "mixed_capability_runner",
     "evaluator": "evaluator_runner",
     "auditor": "evaluator_runner",
     "advisor": "advisor_runner",
@@ -45,6 +50,7 @@ function_roles := {
 mcp_entity_roles := {
     "analyst": "analyst_runner",
     "data_modeler": "data_modeler_runner",
+    "mixed_capability": "mixed_capability_runner",
     "evaluator": "evaluator_runner",
     "advisor": "advisor_runner",
 }
@@ -144,7 +150,7 @@ function_token_limit_exceeded if {
 chatbot_token_limit_exceeded if {
     input.actor.role == "chatbot_runner"
     input.request.action == "model.chat"
-    object.get(input.request, "max_tokens", 0) > 2048
+    object.get(input.request, "max_tokens", 0) > 4096
 }
 
 chatbot_model_allowed if {
@@ -153,6 +159,7 @@ chatbot_model_allowed if {
 
 chatbot_model_mismatch if {
     input.actor.role == "chatbot_runner"
+    input.request.action == "model.chat"
     not chatbot_model_allowed
 }
 

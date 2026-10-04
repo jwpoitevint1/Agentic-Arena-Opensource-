@@ -25,7 +25,7 @@ def test_runtime_logbook_endpoint_and_ui_surface_full_records() -> None:
     ui = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert '/system/runtime-logbook' in backend
-    assert '["logbook", "Runtime Logbook", "03"]' in ui
+    assert '["logbook", "Runtime Logbook", "05"]' in ui
     assert 'apiRequest("/api/v1/system/runtime-logbook?limit=25"' in ui
     assert "Each persisted run record is shown in full for transparency." in ui
     assert "JSON.stringify(record, null, 2)" in ui

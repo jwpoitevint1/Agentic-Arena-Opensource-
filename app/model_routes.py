@@ -39,7 +39,7 @@ class ChatRequest(StrictRequest):
     execution: ExecutionContext
     model_key: str = Field(min_length=1, max_length=128)
     messages: list[ChatMessage] = Field(min_length=1, max_length=100)
-    max_tokens: int = Field(default=2048, ge=1, le=8192)
+    max_tokens: int = Field(default=4096, ge=1, le=8192)
 
     @model_validator(mode="after")
     def validate_total_prompt_size(self) -> "ChatRequest":

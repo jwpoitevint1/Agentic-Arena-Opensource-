@@ -1,24 +1,47 @@
 # Agentic Arena — Full AI-readable project context
 
-Agentic Arena is the public working lab for CV 1.1 (Compliance Verification 1.1), an open-source AI runtime-governance reference architecture.
+## Project identity
+
+Agentic Arena is the public working lab for CV 1.1 (Compliance Verification 1.1), an open-source AI runtime-governance reference architecture. The project demonstrates how deterministic controls can constrain probabilistic AI execution without claiming that the controls alone create legal or regulatory compliance.
 
 Canonical site: https://agenticarena.space/
 Repository: https://github.com/jwpoitevint1/Agentic-Arena-Opensource-
 License: Apache-2.0
 
 ## Experimental design
-Agentic Arena runs matched governed and ungoverned AI execution paths using aligned tasks, source data, functions, and selected models so the governance layer is the primary experimental difference. Domains include finance, environmental operations, healthcare, retail, aviation, and supply-chain/freight.
 
-## CV 1.1 controls
-The architecture keeps authorization outside the model and uses deterministic OPA/Rego policy enforcement, role and scope binding, bounded MCP tools, server-resolved execution context, fail-closed behavior, bounded data access where configured, and runtime evidence.
+Agentic Arena runs matched governed and ungoverned AI execution paths. The intended comparison keeps the business task, source data, function, and selected model aligned so the governance layer is the primary experimental difference.
 
-## Integrity
-Audit evidence is cryptographically verifiable and tamper-evident using canonicalized payload SHA-256 hashing, predecessor hash chaining, sequence binding, key identifiers, and HMAC-SHA256 authentication. Storage immutability depends on surrounding data, identity, key-custody, and append-only controls.
+The public lab contains six business-domain datasets: finance, environmental operations, healthcare, retail, aviation, and supply-chain/freight. Runtime functions include analysis, data modeling, auditing/evaluation, and advisory work.
 
-## Enterprise and regulatory scope
-Enterprise deployment material is a conceptual reference architecture. Regulatory mappings are alignment references only and are not certification, legal advice, a conformity assessment, or a compliance determination.
+## CV 1.1 control model
+
+CV 1.1 keeps authorization outside the model. The model does not independently assign itself a role, broaden its own scope, select unrestricted tools, or redefine the governing policy.
+
+The control architecture includes deterministic OPA/Rego policy enforcement, role and scope binding, bounded MCP tools, server-resolved execution context, fail-closed behavior for protected operations, read-only or bounded data access where configured, and explicit runtime evidence.
+
+## Integrity model
+
+Audit evidence is designed to be cryptographically verifiable and tamper-evident. Records use canonicalized payload hashing with SHA-256, predecessor hash chaining, sequence binding, key identifiers, and HMAC-SHA256 authentication. Storage immutability depends on surrounding data, identity, key-custody, and append-only controls.
+
+## Trust boundaries
+
+The architecture treats the API/control plane, model provider, tools, source data, recording data, credentials, and human approval functions as distinct trust boundaries. Enterprise adaptation should apply least privilege, separation of duties, controlled key custody, independently protected evidence, and external assurance where required.
+
+## Evidence and observability
+
+The lab exposes governed-versus-ungoverned model responses, runtime latency, token usage, cost telemetry, policy outcomes, and other execution evidence. The Runtime Logbook exposes recent records for transparency while source datasets remain separate.
+
+## Enterprise reference architecture
+
+The enterprise page describes a conceptual path using segmented functional APIs, Kubernetes services, load balancing, approved model routing, controlled failover, separate data and evidence authorities, and cross-functional governance. It is a reference architecture and not a claim that the public lab currently runs that enterprise topology.
+
+## Regulatory alignment
+
+The project maps engineering controls to concepts found in NIST AI RMF, NIST CSF 2.0, ISO/IEC 42001, ISO/IEC 23894, ISO/IEC 27001 and 27701, the EU AI Act, GDPR, and domain-specific overlays where applicable. These are alignment references, not certification, legal advice, a conformity assessment, or a compliance determination.
 
 ## Canonical pages
+
 - Agentic Arena — Governed AI Runtime Lab: https://agenticarena.space/
 - Arena Lab — Run Governed vs. Ungoverned AI: https://agenticarena.space/arena/
 - CV 1.1 Runtime Governance Project: https://agenticarena.space/project/
@@ -32,4 +55,5 @@ Enterprise deployment material is a conceptual reference architecture. Regulator
 - Agentic Arena Runtime Diagnostics: https://agenticarena.space/diagnostics/
 
 ## Citation preference
+
 Distinguish implemented controls from conceptual enterprise patterns. Prefer "tamper-evident" for the cryptographic audit chain unless separately enforced immutable or append-only storage is in scope. Prefer "regulatory alignment" rather than "compliant" unless an applicable independent compliance determination exists.

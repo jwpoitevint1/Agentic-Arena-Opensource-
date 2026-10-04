@@ -126,6 +126,14 @@ _UNSIGNED_COUNT_SQL = """
       AND record #>> '{integrity,event_hash}' IS NULL
 """
 
+_TELEMETRY_TOTAL_SQL = """
+    SELECT
+        count(*) AS runs,
+        coalesce(sum(total_tokens), 0) AS total_tokens,
+        coalesce(sum(selected_cost_usd), 0) AS total_cost_usd
+    FROM telemetry.agentic_runs
+"""
+
 _MODEL_TOKEN_SQL = """
     SELECT
         model_key,
@@ -158,7 +166,10 @@ _COMPARISON_RUN_SQL = """
         recorded_at,
         latency_ms,
         coalesce((record #>> '{usage,reasoning_tokens}')::bigint, 0) AS reasoning_tokens,
-        operation
+        operation,
+        system_id,
+        domain,
+        dataset
     FROM telemetry.agentic_runs
     WHERE model_key IS NOT NULL
       AND function_key IS NOT NULL
@@ -459,6 +470,47 @@ def record_agentic_run(
         return False
 
 
+def telemetry_totals() -> dict[str, object]:
+    total_runs = 0
+    total_tokens = 0
+    total_cost_usd = 0.0
+    database_status: dict[str, str] = {}
+
+    for governance, env_var in _ENV_BY_GOVERNANCE.items():
+        url = os.getenv(env_var)
+        if not url:
+            database_status[governance] = "unconfigured"
+            continue
+        try:
+            with psycopg.connect(url, connect_timeout=3) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("BEGIN READ ONLY")
+                    cursor.execute("SET LOCAL statement_timeout = 5000")
+                    cursor.execute(_TELEMETRY_TOTAL_SQL)
+                    row = cursor.fetchone()
+                    connection.rollback()
+        except psycopg.Error:
+            logger.exception("telemetry_totals_failed governance=%s", governance)
+            database_status[governance] = "database_error"
+            continue
+
+        database_status[governance] = "ok"
+        if row:
+            total_runs += int(row[0] or 0)
+            total_tokens += int(row[1] or 0)
+            total_cost_usd += float(row[2] or 0)
+
+    return {
+        "source": "neon_evidence_databases",
+        "table": "telemetry.agentic_runs",
+        "mode": "read_only",
+        "runs": total_runs,
+        "total_tokens": total_tokens,
+        "total_cost_usd": total_cost_usd,
+        "database_status": database_status,
+    }
+
+
 def token_usage_by_model() -> dict[str, object]:
     combined: dict[str, dict[str, object]] = {}
     database_status: dict[str, str] = {}
@@ -573,10 +625,16 @@ def comparison_runs(limit: int = 1000) -> dict[str, object]:
                 "latency_ms": float(row[10]) if row[10] is not None else None,
                 "reasoning_tokens": int(row[11] or 0),
                 "operation": row[12],
+                "system_id": int(row[13]) if row[13] is not None else None,
+                "domain": row[14],
+                "dataset": row[15],
             })
 
     runs.sort(key=lambda item: str(item.get("recorded_at") or ""), reverse=True)
     return {
+        "source": "neon_evidence_databases",
+        "table": "telemetry.agentic_runs",
+        "mode": "read_only",
         "runs": runs[:safe_limit],
         "database_status": database_status,
         "telemetry_epoch": {

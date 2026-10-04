@@ -89,7 +89,7 @@ def test_governed_execute_without_manual_context_uses_authorized_neon(monkeypatc
 
 def test_ungoverned_execute_without_any_dataset_is_unavailable(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.ungoverned_routes.neon_dataset_context",
+        "app.ungoverned_routes.ungoverned_dataset_context",
         lambda target: (None, {"row_count": 0}),
     )
     monkeypatch.setattr(
@@ -194,11 +194,11 @@ def test_ungoverned_execute_uses_matched_neon_rows_without_manual_context(monkey
         '"columns":[{"column_name":"Shipment_ID","data_type":"text","is_nullable":"YES"}]}'
     )
     monkeypatch.setattr(
-        "app.ungoverned_routes.neon_dataset_context",
+        "app.ungoverned_routes.ungoverned_dataset_context",
         lambda target: (neon_context, {"row_count": 2000}),
     )
     monkeypatch.setattr(
-        "app.ungoverned_routes.query_table",
+        "app.ungoverned_routes.read_source_rows",
         lambda target, **kwargs: [{"Shipment_ID": "S-001", "Status": "Delivered"}],
     )
     monkeypatch.setattr("app.ungoverned_routes.record_agentic_run", lambda **kwargs: True)
@@ -295,7 +295,20 @@ def test_data_modeler_requires_bounded_mcp_evidence_path(monkeypatch) -> None:
         return {"structuredContent": payloads[tool_name]}
 
     monkeypatch.setattr("app.governed_routes.execute_governed_mcp_tool", fake_mcp)
-    monkeypatch.setattr("app.governed_routes.chat_completion", lambda **kwargs: _model_result())
+    model_calls = {"count": 0}
+
+    def fake_modeler_chat(**kwargs):
+        model_calls["count"] += 1
+        if model_calls["count"] == 1:
+            return _model_result(
+                'Simple Data Model: Shipment_ID is the shipment identifier.\n'
+                'VISUALIZATION_SPEC: {"type":"bar","title":"Shipment sample","x_label":"Shipment","y_label":"Count","data":[{"label":"S-002","value":1}]}'
+            )
+        return _model_result(
+            '{"valid":true,"reason":"visual matches supplied MCP row","verified_fields":["Shipment_ID"]}'
+        )
+
+    monkeypatch.setattr("app.governed_routes.chat_completion", fake_modeler_chat)
 
     result = execute_governed_function(
         GovernedExecuteRequest(

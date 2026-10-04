@@ -6,19 +6,20 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_ungoverned_catalog_mirrors_four_functions() -> None:
+def test_ungoverned_catalog_mirrors_five_functions() -> None:
     response = client.get("/api/v1/ungoverned/functions")
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["governance"] == "ungoverned"
     assert payload["cv11_enforced"] is False
-    assert payload["count"] == 4
+    assert payload["count"] == 5
     assert [item["key"] for item in payload["functions"]] == [
         "analyst",
         "data_modeler",
         "evaluator",
         "advisor",
+        "mixed_capability",
     ]
 
 

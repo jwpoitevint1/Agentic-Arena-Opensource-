@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agentic_run_store import audit_integrity_ready, comparison_runs, runtime_logbook_runs, token_usage_by_model, verify_agentic_run_chain
+from app.agentic_run_store import audit_integrity_ready, comparison_runs, runtime_logbook_runs, telemetry_totals, token_usage_by_model, verify_agentic_run_chain
 from app.analytics_routes import router as analytics_router
 from app.chatbot_routes import router as chatbot_router
 from app.config import settings
@@ -16,7 +16,7 @@ from app.governed_routes import router as governed_router
 from app.mcp.routes import router as mcp_router
 from app.middleware import RequestContextMiddleware, RequestSizeLimitMiddleware
 from app.model_routes import router as model_router
-from app.openrouter import openrouter_configured
+from app.openrouter import openrouter_configured, openrouter_usage_totals
 from app.ungoverned_routes import router as ungoverned_router
 
 
@@ -123,6 +123,11 @@ def audit_integrity_status() -> dict[str, object]:
 @app.get(f"{settings.api.prefix}/system/telemetry/tokens-by-model", tags=["system"])
 def telemetry_tokens_by_model() -> dict[str, object]:
     return token_usage_by_model()
+
+
+@app.get(f"{settings.api.prefix}/system/telemetry/totals", tags=["system"])
+def telemetry_live_totals() -> dict[str, object]:
+    return telemetry_totals()
 
 
 @app.get(f"{settings.api.prefix}/system/telemetry/comparison-runs", tags=["system"])

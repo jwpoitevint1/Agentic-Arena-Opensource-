@@ -41,7 +41,7 @@ def test_governed_output_is_not_released_when_signed_audit_write_fails(monkeypat
 
 def test_control_output_is_not_released_when_audit_write_fails(monkeypatch) -> None:
     monkeypatch.setattr(
-        "app.ungoverned_routes.neon_dataset_context",
+        "app.ungoverned_routes.ungoverned_dataset_context",
         lambda target: (None, {"row_count": 0}),
     )
     monkeypatch.setattr("app.ungoverned_routes.record_agentic_run", lambda **kwargs: False)

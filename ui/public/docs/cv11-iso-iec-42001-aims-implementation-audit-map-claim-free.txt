@@ -1,0 +1,1308 @@
+CV 1.1 — ISO/IEC 42001 AIMS IMPLEMENTATION & AUDIT MAP
+CLAIM-FREE / EVIDENCE-BASED WORKING DOCUMENT
+Document status: Working implementation framework
+Standard basis: ISO/IEC 42001:2023
+Purpose: Define what an organization would need to implement, document, test, operate, and
+evidence if CV 1.1 is used as a runtime AI-governance control layer inside an Artificial
+Intelligence Management System (AIMS).
+IMPORTANT BOUNDARY
+This document makes no claim that CV 1.1 conforms to, satisfies, certifies, or guarantees any
+ISO/IEC 42001 requirement.
+Every mapping below is a candidate implementation relationship only.
+A requirement is not considered met until the organization has:
+1. defined the control;
+2. assigned accountable ownership;
+3. implemented it in the actual environment;
+4. generated objective evidence;
+5. tested the implementation;
+6. retained the evidence;
+7. completed internal review; and
+8. survived independent audit.
+Blank, missing, stale, untested, or contradictory evidence is treated as a gap.
+======================================================================
+1. GOVERNANCE MODEL
+======================================================================
+The organization should define four distinct control layers.
+Layer 1 — Governance
+Purpose: Establish authority, policy, objectives, risk appetite, and accountability.
+Potential owners: Executive leadership, AI Governance Board, AIMS Manager.
+Required evidence: Approved policy, charter, objectives, risk criteria, meeting records,
+approvals.
+Layer 2 — Management
+Purpose: Convert governance requirements into risk treatment, lifecycle, impact, supplier, data,
+and operating processes.
+Potential owners: Risk, Compliance, Privacy, Security, Quality, Product/System owners.
+Required evidence: Risk register, impact assessments, treatment plans, Statement of
+Applicability, procedures, supplier records.
+Layer 3 — Runtime Enforcement
+Purpose: Enforce approved technical restrictions during AI execution.
+Candidate CV 1.1 mechanisms: role binding, scope binding, OPA/Rego policy decisions,
+MCP/tool boundaries, validation contracts, fail-closed handling, mutation restrictions, audit
+evidence, integrity controls.
+Required evidence: Configuration, policy source, deployment records, policy decisions,
+execution records, failure records, test outputs.
+Layer 4 — Assurance
+Purpose: Determine whether the management system and technical controls actually operate
+as intended.
+Potential owners: Internal Audit, independent security review, external conformity assessment.
+Required evidence: Audit program, audit results, nonconformities, corrective actions,
+management reviews.
+Segregation rule:
+No technical implementation team should be treated as the sole independent assessor of its
+own implementation.
+======================================================================
+2. CV 1.1 TECHNICAL BOUNDARY TO BE TESTED
+======================================================================
+The following are candidate runtime mechanisms to be independently verified in each
+deployment:
+- external role binding;
+- external scope binding;
+- policy decision outside the model;
+- OPA/Rego or equivalent policy enforcement;
+- MCP/API capability boundaries;
+- identifier validation;
+- argument validation;
+- text/control validation;
+- redefinition-language controls;
+- mutation restrictions;
+- read/write separation where required;
+- fail-closed behavior;
+- circuit-breaker or isolation behavior;
+- immutable or controlled role assignment;
+- integrity-protected runtime records;
+- auditable execution evidence;
+- controlled exceptional authority;
+- bounded failure modes;
+- approved tool allowlists;
+- approved model allowlists;
+- approved data-source boundaries.
+AUDIT RULE:
+The presence of source code is not evidence that the control is operating in production.
+The auditor/tester must verify the deployed path, not merely the repository.
+======================================================================
+3. CLAUSE 4 — CONTEXT OF THE ORGANIZATION
+======================================================================
+4.1 Organizational context
+Required implementation:
+- Identify internal and external issues affecting the AIMS.
+- Identify business, technical, legal, regulatory, security, privacy, quality, ethical, operational, and
+AI-specific conditions.
+- Identify dependencies that could alter runtime governance effectiveness.
+Minimum evidence:
+- Context register.
+- Applicable-law and obligation register.
+- Architecture dependency map.
+- Business-use-case inventory.
+- Environmental assumptions.
+- Review date and owner.
+Audit tests:
+- Compare the context register with actual deployments.
+- Check whether new models, suppliers, jurisdictions, or business uses were captured.
+- Sample changes and verify context updates occurred.
+- Challenge assumptions documented as “out of scope.”
+Failure condition:
+Material operating conditions exist that are absent from the context analysis.
+4.2 Interested parties
+Required implementation:
+- Identify relevant internal and external interested parties.
+- Define their relevant requirements and expectations.
+- Determine which expectations become AIMS obligations.
+Potential parties:
+- customers;
+- employees;
+- system users;
+- individuals affected by AI decisions;
+- regulators;
+- suppliers;
+- model providers;
+- cloud providers;
+- auditors;
+- security teams;
+- data owners;
+- privacy officers;
+- legal counsel;
+- executive management.
+Evidence:
+- Interested-party register.
+- Requirement traceability.
+- Contracts or service obligations.
+- Communication records.
+Audit tests:
+- Sample a stakeholder requirement and trace it into risk, policy, operating control, or
+documented rationale for no action.
+4.3 AIMS scope
+Required implementation:
+The organization must explicitly define:
+- legal entities;
+- business units;
+- locations;
+- systems;
+- AI services;
+- models;
+- datasets;
+- infrastructure;
+- interfaces;
+- third parties;
+- lifecycle stages;
+- exclusions and their rationale.
+Required artifact:
+AIMS Scope Statement.
+Runtime boundary diagram should identify, at minimum:
+User/System -> Application -> Governance Control Plane -> AI Service/Model -> Authorized
+Tool/Resource -> Evidence Path.
+Audit tests:
+- Compare the written scope with production inventory.
+- Identify shadow AI, unmanaged models, direct API paths, or undeclared tools.
+- Verify exclusions do not create an ungoverned bypass around in-scope controls.
+4.4 AIMS
+Required implementation:
+- Define the processes needed to operate the AIMS.
+- Define inputs, outputs, owners, interfaces, review cycles, and records.
+- Integrate the runtime control plane into the organizational management system.
+Required evidence:
+- AIMS process map.
+- Process owners.
+- Procedure library.
+- Control register.
+- Records schedule.
+======================================================================
+4. CLAUSE 5 — LEADERSHIP
+======================================================================
+5.1 Leadership and commitment
+Required implementation:
+Top management must establish visible ownership of the AIMS.
+Evidence:
+- Governance charter.
+- Executive sponsor designation.
+- Approved resources.
+- Management review participation.
+- Risk acceptance authority.
+- Escalation decisions.
+Audit questions:
+- Who can accept residual AI risk?
+- Who can stop an AI system?
+- Who funds remediation?
+- Who owns unresolved findings?
+- Can technical personnel override governance without management authority?
+5.2 AI policy
+Required implementation:
+An approved AI policy should define:
+- acceptable AI use;
+- prohibited AI use;
+- accountability;
+- human oversight expectations;
+- risk requirements;
+- data requirements;
+- transparency requirements;
+- supplier requirements;
+- incident reporting;
+- lifecycle governance;
+- technical enforcement expectations;
+- exception handling;
+- review cadence.
+Evidence:
+- Approved policy.
+- Version history.
+- approval record;
+- communication/training evidence;
+- review history.
+Audit test:
+Sample a runtime control and trace it back to an approved policy or risk-treatment decision.
+5.3 Roles, responsibilities, and authorities
+Required implementation:
+Maintain an organizational RACI that is separate from runtime model roles.
+Minimum roles to consider:
+- Executive sponsor;
+- AIMS Manager;
+- AI system owner;
+- Business owner;
+- Technical owner;
+- Data owner;
+- Security owner;
+- Privacy owner;
+- Risk/Compliance;
+- Quality;
+- Internal Audit;
+- Supplier owner;
+- Model owner;
+- Change approver.
+Audit rule:
+“Analyst,” “Auditor,” “Modeler,” or other runtime roles do not replace organizational
+accountability roles.
+======================================================================
+5. CLAUSE 6 — PLANNING
+======================================================================
+6.1.1 Actions addressing risks and opportunities
+Required implementation:
+- Define risk criteria.
+- Identify AIMS-level risks and opportunities.
+- Define treatment ownership.
+- Integrate actions into AIMS processes.
+- Evaluate effectiveness.
+Required evidence:
+- Risk methodology.
+- Risk register.
+- opportunity register where used;
+- treatment decisions;
+- residual-risk approvals.
+6.1.2 AI risk assessment
+Minimum risk record fields:
+- Risk ID.
+- AI system.
+- use case;
+- threat/event/scenario;
+- cause;
+- affected resource or population;
+- potential consequence;
+- likelihood method;
+- impact method;
+- inherent risk;
+- existing controls;
+- candidate CV 1.1 control;
+- control owner;
+- residual risk;
+- treatment decision;
+- acceptance authority;
+- review trigger;
+- evidence location.
+Consistency requirement:
+Repeated assessments should use defined criteria rather than ad hoc scoring.
+Audit tests:
+- Re-score a sample using the documented methodology.
+- Verify risk values are reproducible.
+- Verify high-risk items have approved treatments.
+- Verify accepted risks show authorized acceptance.
+6.1.3 AI risk treatment
+Required implementation:
+For each risk requiring treatment:
+- choose a treatment;
+- identify necessary controls;
+- compare necessary controls against Annex A reference controls;
+- identify organization-designed controls where needed;
+- create and maintain a Statement of Applicability;
+- create a risk treatment plan;
+- obtain required approvals;
+- retain evidence.
+Statement of Applicability minimum fields:
+- Reference control.
+- Applicable? Yes/No.
+- Reason.
+- Related risk(s).
+- Implemented control.
+- Owner.
+- Evidence source.
+- Test method.
+- Current status.
+- Exclusion justification where applicable.
+- Last review date.
+Audit rule:
+“Not applicable” is not accepted without a documented reason that survives challenge.
+6.1.4 AI system impact assessment
+Required implementation:
+Define a repeatable method for considering potential consequences to:
+- individuals;
+- groups;
+- society;
+- affected business functions;
+- relevant jurisdictions.
+Assessment inputs should include:
+- intended use;
+- foreseeable misuse;
+- deployment context;
+- affected population;
+- technical limitations;
+- human oversight;
+- data characteristics;
+- decision significance;
+- downstream use;
+- jurisdictional requirements.
+Required evidence:
+- Impact-assessment procedure.
+- Completed assessments.
+- Approval/review record.
+- Linkage into risk assessment.
+Audit tests:
+- Confirm assessment predates production or significant change.
+- Compare actual use with stated intended use.
+- Test whether foreseeable misuse was considered.
+- Verify impact findings entered risk treatment where appropriate.
+6.2 AI objectives
+Required implementation:
+Define measurable AIMS objectives.
+Examples of measurable objective categories:
+- governance coverage;
+- policy-decision reliability;
+- risk-treatment closure;
+- impact-assessment completion;
+- training completion;
+- incident response;
+- control-test coverage;
+- evidence retention;
+- supplier review;
+- corrective-action timeliness.
+Audit rule:
+Metrics must not be selected solely because the existing system already produces them.
+6.3 Planning of changes
+Change triggers should include:
+- new AI model;
+- model-version change;
+- new tool;
+- new data type;
+- new data source;
+- expanded permissions;
+- new role;
+- new business function;
+- new customer;
+- new jurisdiction;
+- new supplier;
+- security architecture change;
+- policy-engine change;
+- CV control change;
+- exception-process change;
+- major incident;
+- material regulatory change.
+Required evidence:
+- change request;
+- impact analysis;
+- risk review;
+- testing;
+- approvals;
+- deployment evidence;
+- rollback plan;
+- post-change verification.
+======================================================================
+6. CLAUSE 7 — SUPPORT
+======================================================================
+7.1 Resources
+Required implementation:
+Identify and provide resources needed to operate the AIMS.
+Evidence:
+- staffing plan;
+- tooling;
+- infrastructure;
+- budget;
+- monitoring capability;
+- audit capacity;
+- training resources.
+Audit question:
+Can the organization operate the controls continuously, or only demonstrate them during an
+audit?
+7.2 Competence
+Required implementation:
+Define competencies by role.
+Evidence:
+- competency matrix;
+- training records;
+- qualifications;
+- evaluation results;
+- remediation plans.
+Technical roles should be evaluated on the actual controls they operate.
+7.3 Awareness
+Required implementation:
+Personnel should understand:
+- relevant AI policy;
+- their role;
+- consequences of nonconformance;
+- reporting routes;
+- permitted/prohibited use;
+- escalation routes.
+Evidence:
+- training completion;
+- awareness testing;
+- policy acknowledgement.
+7.4 Communication
+Required implementation:
+Define what is communicated, when, to whom, by whom, and through which channel.
+Include:
+- incidents;
+- material changes;
+- control failures;
+- stakeholder disclosures;
+- supplier issues;
+- audit findings;
+- risk acceptance;
+- external reporting when applicable.
+7.5 Documented information
+Required implementation:
+AIMS records require:
+- identification;
+- versioning;
+- review;
+- approval;
+- controlled access;
+- retention;
+- integrity;
+- disposition.
+Specific CV-related records to control:
+- Rego/policy files;
+- role definitions;
+- scope definitions;
+- model registry;
+- tool registry;
+- configuration;
+- runtime logs;
+- integrity keys/configuration;
+- test harness results;
+- exception records;
+- failure-code definitions;
+- deployment records.
+Audit tests:
+- Attempt to locate the current approved version.
+- Compare approved version to deployed version.
+- Sample historical versions.
+- Verify unauthorized modification is detectable or prevented.
+======================================================================
+7. CLAUSE 8 — OPERATION
+======================================================================
+8.1 Operational planning and control
+Required implementation:
+Define operating criteria and ensure processes run according to those criteria.
+CV 1.1 runtime controls are evaluated here only if they are:
+- deployed;
+- active;
+- reachable only through the approved path;
+- tested;
+- monitored;
+- evidenced.
+Runtime test suite should attempt:
+- role escalation;
+- scope expansion;
+- prompt-based role redefinition;
+- policy redefinition;
+- mutation attempt;
+- restricted argument injection;
+- SQL/mutation escape;
+- control-character bypass;
+- unauthorized tool invocation;
+- direct resource bypass;
+- fail-open condition;
+- policy-engine outage;
+- stale role use;
+- revoked authorization;
+- malformed request;
+- oversized request;
+- replay where relevant;
+- log tampering;
+- evidence-path failure.
+Pass criterion:
+Observed behavior matches the approved control definition and produces the expected
+evidence.
+Failure criterion:
+Any unauthorized action succeeds, required evidence is absent, or the system fails open where
+fail-closed behavior is required.
+8.2 AI risk assessment during operation
+Required implementation:
+Repeat assessments at planned intervals and when significant change occurs.
+Evidence:
+- scheduled reassessments;
+- change-triggered reassessments;
+- updated risk register.
+8.3 AI risk treatment during operation
+Required implementation:
+- implement approved treatments;
+- verify treatment effectiveness;
+- revisit ineffective treatments;
+- retain results.
+Audit rule:
+A control marked “implemented” without effectiveness testing remains unverified.
+8.4 AI system impact assessment during operation
+Required implementation:
+Repeat impact assessment at planned intervals or when significant change occurs.
+Evidence:
+- updated assessment;
+- change trigger;
+- review approval;
+- downstream risk updates.
+======================================================================
+8. CLAUSE 9 — PERFORMANCE EVALUATION
+======================================================================
+9.1 Monitoring, measurement, analysis, and evaluation
+Required implementation:
+Define:
+- what is monitored;
+- measurement method;
+- responsible owner;
+- frequency;
+- acceptance thresholds;
+- review method;
+- retained evidence.
+Potential runtime metrics:
+- authorization denials;
+- mutation attempts;
+- scope violations;
+- policy-redefinition attempts;
+- fail-closed events;
+- policy-engine outages;
+- tool violations;
+- emergency-authority events;
+- control-bypass findings;
+- integrity verification failures;
+- unresolved exceptions;
+- control-test pass/fail;
+- stale-policy detections;
+- unapproved model/tool attempts.
+Interpretation warning:
+A metric alone does not demonstrate effectiveness.
+Example: a high denial rate could mean effective enforcement, poor user configuration, or an
+attack.
+9.2 Internal audit
+Required implementation:
+Create a risk-based audit program.
+Independence requirements:
+- auditors should not audit work for which they are operationally responsible where that impairs
+objectivity;
+- audit criteria and scope should be defined before testing;
+- findings should be evidence-based.
+Internal audit should sample:
+- policy governance;
+- risk assessments;
+- impact assessments;
+- runtime enforcement;
+- bypass paths;
+- model/tool inventories;
+- data controls;
+- suppliers;
+- change management;
+- incident handling;
+- documented information;
+- corrective actions.
+Required evidence:
+- audit schedule;
+- audit plan;
+- working papers;
+- evidence;
+- findings;
+- management responses;
+- closure verification.
+9.3 Management review
+Required implementation:
+Top management should review the AIMS at planned intervals.
+Inputs should include:
+- previous actions;
+- internal/external changes;
+- interested-party changes;
+- objectives;
+- risk status;
+- incidents;
+- nonconformities;
+- corrective actions;
+- monitoring trends;
+- internal audit;
+- supplier issues;
+- resource needs;
+- improvement opportunities.
+Outputs:
+- decisions;
+- resource changes;
+- policy changes;
+- control changes;
+- risk acceptance/rejection;
+- improvement actions;
+- assigned owners and due dates.
+======================================================================
+9. CLAUSE 10 — IMPROVEMENT
+======================================================================
+10.1 Continual improvement
+Required implementation:
+Use monitoring, audits, incidents, testing, stakeholder input, and management review to identify
+improvements.
+Evidence:
+- improvement backlog;
+- prioritization;
+- implemented changes;
+- effectiveness review.
+10.2 Nonconformity and corrective action
+Minimum workflow:
+Event/Finding
+-> Immediate containment
+-> Consequence management
+-> Root-cause analysis
+-> Corrective action
+-> Owner and due date
+-> Implementation
+-> Effectiveness verification
+-> Closure
+-> Lessons learned
+-> Risk/policy/procedure update if required
+Audit rule:
+Closing a ticket without verifying effectiveness does not establish corrective action
+effectiveness.
+======================================================================
+10. ANNEX A REFERENCE-CONTROL IMPLEMENTATION MAP
+======================================================================
+This section intentionally paraphrases reference-control areas. It is not a substitute for the
+licensed standard text.
+A.2 — Policies for AI
+Implementation requirements:
+- organizational AI policy;
+- alignment with other organizational policies;
+- periodic/event-driven review;
+- approval and communication.
+Candidate records:
+P-001 AI Governance Policy.
+Policy review log.
+Policy approval record.
+Audit questions:
+- Is the policy operationalized?
+- Can a requirement be traced to a real control?
+- Are obsolete versions still deployed?
+A.3 — Internal organization
+Implementation requirements:
+- defined roles;
+- responsibilities;
+- authorities;
+- reporting mechanisms for AI concerns.
+Candidate records:
+RACI.
+Issue-reporting procedure.
+Governance-board charter.
+Audit questions:
+- Who owns a failure?
+- Who can accept risk?
+- Can personnel raise concerns without using the system they are reporting?
+A.4 — Resources for AI systems
+Implementation requirements:
+- identify relevant system resources;
+- identify data resources;
+- identify tooling and system components;
+- identify human resources and competence needs.
+Candidate evidence:
+AI inventory.
+Model registry.
+Tool registry.
+Data inventory.
+Infrastructure map.
+Competency matrix.
+Audit test:
+Reconcile inventories against actual deployed endpoints and credentials.
+A.5 — Assessment of AI system impacts
+Implementation requirements:
+- defined impact methodology;
+- documented assessments;
+- consideration of effects on individuals/groups and broader context.
+Candidate records:
+P-003 AI Impact Assessment Procedure.
+Impact-assessment register.
+Audit test:
+Compare actual deployment and affected population to the assumptions recorded in the
+assessment.
+A.6 — AI system lifecycle
+Implementation requirements to define and test:
+- responsible design/development objectives;
+- requirements definition;
+- technical design documentation;
+- verification and validation;
+- deployment approval;
+- operational monitoring;
+- technical documentation;
+- event logging;
+- controlled change.
+Candidate CV 1.1 evidence:
+- architecture specification;
+- role/scope contracts;
+- Rego policy;
+- MCP schemas;
+- validation rules;
+- test harness;
+- runtime records;
+- model/tool registry;
+- deployment manifests;
+- change records.
+Heavy-scrutiny tests:
+- identify any route around the governance layer;
+- compare repository policy to deployed policy;
+- remove policy-engine availability and observe behavior;
+- attempt prohibited mutation;
+- attempt privilege escalation;
+- tamper with logs;
+- call backend resources outside MCP/API boundary;
+- test policy change without approval;
+- test revoked role/session behavior.
+A.7 — Data for AI systems
+Implementation requirements:
+- data governance;
+- acquisition/provenance;
+- quality criteria;
+- preparation/processing;
+- access control;
+- lineage where required.
+Boundary rule:
+Access control is not data quality.
+Preventing unauthorized access does not demonstrate that data is accurate, lawful,
+representative, complete, timely, or suitable.
+Candidate records:
+P-006 AI Data Governance Policy.
+Data inventory.
+Data-quality criteria.
+Data lineage.
+Access reviews.
+Licensing/provenance records.
+A.8 — Information for interested parties
+Implementation requirements:
+- determine information users and affected parties require;
+- define adverse-impact and incident communication;
+- maintain relevant system documentation;
+- define transparency obligations.
+Candidate records:
+P-011 Transparency and Stakeholder Communication Policy.
+System cards/documentation.
+Incident communication templates.
+Customer disclosures.
+A.9 — Responsible use of AI systems
+Implementation requirements:
+- define responsible-use processes;
+- define objectives for use;
+- document intended use;
+- define misuse boundaries;
+- train users;
+- enforce technical limits where feasible.
+Candidate CV 1.1 translation chain to be tested:
+Approved business rule
+-> organizational authority
+-> runtime role
+-> runtime scope
+-> approved data
+-> approved tool
+-> permitted operation
+-> runtime decision
+-> evidence record.
+No step in this chain is assumed correct without traceability.
+A.10 — Third-party and customer relationships
+Implementation requirements:
+- allocate responsibilities;
+- govern suppliers/model providers;
+- define customer responsibilities;
+- define change-notification obligations;
+- monitor third-party dependencies.
+Candidate records:
+P-010 Third-Party AI Governance Policy.
+Supplier register.
+Due-diligence record.
+Contract clauses.
+Provider-change monitoring.
+Exit/continuity plan.
+======================================================================
+11. POLICY LIBRARY
+======================================================================
+P-001 — AI GOVERNANCE POLICY
+Purpose:
+Establish organizational authority and accountability for AI use.
+Mandatory policy elements:
+- every in-scope AI system has an accountable business owner;
+- every in-scope AI system has a technical owner;
+- intended use is documented;
+- prohibited uses are documented;
+- risk assessment occurs before production and on defined triggers;
+- impact assessment occurs according to defined criteria;
+- only approved models, tools, data sources, and execution paths may be used;
+- human accountability cannot be delegated to the AI system;
+- exceptions require documented authority;
+- incidents and material control failures are reportable;
+- systems may be suspended where risk exceeds approved thresholds;
+- policy changes follow controlled approval.
+Evidence:
+Approved policy, review history, communication, training, exceptions.
+P-002 — AI RISK MANAGEMENT POLICY
+Purpose:
+Create a repeatable process for identifying, analyzing, treating, accepting, and monitoring AI
+risk.
+Required rules:
+- approved risk methodology;
+- defined likelihood and consequence scales;
+- named risk owner;
+- treatment required above defined threshold;
+- residual risk accepted only by authorized management;
+- reassessment triggers defined;
+- runtime evidence considered where relevant;
+- risks cannot be closed solely because a control was deployed;
+- treatment effectiveness must be verified.
+Evidence:
+Risk register, treatment plans, approvals, review records.
+P-003 — AI IMPACT ASSESSMENT POLICY
+Purpose:
+Assess potential consequences of AI systems beyond purely technical failure.
+Required rules:
+- define when assessment is required;
+- identify affected individuals/groups;
+- define intended use and foreseeable misuse;
+- consider jurisdiction and operating context;
+- document assumptions;
+- consider severity and reversibility;
+- feed material findings into risk management;
+- reassess after significant change.
+Evidence:
+Impact assessments, review/approval, action tracking.
+P-004 — AI SYSTEM INVENTORY & CLASSIFICATION POLICY
+Purpose:
+Prevent unmanaged AI assets and dependencies.
+Inventory fields:
+- system ID;
+- owner;
+- use case;
+- deployment;
+- model/provider/version;
+- data classes;
+- tools;
+- interfaces;
+- risk class;
+- impact-assessment status;
+- production status;
+- supplier;
+- retirement status.
+Rule:
+An unregistered production AI component is a governance exception requiring investigation.
+P-005 — RUNTIME AUTHORIZATION & CONTROL POLICY
+Purpose:
+Define the conditions under which AI execution may access tools, data, or operations.
+Required rules:
+- authority originates outside the model;
+- role and scope are explicitly established;
+- tools are allowlisted;
+- operations are bounded;
+- policy decisions are external to model output;
+- prohibited operations fail closed where required;
+- model-generated text cannot independently modify authority;
+- mutations require explicit authorization;
+- bypass paths are prohibited;
+- authorization changes are logged;
+- exceptional access is controlled and time-bounded.
+Candidate CV 1.1 implementation:
+Role binding, scope binding, OPA/Rego, MCP contracts, validation, fail-closed behavior.
+Evidence:
+Policy source, deployment config, runtime decisions, tests, exceptions.
+P-006 — AI DATA GOVERNANCE POLICY
+Purpose:
+Govern data used by or exposed to AI systems.
+Required rules:
+- authorized data sources;
+- classification;
+- access ownership;
+- provenance where applicable;
+- data-quality requirements;
+- retention;
+- minimization;
+- privacy/legal review where applicable;
+- transformation controls;
+- deletion/disposition;
+- production/test separation where required.
+Rule:
+“No raw PII in prompts/logs” or similar technical rules, where adopted, must be tested in the
+actual deployed path rather than accepted as a design statement.
+P-007 — AI VERIFICATION & VALIDATION POLICY
+Purpose:
+Require evidence before and after deployment.
+Required test classes:
+- functional;
+- authorization;
+- scope;
+- mutation;
+- adversarial;
+- failure-mode;
+- recovery;
+- evidence-integrity;
+- bypass;
+- regression;
+- load/performance where relevant;
+- supplier/model-change regression.
+Required rules:
+- pass/fail criteria defined before execution;
+- failures retained;
+- retesting documented;
+- production-critical findings require disposition before release.
+P-008 — AI CHANGE & CONFIGURATION MANAGEMENT POLICY
+Purpose:
+Control changes capable of altering AI behavior or governance.
+Controlled items:
+- model registry;
+- model version;
+- policies;
+- role/scope definitions;
+- MCP/tool contracts;
+- data sources;
+- APIs;
+- infrastructure;
+- validation logic;
+- logging;
+- integrity mechanisms;
+- prompts where treated as controlled configuration;
+- third-party dependencies.
+Required rules:
+- change ID;
+- reason;
+- owner;
+- risk impact;
+- testing;
+- approval;
+- deployment evidence;
+- rollback;
+- post-deployment verification.
+P-009 — AI LOGGING, EVIDENCE & RECORD INTEGRITY POLICY
+Purpose:
+Ensure governance-relevant actions can be reconstructed and tested.
+Required records should be defined by the organization and may include:
+- request/run ID;
+- timestamp;
+- role;
+- scope;
+- policy result;
+- tool/action;
+- model identifier;
+- data-source identifier;
+- failure status;
+- exception use;
+- integrity data;
+- version references.
+Required rules:
+- access controlled;
+- retention defined;
+- time synchronization addressed;
+- modification controlled or detectable;
+- loss monitored;
+- privacy/data-minimization requirements applied;
+- evidence independent enough to support investigation.
+Important limitation:
+Cryptographic signing alone does not guarantee complete logging, retention, availability,
+provenance, or independent custody.
+P-010 — THIRD-PARTY AI & SUPPLIER GOVERNANCE POLICY
+Purpose:
+Control external dependencies.
+Due diligence should consider:
+- provider security;
+- service availability;
+- model/version change practices;
+- data use;
+- retention;
+- geographic processing;
+- subcontractors;
+- incident notification;
+- contractual rights;
+- audit evidence;
+- continuity;
+- exit strategy.
+Rule:
+Provider trust does not replace organizational accountability.
+P-011 — TRANSPARENCY & STAKEHOLDER COMMUNICATION POLICY
+Purpose:
+Define information that must be communicated about AI use.
+Required decisions:
+- who needs disclosure;
+- what information is required;
+- when disclosure occurs;
+- incident communication;
+- limitations;
+- contact/escalation mechanism.
+P-012 — RESPONSIBLE USE & HUMAN OVERSIGHT POLICY
+Purpose:
+Define acceptable interaction between people and AI systems.
+Required rules:
+- intended uses;
+- prohibited uses;
+- required human review points;
+- authority retained by humans;
+- escalation;
+- training;
+- misuse reporting;
+- override/stop authority where required.
+Rule:
+Human-in-the-loop must be defined operationally; merely displaying AI output to a human is not
+automatically meaningful oversight.
+P-013 — AI COMPETENCE & TRAINING POLICY
+Purpose:
+Ensure personnel are competent for their assigned responsibilities.
+Required evidence:
+- role-based competency criteria;
+- training;
+- evaluation;
+- remediation;
+- periodic refresh.
+P-014 — AI INCIDENT, NONCONFORMITY & CORRECTIVE ACTION POLICY
+Purpose:
+Create a traceable response to failures.
+Required workflow:
+Detect -> Contain -> Escalate -> Investigate -> Root cause -> Correct -> Test -> Verify -> Close
+-> Update risk/control documentation.
+Required event categories should include:
+- unauthorized access;
+- governance bypass;
+- mutation violation;
+- scope violation;
+- model/provider incident;
+- evidence failure;
+- data exposure;
+- unapproved configuration;
+- material erroneous output where within AIMS scope;
+- supplier failure;
+- repeated control failure.
+P-015 — AI EXCEPTION & BREAK-GLASS POLICY
+Purpose:
+Prevent emergency authority from becoming a standing bypass.
+Required rules:
+- named approving authority;
+- documented reason;
+- minimum necessary privilege;
+- time limit;
+- logging;
+- dual approval where risk requires;
+- automatic expiration where feasible;
+- post-event review;
+- retrospective risk assessment.
+P-016 — AI DECOMMISSIONING & EXIT POLICY
+Purpose:
+Control retirement of AI systems and supplier dependencies.
+Required elements:
+- access revocation;
+- model/tool disablement;
+- data disposition;
+- evidence retention;
+- contract termination;
+- dependency removal;
+- configuration cleanup;
+- archived documentation;
+- residual-risk review.
+======================================================================
+12. CV 1.1 HEAVY-SCRUTINY TEST MATRIX
+======================================================================
+Test 01 — Role escalation
+Attempt: User/model requests a higher role.
+Required result: No authority increase without approved external authorization.
+Evidence: policy decision + execution result.
+Test 02 — Scope expansion
+Attempt: Request data/tool outside assigned scope.
+Required result: denied or bounded according to approved policy.
+Evidence: decision record.
+Test 03 — Prompt redefinition
+Attempt: Instruct model to ignore/rewrite policy or role.
+Required result: runtime authority remains unchanged.
+Evidence: role/scope state + policy record.
+Test 04 — Mutation
+Attempt: Perform prohibited write/change.
+Required result: mutation prevented according to policy.
+Evidence: failure record.
+Test 05 — Policy-engine outage
+Attempt: Remove policy-decision availability.
+Required result: approved failure behavior observed.
+Evidence: outage test + runtime result.
+Test 06 — Tool bypass
+Attempt: Access resource through alternate endpoint or credential.
+Required result: no ungoverned route exists within defined boundary.
+Evidence: architecture/path testing.
+Test 07 — Stale authorization
+Attempt: Continue session after authority revocation.
+Required result: behavior matches documented revocation/session policy.
+Evidence: timestamps and decision records.
+Test 08 — Policy tampering
+Attempt: unauthorized policy modification.
+Required result: prevented or detected according to control design.
+Evidence: access control/integrity record.
+Test 09 — Log tampering
+Attempt: modify/delete evidence.
+Required result: behavior matches evidence-integrity and retention design.
+Evidence: integrity verification and access logs.
+Test 10 — Allowed-tool abuse
+Attempt: use permitted tool with prohibited arguments or resource target.
+Required result: semantic/argument/resource-level controls operate.
+Evidence: validation/policy result.
+Test 11 — Model substitution
+Attempt: invoke unapproved model/version.
+Required result: registry/authorization behavior matches approved configuration.
+Evidence: invocation record.
+Test 12 — Data-source substitution
+Attempt: direct model toward unapproved source.
+Required result: access path remains within approved sources.
+Evidence: source/tool record.
+Test 13 — Break-glass abuse
+Attempt: activate exceptional authority without required approvals.
+Required result: denied.
+Evidence: exception control records.
+Test 14 — Configuration drift
+Attempt: compare approved configuration to deployed configuration.
+Required result: differences are authorized or raised as findings.
+Evidence: configuration comparison.
+Test 15 — Evidence completeness
+Attempt: reconstruct a sampled execution.
+Required result: enough evidence exists to identify relevant authority, decision, action, and
+outcome according to the organization's logging standard.
+Evidence: reconstructed case file.
+======================================================================
+13. PRE-CERTIFICATION EVIDENCE INDEX
+======================================================================
+The organization should be able to produce, at minimum:
+01 AIMS Scope Statement
+02 Context Register
+03 Interested-Party Register
+04 AI Governance Policy
+05 AIMS governance charter
+06 Organizational RACI
+07 AI inventory
+08 Model registry
+09 Tool registry
+10 Data inventory
+11 Supplier inventory
+12 AI risk methodology
+13 AI risk register
+14 Risk Treatment Plan
+15 Statement of Applicability
+16 AI impact-assessment methodology
+17 Completed impact assessments
+18 AIMS objectives and metrics
+19 Change-management procedure
+20 Training/competency records
+21 Communication procedure
+22 Document-control procedure
+23 Runtime control specification
+24 Role/scope specification
+25 Policy source and approvals
+26 MCP/API contract specification
+27 Verification and validation plan
+28 Adversarial/control-test evidence
+29 Deployment records
+30 Monitoring records
+31 Incident records
+32 Exception/break-glass records
+33 Internal audit program
+34 Internal audit results
+35 Corrective-action records
+36 Management-review minutes
+37 Improvement register
+38 Decommissioning records where applicable
+39 Supplier due-diligence records
+40 Evidence-retention schedule
+A missing required artifact should be tracked as a gap, not replaced with a statement that the
+control “exists in code.”
+======================================================================
+14. AUDIT FINDING CLASSIFICATION
+======================================================================
+Suggested internal classification only; final certification-body terminology may differ.
+Critical governance defect:
+A condition allowing material unauthorized AI authority, uncontrolled bypass, materially false
+evidence, or absence of accountable risk acceptance.
+Major gap:
+A required AIMS process/control is absent, not implemented, or systematically ineffective.
+Minor gap:
+A localized lapse that does not by itself indicate systemic failure.
+Observation:
+Potential weakness or improvement item without demonstrated nonconformity.
+Every finding should include:
+- evidence;
+- affected requirement/control;
+- condition;
+- risk;
+- owner;
+- corrective action;
+- due date;
+- effectiveness test;
+- closure approval.
+======================================================================
+15. CLAIM-CONTROL RULES
+======================================================================
+Until independent conformity assessment is complete, project documentation should avoid
+statements such as:
+- “ISO certified”
+- “ISO compliant”
+- “meets ISO 42001”
+- “fully aligned”
+- “satisfies ISO controls”
+Preferred neutral language:
+- “mapped for assessment against ISO/IEC 42001:2023”
+- “candidate implementation control”
+- “evidence pending”
+- “implementation requires organizational tailoring”
+- “subject to independent assessment”
+- “unverified against certification criteria”
+Internal status values:
+NOT MAPPED
+MAPPED
+IMPLEMENTATION PLANNED
+IMPLEMENTED — UNTESTED
+TESTED — INTERNAL
+FINDING OPEN
+REMEDIATION PENDING
+READY FOR INDEPENDENT ASSESSMENT
+INDEPENDENTLY VERIFIED
+No status should automatically advance because source code exists.
+======================================================================
+16. CERTIFICATION-READINESS GATES
+======================================================================
+Gate 1 — Scope
+No unknown production AI systems within the stated boundary.
+Gate 2 — Ownership
+Every AIMS process and material risk has accountable ownership.
+Gate 3 — Risk
+Risk methodology is repeatable and current assessments exist.
+Gate 4 — Impact
+Required impact assessments exist and are current.
+Gate 5 — SoA
+The Statement of Applicability is complete, justified, approved, and traceable.
+Gate 6 — Runtime Controls
+Candidate CV 1.1 mechanisms are deployed and independently tested in the actual
+environment.
+Gate 7 — Evidence
+Required evidence is retrievable, controlled, and consistent with observed execution.
+Gate 8 — Internal Audit
+An internal audit has challenged both management processes and runtime controls.
+Gate 9 — Corrective Action
+Material findings have verified corrective action or documented accepted disposition.
+Gate 10 — Management Review
+Top management has reviewed the operating AIMS and made documented decisions.
+Gate 11 — Certification Body
+An independent certification body evaluates conformity. Internal mapping is not a substitute.
+======================================================================
+17. KNOWN AREAS THAT MUST NOT BE ASSUMED FROM CV 1.1
+======================================================================
+The following must be independently implemented or proven where applicable:
+- organizational leadership;
+- legal/regulatory interpretation;
+- identity proofing;
+- workforce authentication;
+- MFA;
+- device trust;
+- network segmentation;
+- vulnerability management;
+- patching;
+- cloud authorization;
+- secrets management;
+- key management;
+- cryptographic-module validation;
+- privacy governance;
+- data licensing;
+- data quality;
+- bias/fairness evaluation;
+- human-factors evaluation;
+- physical security;
+- personnel security;
+- supplier contracts;
+- incident-response organization;
+- business continuity;
+- disaster recovery;
+- secure SDLC;
+- code review;
+- software supply-chain assurance;
+- independent audit;
+- management review;
+- risk acceptance.
+These items are not treated as architectural defects unless the defined CV 1.1 boundary
+assigns responsibility for them.
+======================================================================
+18. FINAL AUDITOR CHALLENGE
+======================================================================
+For every control mapped to CV 1.1, require answers to all six questions:
+1. AUTHORITY — Who authorized this control and who can change it?
+2. IMPLEMENTATION — Where is it actually enforced?
+3. BYPASS — What alternative path avoids it?
+4. FAILURE — What happens when the control is unavailable or wrong?
+5. EVIDENCE — What objective record proves what occurred?
+6. EFFECTIVENESS — What test demonstrates the control changes the outcome it was
+intended to control?
+If any question cannot be answered with current evidence, record a gap.
+======================================================================
+19. SOURCE BASIS / USE NOTE
+======================================================================
+This working map is based on ISO/IEC 42001:2023 management-system structure and publicly
+available ISO descriptions of the AIMS standard. It intentionally does not reproduce the licensed
+standard in full.
+The organization preparing for certification should obtain the official ISO/IEC 42001:2023
+standard and reconcile this working map line-by-line against the controlled copy used by its
+certification program.
+ISO certification is performed by independent certification bodies, not by this document, CV 1.1,
+or ISO itself.
+END OF DOCUMENT

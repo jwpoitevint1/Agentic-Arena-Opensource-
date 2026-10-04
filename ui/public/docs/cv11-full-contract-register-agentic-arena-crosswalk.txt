@@ -1,0 +1,955 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CV 1.1 — Full Contract Register and Agentic Arena Crosswalk
+
+
+CV 1.1 — FULL CONTRACT REGISTER AND AGENTIC ARENA CROSSWALK 
+Working architectural register — claim-free 
+ 
+PURPOSE 
+This document defines a complete working contract taxonomy for CV 1.1 and cross-references 
+the existing Agentic Arena implementation contracts. 
+ 
+Important distinction: 
+- CV 1.1 contracts define architectural invariants. 
+- Agentic Arena contracts define one implementation of those invariants plus lab-specific 
+behavior. 
+- An Arena contract does not automatically become a universal CV 1.1 requirement. 
+- A CV 1.1 architectural contract is not considered implemented until the deploying environment 
+provides evidence and testing. 
+ 
+A contract is an invariant that another component is allowed to depend on. 
+ 
+====================================================================== 
+1. CORE GOVERNANCE CONTRACTS 
+====================================================================== 
+ 
+CV-CG-001 — Governance Control-Plane Boundary Contract 
+Invariant: 
+AI authority is established and enforced through the declared governance control-plane 
+boundary rather than by model-generated content. 
+ 
+CV-CG-002 — External Authority Contract 
+Invariant: 
+The AI cannot create, enlarge, or redefine its own authority. 
+ 
+CV-CG-003 — Identity-to-Role Binding Contract 
+Invariant: 
+Runtime role assignment originates from a trusted external identity/authorization source and not 
+from the model, prompt, retrieved content, or tool output. 
+ 
+CV-CG-004 — Role Binding Contract 
+Invariant: 
+Each governed execution is bound to an approved runtime role. 
+ 
+CV-CG-005 — Scope Binding Contract 
+Invariant: 
+Each governed execution is constrained to an approved scope defining permitted resources, 
+tools, actions, and data boundaries. 
+ 
+
+
+
+CV-CG-006 — Role-to-Action Authorization Contract 
+Invariant: 
+A role may execute only actions explicitly authorized for that role. 
+ 
+CV-CG-007 — Function-to-Role Binding Contract 
+Invariant: 
+A governed business function maps to the approved runtime role and cannot substitute another 
+role without an approved change. 
+ 
+CV-CG-008 — Resource Binding Contract 
+Invariant: 
+Protected resources are selected from server-side or otherwise trusted bindings rather than 
+model-selected routing. 
+ 
+CV-CG-009 — Governance Mode Binding Contract 
+Invariant: 
+Governed execution cannot silently transition into an ungoverned mode. 
+ 
+CV-CG-010 — Default-Deny Contract 
+Invariant: 
+When no explicit allow decision exists, the governed operation is denied. 
+ 
+CV-CG-011 — Redefinition Guard Contract 
+Invariant: 
+User input, retrieved content, tool output, model output, and prior conversation content cannot 
+redefine protected governance state. 
+ 
+CV-CG-012 — Policy Decision Contract 
+Invariant: 
+Governed execution requires a valid external policy decision. 
+ 
+CV-CG-013 — Policy Provenance Contract 
+Invariant: 
+Each active governance policy is versioned, attributable, approved, and traceable to an 
+authorized requirement or risk-treatment decision. 
+ 
+CV-CG-014 — Policy Semantic Traceability Contract 
+Invariant: 
+The meaning of a deployed technical rule must trace to an approved policy or control 
+requirement, and every deployed rule must be reverse-traceable to its authority. 
+ 
+CV-CG-015 — Policy Version Compatibility Contract 
+Invariant: 
+A runtime shall not silently reinterpret an older policy under changed control semantics. 
+
+
+
+ 
+CV-CG-016 — Magnitude 1 Change Contract 
+Invariant: 
+A change to one core governance feature constitutes a governance-baseline change requiring 
+the defined cross-functional approval process. 
+ 
+CV-CG-017 — No Unilateral Magnitude 1 Approval Contract 
+Invariant: 
+No single implementation function may independently authorize a Magnitude 1 production 
+release when other required implementation parties have not completed review. 
+ 
+CV-CG-018 — Release / Deny Decision Contract 
+Invariant: 
+Governed output or action is released only after required authorization, validation, verification, 
+and evidence gates have completed. 
+ 
+====================================================================== 
+2. PROXY, TRANSPORT, AND ENFORCEMENT-PATH CONTRACTS 
+====================================================================== 
+ 
+CV-PXY-001 — Governed Proxy Path Contract 
+Invariant: 
+Governed AI traffic reaches governed capabilities only through the approved proxy/enforcement 
+path. 
+ 
+CV-PXY-002 — No Proxy Bypass Contract 
+Invariant: 
+No alternate network, API, tool, database, or service path may allow equivalent governed 
+execution while bypassing required governance enforcement. 
+ 
+CV-PXY-003 — Proxy Route Allowlist Contract 
+Invariant: 
+Only approved routes and methods may traverse the governed proxy. 
+ 
+CV-PXY-004 — Proxy Method Contract 
+Invariant: 
+HTTP methods are explicitly bounded by route and unsupported methods are denied. 
+ 
+CV-PXY-005 — Proxy Content-Type Contract 
+Invariant: 
+Only approved request content types are accepted for governed routes. 
+ 
+CV-PXY-006 — Proxy Request-Size Contract 
+Invariant: 
+
+
+
+Governed proxy requests are bounded by an approved maximum size. 
+ 
+CV-PXY-007 — Proxy Response-Size Contract 
+Invariant: 
+Governed proxy responses are bounded by an approved maximum size. 
+ 
+CV-PXY-008 — Proxy Timeout Contract 
+Invariant: 
+Upstream execution is bounded by an approved timeout and timeout does not create a bypass 
+or partial-release condition. 
+ 
+CV-PXY-009 — Proxy Origin-Pinning Contract 
+Invariant: 
+Once a governed backend origin is resolved, request routing cannot silently redirect to an 
+unapproved origin. 
+ 
+CV-PXY-010 — Proxy TLS Contract 
+Invariant: 
+Production governed backend transport uses approved encrypted transport and does not 
+downgrade silently. 
+ 
+CV-PXY-011 — Proxy Authentication Forwarding Contract 
+Invariant: 
+Required backend authentication is preserved across the proxy boundary and is not replaced by 
+model-controlled credentials. 
+ 
+CV-PXY-012 — Proxy Request-ID Contract 
+Invariant: 
+Each governed request receives a valid request identifier suitable for traceability; invalid 
+identifiers are rejected or replaced according to policy. 
+ 
+CV-PXY-013 — Proxy Security-Header Contract 
+Invariant: 
+Required response security headers are consistently applied on governed public routes. 
+ 
+CV-PXY-014 — Proxy Error-Translation Contract 
+Invariant: 
+Transport and backend failures are represented deterministically and are not rewritten as 
+successful AI execution. 
+ 
+CV-PXY-015 — Proxy Path-Sanitization Contract 
+Invariant: 
+Path traversal, null bytes, malformed separators, and equivalent routing manipulation are 
+rejected. 
+
+
+
+ 
+CV-PXY-016 — Proxy Configuration-Parity Contract 
+Invariant: 
+Where multiple deployed proxy copies implement the same boundary, their route and 
+enforcement contracts remain semantically identical. 
+ 
+CV-PXY-017 — Proxy Isolation / Controlled-Failure Contract 
+Invariant: 
+When required governance state cannot be established or enforced, the affected proxy path is 
+disabled or broken so the governed AI path becomes unavailable. 
+ 
+CV-PXY-018 — Availability-over-Authority Contract 
+Invariant: 
+Where availability conflicts with governance authority, the governed execution path becomes 
+unavailable rather than continue without valid governance enforcement. 
+ 
+CV-PXY-019 — No Degraded-Governance Mode Contract 
+Invariant: 
+A degraded operational mode shall not permit governed AI execution with missing, stale, 
+reduced, or indeterminate governance bindings. 
+ 
+CV-PXY-020 — Recovery-Gate Contract 
+Invariant: 
+A disabled governed proxy path returns to service only after required governance 
+dependencies, bindings, policy enforcement, and validation controls are restored and verified. 
+ 
+CV-PXY-021 — Load-Balancer Governance Preservation Contract 
+Invariant: 
+Load balancing may redistribute traffic but shall not alter, bypass, or weaken the governance 
+contract. 
+ 
+CV-PXY-022 — Service-Routing Governance Preservation Contract 
+Invariant: 
+Container, Kubernetes, service-mesh, or equivalent routing changes shall not create an 
+alternate unbound execution path. 
+ 
+====================================================================== 
+3. MCP AND TOOL CONTRACTS 
+====================================================================== 
+ 
+CV-MCP-001 — MCP Authorization-Boundary Contract 
+Invariant: 
+MCP is treated as an authorization boundary, not merely a tool transport. 
+ 
+
+
+
+CV-MCP-002 — Entity-to-Role Binding Contract 
+Invariant: 
+Each governed MCP entity is accessible only to its approved runtime role. 
+ 
+CV-MCP-003 — Entity-to-Tool Exposure Contract 
+Invariant: 
+Each entity may invoke only the tools explicitly exposed to that entity. 
+ 
+CV-MCP-004 — Tool Allowlist Contract 
+Invariant: 
+Only approved tools are available to governed execution. 
+ 
+CV-MCP-005 — Tool Mutation Classification Contract 
+Invariant: 
+Every tool is classified as read-only, mutating, or otherwise controlled before exposure. 
+ 
+CV-MCP-006 — Tool Argument Validation Contract 
+Invariant: 
+Tool arguments are validated for type, size, structure, restricted fields, control characters, 
+mutation/escape patterns, and other defined constraints. 
+ 
+CV-MCP-007 — Server-Controlled Argument Contract 
+Invariant: 
+Authority, governance mode, resource targets, tenant identifiers, database targets, and 
+equivalent protected fields cannot be supplied or overridden by the model when designated 
+server-controlled. 
+ 
+CV-MCP-008 — Tool-to-Resource Binding Contract 
+Invariant: 
+Each tool may reach only approved resource classes and targets. 
+ 
+CV-MCP-009 — MCP Database-Target Binding Contract 
+Invariant: 
+Governed data-tool execution resolves database targets through trusted server-side mapping. 
+ 
+CV-MCP-010 — No Cross-Entity Invocation Contract 
+Invariant: 
+A tool exposed to one MCP entity cannot be invoked through another entity unless explicitly 
+authorized. 
+ 
+CV-MCP-011 — MCP Read-Only Enforcement Contract 
+Invariant: 
+Read-only tool paths cannot mutate source systems. 
+ 
+
+
+
+CV-MCP-012 — MCP Verification Contract 
+Invariant: 
+Where required, tool results are checked against declared schema, resource, and execution 
+expectations before release to downstream model or user. 
+ 
+CV-MCP-013 — MCP Failure-Isolation Contract 
+Invariant: 
+MCP transport or tool failure does not broaden authority or route around MCP. 
+ 
+CV-MCP-014 — MCP Contract-Version Contract 
+Invariant: 
+MCP schema and tool-contract versions are identifiable and bound to relevant execution 
+evidence. 
+ 
+====================================================================== 
+4. DATA AND RESOURCE CONTRACTS 
+====================================================================== 
+ 
+CV-DAT-001 — Data-Source Registry Contract 
+Invariant: 
+Governed data sources are registered and identifiable before use. 
+ 
+CV-DAT-002 — Data-Source Binding Contract 
+Invariant: 
+A governed execution reaches only the data source approved for its system, role, and scope. 
+ 
+CV-DAT-003 — Read-Only Transaction Contract 
+Invariant: 
+Where the governed operation is classified read-only, database transaction behavior enforces 
+read-only access. 
+ 
+CV-DAT-004 — Bounded Query Contract 
+Invariant: 
+Governed query operations are bounded by approved row, column, filter, aggregation, and 
+query-complexity limits. 
+ 
+CV-DAT-005 — Dataset-Presence Contract 
+Invariant: 
+A model does not perform evidence-dependent analysis when required source evidence is 
+absent or unavailable. 
+ 
+CV-DAT-006 — No Fabricated-Evidence Contract 
+Invariant: 
+
+
+
+Infrastructure or data unavailability is represented as unavailable rather than allowing the model 
+to fabricate analytical evidence. 
+ 
+CV-DAT-007 — Dataset-Provenance Contract 
+Invariant: 
+Dataset source/provenance claims are recorded only when supported by evidence. 
+ 
+CV-DAT-008 — Data-Scope Contract 
+Invariant: 
+Data access remains within the approved department, tenant, business function, classification, 
+or other declared scope. 
+ 
+CV-DAT-009 — Data-Minimization Contract 
+Invariant: 
+Only data required for the approved use is exposed to the model or logged where minimization 
+requirements apply. 
+ 
+CV-DAT-010 — Data-Retention Boundary Contract 
+Invariant: 
+Retention of prompts, responses, source data, tool results, and audit evidence follows the 
+deploying organization's approved record-class and industry requirements. 
+ 
+====================================================================== 
+5. MODEL AND EXECUTION CONTRACTS 
+====================================================================== 
+ 
+CV-MOD-001 — Model Allowlist Contract 
+Invariant: 
+Governed execution uses only approved model identifiers/providers. 
+ 
+CV-MOD-002 — Model-to-Function Binding Contract 
+Invariant: 
+Where defined, specific models or model classes are bound to approved functions. 
+ 
+CV-MOD-003 — Model Identity Verification Contract 
+Invariant: 
+The runtime does not rely solely on the model's own claim of identity. 
+ 
+CV-MOD-004 — Model Provider Failure Contract 
+Invariant: 
+Provider failure is represented as unavailable/error and is not treated as successful governed 
+execution. 
+ 
+CV-MOD-005 — Model Failover Contract 
+
+
+
+Invariant: 
+Failover occurs only according to an approved failover policy and shall not silently weaken 
+governance or substitute an unapproved model. 
+ 
+CV-MOD-006 — Output-Budget Contract 
+Invariant: 
+Token/output limits are defined by the approved execution class and remain aligned across 
+dependent components. 
+ 
+CV-MOD-007 — Execution-Context Contract 
+Invariant: 
+Governance mode, workload, function, system, role, and resource context are validated before 
+execution. 
+ 
+CV-MOD-008 — Client System-Message Prohibition Contract 
+Invariant: 
+Where protected, clients cannot inject a system-role message that overrides the governed 
+system contract. 
+ 
+CV-MOD-009 — Prompt Neutrality / Comparative-Test Contract 
+Invariant: 
+Where governed and ungoverned executions are compared, prompts remain matched except 
+for the governance treatment being measured. 
+ 
+CV-MOD-010 — Governed/Ungoverned Isolation Contract 
+Invariant: 
+Governed and ungoverned control paths remain technically and evidentially distinguishable. 
+ 
+CV-MOD-011 — Output-Sanitation Contract 
+Invariant: 
+Governed output is checked for prohibited reasoning scaffold, unsupported deterministic claims, 
+or other defined output-control violations. 
+ 
+CV-MOD-012 — Sensitive-Output Redaction Contract 
+Invariant: 
+Where required, governed output is screened and redacted according to approved 
+data-handling rules. 
+ 
+====================================================================== 
+6. VERIFICATION, EVIDENCE, AND INTEGRITY CONTRACTS 
+====================================================================== 
+ 
+CV-EVD-001 — Authorization-versus-Verification Separation Contract 
+Invariant: 
+
+
+
+Authorization determines whether an operation may occur; verification determines whether the 
+resulting output satisfies declared evidence and execution requirements. 
+ 
+CV-EVD-002 — Evidence Generation Contract 
+Invariant: 
+Governance-relevant execution produces the evidence required by the deploying organization's 
+assurance design. 
+ 
+CV-EVD-003 — Evidence Provenance Contract 
+Invariant: 
+Evidence identifies its producing component and relevant execution context. 
+ 
+CV-EVD-004 — Configuration-to-Evidence Binding Contract 
+Invariant: 
+Historical execution evidence identifies the policy, role/scope schema, MCP/API contract, 
+model, data source, and deployment baseline that actually governed the execution. 
+ 
+CV-EVD-005 — Signed Audit Persistence Contract 
+Invariant: 
+Where signed persistence is required before release, output is not released if the required audit 
+write fails. 
+ 
+CV-EVD-006 — Audit Integrity-Key Contract 
+Invariant: 
+Integrity keys meet approved strength, storage, rotation, and access requirements. 
+ 
+CV-EVD-007 — Integrity Envelope Contract 
+Invariant: 
+Signed evidence contains the required version, hashes, signature/MAC, chain information, key 
+identifier, and sequencing fields. 
+ 
+CV-EVD-008 — Append-Only Evidence Contract 
+Invariant: 
+Historical governed evidence is not overwritten to make later verification pass. 
+ 
+CV-EVD-009 — Run Uniqueness Contract 
+Invariant: 
+Execution/run identifiers are unique within the defined evidence domain. 
+ 
+CV-EVD-010 — Chain-Tail Validation Contract 
+Invariant: 
+The current integrity-chain tail is validated before appending the next protected record where 
+chain semantics are used. 
+ 
+
+
+
+CV-EVD-011 — Governance-Domain Separation Contract 
+Invariant: 
+Evidence chains from materially distinct governance modes or domains remain separately 
+identifiable and cryptographically/domain logically separated where required. 
+ 
+CV-EVD-012 — Evidence Schema Compatibility Contract 
+Invariant: 
+Schema changes preserve interpretability of historical evidence or are handled through explicit 
+Magnitude 1 migration/retirement treatment. 
+ 
+CV-EVD-013 — Evidence Retention Contract 
+Invariant: 
+Evidence is retained for the period required by the applicable industry, regulatory, contractual, 
+and organizational policy. 
+ 
+CV-EVD-014 — Evidence Chain-of-Custody Contract 
+Invariant: 
+Access, export, handling, and transfer of audit evidence are controlled and reconstructable 
+where required. 
+ 
+CV-EVD-015 — Evidence Sampling Contract 
+Invariant: 
+Internal audit samples are selected using a documented stratified-random method within 
+predefined use-classification and latency strata rather than cherry-picked cases. 
+ 
+CV-EVD-016 — Unredacted Audit-Source Contract 
+Invariant: 
+Authorized audit sampling is performed against source logs that preserve the evidence required 
+for assessment; any masking/redaction process must be documented and must not destroy 
+required audit facts. 
+ 
+CV-EVD-017 — Historical Reconstruction Contract 
+Invariant: 
+A sampled historical run can be reconstructed sufficiently to identify the active authority, policy, 
+configuration, action, and outcome. 
+ 
+====================================================================== 
+7. FAILURE, SECURITY, AND RESILIENCE CONTRACTS 
+====================================================================== 
+ 
+CV-FLR-001 — Fail-Closed Contract 
+Invariant: 
+When required governance, authorization, integrity, or verification state cannot produce a safe 
+decision, the affected operation is denied or isolated. 
+
+
+
+ 
+CV-FLR-002 — Unbound-Execution Failure Contract 
+Invariant: 
+Any AI execution that proceeds without the required governance binding is a governance failure. 
+ 
+CV-FLR-003 — Unauthorized-Mutation Failure Contract 
+Invariant: 
+Any AI, framework, tool, or downstream component mutation outside authority established by 
+the active binding is a governance failure. 
+ 
+CV-FLR-004 — Zero Unbound-Execution Threshold Contract 
+Invariant: 
+Acceptable successful unbound execution rate is 0%. 
+ 
+CV-FLR-005 — Controlled-Failure Shutdown Contract 
+Invariant: 
+Controlled failure is mitigated by shutting down or isolating the affected chatbot/system 
+execution path rather than permitting reduced-governance operation. 
+ 
+CV-FLR-006 — 600-Series AI Mutation Contract 
+Invariant: 
+AI mutation failures are categorized through stable 600-series failure semantics. 
+ 
+CV-FLR-007 — 700-Series Traffic / Transport Contract 
+Invariant: 
+Traffic, proxy, load-balancer, service-routing, timeout, and dependency availability failures are 
+categorized through stable 700-series semantics. 
+ 
+CV-FLR-008 — 800-Series Security Contract 
+Invariant: 
+Security-boundary, integrity, authentication, authorization, tampering, injection, and equivalent 
+security failures are categorized through stable 800-series semantics. 
+ 
+CV-FLR-009 — 900-Series Contractual-Drift Contract 
+Invariant: 
+Contract drift between components is categorized through stable client-side 900-series 
+semantics. 
+ 
+CV-FLR-010 — Failure-Code Stability Contract 
+Invariant: 
+Once published, a failure code meaning is not reassigned; deprecated codes remain reserved. 
+ 
+CV-FLR-011 — Maintainer Telemetry Boundary Contract 
+Invariant: 
+
+
+
+Optional maintainer telemetry receives only the approved bounded failure information and not 
+client transaction content. 
+ 
+CV-FLR-012 — Customer-Owned Failure Evidence Contract 
+Invariant: 
+Detailed client diagnostic and audit evidence remains in the client environment unless the client 
+independently chooses to disclose it. 
+ 
+CV-FLR-013 — Dependency-Combination Failure Contract 
+Invariant: 
+Combined dependency failures are explicitly tested and shall not create an unbound execution 
+path. 
+ 
+CV-FLR-014 — Capacity / Exhaustion Governance Contract 
+Invariant: 
+Load, queue saturation, rate limiting, evidence-store saturation, and resource exhaustion shall 
+not weaken or bypass governance controls. 
+ 
+CV-FLR-015 — Load-Test Governance Preservation Contract 
+Invariant: 
+Locust or equivalent load testing must verify governance behavior under concurrency and 
+dependency pressure. 
+ 
+CV-FLR-016 — Security Red-Team Contract 
+Invariant: 
+Independent adversarial/red-team testing may attempt to bypass the declared control plane and 
+must record discovered bypasses as findings. 
+ 
+====================================================================== 
+8. OPERATIONS, CHANGE, AND ASSURANCE CONTRACTS 
+====================================================================== 
+ 
+CV-OPS-001 — Readiness Contract 
+Invariant: 
+A governed service reports ready only when all dependencies required for safe governed 
+execution are available and validated. 
+ 
+CV-OPS-002 — Health-versus-Readiness Separation Contract 
+Invariant: 
+Process health does not imply governance readiness. 
+ 
+CV-OPS-003 — Configuration Baseline Contract 
+Invariant: 
+Each production deployment has an identifiable approved configuration baseline. 
+
+
+
+ 
+CV-OPS-004 — Configuration Drift Contract 
+Invariant: 
+Drift from the approved baseline is detectable and subject to disposition. 
+ 
+CV-OPS-005 — Change Traceability Contract 
+Invariant: 
+A governance-impacting change traces from requirement through implementation, testing, 
+approvals, deployment, and post-deployment verification. 
+ 
+CV-OPS-006 — Policy Migration Contract 
+Invariant: 
+Changed policy semantics require explicit compatibility, migration, incompatibility, evidence-only 
+compatibility, or retirement disposition. 
+ 
+CV-OPS-007 — Reference Repository Archival Contract 
+Invariant: 
+Retired or long-term historical policy/configuration items retained for reference are stored in a 
+controlled reference repository according to the organization's retention rules; periods of one 
+year or greater may be used where adopted by policy. 
+ 
+CV-OPS-008 — Exception Ownership Contract 
+Invariant: 
+Each approved exception has an owner, expiration, compensating control, escalation path, and 
+ticket/reference. 
+ 
+CV-OPS-009 — Exception Aging Contract 
+Invariant: 
+Open exceptions are aged and escalated through the organization's ticketing/work-management 
+system. 
+ 
+CV-OPS-010 — Monitoring Tier Contract 
+Invariant: 
+Metrics are classified LOW, MID, or HIGH based on risk, control criticality, and required 
+response time. 
+ 
+CV-OPS-011 — Low-Tier Review Contract 
+Invariant: 
+LOW-tier metrics receive at least quarterly review. 
+ 
+CV-OPS-012 — Mid-Tier Review Contract 
+Invariant: 
+MID-tier metrics receive at least monthly review. 
+ 
+
+
+
+CV-OPS-013 — High-Tier Monitoring Contract 
+Invariant: 
+HIGH-tier areas receive daily monitoring of streaming operational data. 
+ 
+CV-OPS-014 — Threshold Override Contract 
+Invariant: 
+A material breach or anomaly overrides the routine review cadence and enters the applicable 
+incident, risk, escalation, or corrective-action process immediately. 
+ 
+CV-OPS-015 — Metric Reclassification Contract 
+Invariant: 
+Monitoring tier may change when risk, incident history, system scope, Magnitude 1 change, 
+audit findings, or control performance changes. 
+ 
+CV-OPS-016 — Reassessment Trigger Contract 
+Invariant: 
+The organization defines periodic reassessment and change-triggered reassessment windows; 
+a 120–240 day interval may be adopted as an operating policy where appropriate to the 
+deployment risk. 
+ 
+CV-OPS-017 — Deployment Tailoring Contract 
+Invariant: 
+Before go-live, the deployer documents roles, scopes, models, tools, data mappings, retention, 
+failure handling, identity, exceptions, and project-specific governance configuration. 
+ 
+CV-OPS-018 — Data-Mapping Contract 
+Invariant: 
+Project documentation identifies approved data sources, owners, system boundaries, interfaces, 
+and allowed role/function access. 
+ 
+CV-OPS-019 — AIMS Operating-Evidence Contract 
+Invariant: 
+Certification-readiness evidence comes from the operating management system, including real 
+change records, reviews, audits, CAPAs, training, and runtime evidence, not merely design 
+documents. 
+ 
+CV-OPS-020 — Independent Internal-Audit Contract 
+Invariant: 
+Internal audit sampling and conclusions are performed with sufficient independence from the 
+implementation team. 
+ 
+CV-OPS-021 — Independent Cyber Review Contract 
+Invariant: 
+
+
+
+Cyber/security review is performed as an independent assurance function for material 
+control-plane and deployment changes. 
+ 
+CV-OPS-022 — Quality Review Contract 
+Invariant: 
+Quality verifies requirement traceability, acceptance criteria, regression coverage, evidence 
+completeness, and unresolved findings. 
+ 
+CV-OPS-023 — Management Review Contract 
+Invariant: 
+Top management periodically reviews the operating AIMS, open risks, findings, changes, 
+objectives, and corrective actions. 
+ 
+CV-OPS-024 — CAPA Effectiveness Contract 
+Invariant: 
+Corrective actions are not closed until their effectiveness has been verified. 
+ 
+CV-OPS-025 — Decommissioning Contract 
+Invariant: 
+Retired AI systems have endpoints disabled, credentials revoked, data/evidence handled 
+according to policy, dependencies removed, and inventory updated. 
+ 
+====================================================================== 
+9. AGENTIC ARENA IMPLEMENTATION CONTRACT REGISTER 
+====================================================================== 
+ 
+The following contract names are the current numbered Agentic Arena implementation register. 
+ 
+C-001 — Shared agentic output-budget contract 
+C-002 — UI Guide chat-output contract 
+C-003 — UI Guide model-binding and failover contract 
+C-004 — Proxy/API route contract 
+C-005 — Proxy transport contract 
+C-006 — Request security middleware contract 
+C-007 — Readiness contract 
+C-008 — Execution-context contract 
+C-009 — Database-registration contract 
+C-010 — Governed database read-only contract 
+C-011 — Bounded relational query contract 
+C-012 — MCP argument-validation contract 
+C-013 — MCP entity/tool exposure contract 
+C-014 — MCP database-target binding contract 
+C-015 — Data Modeler governed-evidence contract 
+C-016 — Governed/ungoverned isolation contract 
+
+
+
+C-017 — Dataset-presence contract 
+C-018 — Dataset registry contract 
+C-019 — CV1.1 default-deny contract 
+C-020 — CV1.1 role/function binding contract 
+C-021 — CV1.1 action-authorization contract 
+C-022 — CV1.1 context contract 
+C-023 — Client system-message prohibition 
+C-024 — Redefinition-guard contract 
+C-025 — Model allowlist contract 
+C-026 — Model-provider availability contract 
+C-027 — Signed audit-persistence gate 
+C-028 — Audit integrity-key contract 
+C-029 — Audit integrity-envelope contract 
+C-030 — Governance-separated audit chains 
+C-031 — Run-record uniqueness and append contract 
+C-032 — Runtime Logbook contract 
+C-033 — Telemetry epoch contract 
+C-034 — Governed output sanitation contract 
+C-035 — Sensitive-output redaction contract 
+C-036 — RAG retrieval contract 
+C-037 — Auditor history contract 
+C-038 — Chatbot disclosure/content boundary 
+C-039 — UI Guide governed-workflow contract 
+C-040 — Neutral matched-comparison prompt contract 
+C-041 — Analytics read contract 
+C-042 — Security CI contract 
+ 
+====================================================================== 
+10. HIGH-LEVEL CROSSWALK 
+====================================================================== 
+ 
+Agentic Arena C-004 and C-005 
+Map primarily to: 
+CV-PXY-001 through CV-PXY-016. 
+ 
+Agentic Arena C-006 
+Maps primarily to: 
+CV-PXY-011 through CV-PXY-015 and relevant security/operations contracts. 
+ 
+Agentic Arena C-007 
+Maps primarily to: 
+CV-OPS-001 and CV-OPS-002. 
+ 
+Agentic Arena C-008 
+
+
+
+Maps primarily to: 
+CV-MOD-007 and CV-CG-009. 
+ 
+Agentic Arena C-010 through C-014 
+Map primarily to: 
+CV-MCP-001 through CV-MCP-014 and CV-DAT-002 through CV-DAT-004. 
+ 
+Agentic Arena C-016 
+Maps primarily to: 
+CV-MOD-010 and CV-CG-009. 
+ 
+Agentic Arena C-017 
+Maps primarily to: 
+CV-DAT-005 and CV-DAT-006. 
+ 
+Agentic Arena C-019 through C-024 
+Map primarily to: 
+CV-CG-003 through CV-CG-012, CV-MOD-008, and CV-CG-011. 
+ 
+Agentic Arena C-025 and C-026 
+Map primarily to: 
+CV-MOD-001 through CV-MOD-005. 
+ 
+Agentic Arena C-027 through C-031 
+Map primarily to: 
+CV-EVD-005 through CV-EVD-011. 
+ 
+Agentic Arena C-032 and C-033 
+Map primarily to: 
+CV-EVD-013 through CV-EVD-017 and relevant operational-monitoring contracts. 
+ 
+Agentic Arena C-034 and C-035 
+Map primarily to: 
+CV-MOD-011 and CV-MOD-012. 
+ 
+Agentic Arena C-036 
+Maps primarily to: 
+CV-MCP-004, CV-MCP-008, CV-DAT-008, and deployment-specific retrieval controls. 
+ 
+Agentic Arena C-037 
+Maps primarily to: 
+CV-EVD-015 through CV-EVD-017 and audit-access rules. 
+ 
+Agentic Arena C-038 and C-039 
+
+
+
+Map primarily to: 
+CV-CG-018, CV-MOD-006 through CV-MOD-008, and CV-PXY governance-path contracts. 
+ 
+Agentic Arena C-040 
+Maps primarily to: 
+CV-MOD-009 and CV-MOD-010. 
+ 
+Agentic Arena C-041 
+Maps primarily to: 
+CV-DAT-002 through CV-DAT-006. 
+ 
+Agentic Arena C-042 
+Maps primarily to: 
+CV-OPS-003 through CV-OPS-005, CV-OPS-021, CV-OPS-022, and deployment security 
+controls. 
+ 
+====================================================================== 
+11. CONTRACT PRECEDENCE 
+====================================================================== 
+ 
+Where contracts conflict, the deploying organization should define explicit precedence. 
+ 
+Recommended precedence model: 
+ 
+1. Organizational legal/regulatory obligations 
+2. Approved organizational governance policy 
+3. CV 1.1 Core Governance contracts 
+4. Approved Regulatory Alignment / jurisdiction / industry profile 
+5. Function and role contracts 
+6. Resource and data-scope contracts 
+7. MCP/tool contracts 
+8. Model/execution contracts 
+9. Proxy/transport implementation details 
+10. UI/application presentation behavior 
+ 
+Lower-level contracts may narrow authority. 
+Lower-level contracts shall not silently broaden authority granted by a higher-level contract. 
+ 
+====================================================================== 
+12. CONTRACT FAILURE RULE 
+====================================================================== 
+ 
+A contract rejection is not automatically a governance failure. 
+ 
+
+
+
+Correct enforcement: 
+A request violates a contract and is denied or isolated as designed. 
+ 
+Governance failure: 
+An execution or mutation succeeds without the required binding or outside the authority 
+established by the active contracts. 
+ 
+Acceptance threshold for successful unbound execution: 
+0%. 
+ 
+====================================================================== 
+13. CONTRACT CHANGE RULE 
+====================================================================== 
+ 
+Any change to a contract that can alter: 
+- authority; 
+- scope; 
+- permitted capability; 
+- resource reach; 
+- policy meaning; 
+- validation behavior; 
+- mutation behavior; 
+- failure behavior; 
+- evidence interpretation; 
+- proxy/enforcement-path behavior; 
+- exception authority; 
+ 
+is a candidate Magnitude 1 change and enters the defined cross-functional 
+change-management process. 
+ 
+END OF REGISTER 
+ 
+

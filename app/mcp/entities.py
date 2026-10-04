@@ -7,6 +7,7 @@ class MCPEntity(str, Enum):
     DATA_MODELER = "data_modeler"
     EVALUATOR = "evaluator"
     ADVISOR = "advisor"
+    MIXED_CAPABILITY = "mixed_capability"
 
 
 @dataclass(frozen=True)
@@ -146,6 +147,15 @@ _ENTITIES: dict[MCPEntity, MCPEntityDefinition] = {
         tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
         scope_instruction=(
             "Your job is that of a data modeler: ONLY create a relational data model representation of how the supplied data is organized, stored, and related. Do nothing else."
+        ),
+    ),
+    MCPEntity.MIXED_CAPABILITY: MCPEntityDefinition(
+        key=MCPEntity.MIXED_CAPABILITY,
+        runtime_role="mixed_capability_runner",
+        read_only_workspace=True,
+        tools=(DESCRIBE, SCHEMA, SAMPLE, QUERY, AGGREGATE, STATISTICS, PROFILE, RAG_RETRIEVE),
+        scope_instruction=(
+            "Execute only the Mixed Capability chain: model authorized evidence, visualize it, verify the visual, then trigger analysis."
         ),
     ),
     MCPEntity.EVALUATOR: MCPEntityDefinition(

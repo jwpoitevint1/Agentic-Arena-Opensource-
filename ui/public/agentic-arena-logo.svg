@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Agentic Arena</title>
+  <desc id="desc">An arena, balanced judiciary scales, a governance shield, and paired AI execution paths.</desc>
+  <defs>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071b3f"/><stop offset="1" stop-color="#0f4e8a"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#074b9b"/><stop offset="1" stop-color="#1596e8"/></linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#057b89"/><stop offset="1" stop-color="#20d4c1"/></linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#1288df"/><stop offset="1" stop-color="#14b8c8"/></linearGradient>
+  </defs>
+  <g transform="translate(0,-10)">
+    <ellipse cx="600" cy="255" rx="330" ry="128" fill="none" stroke="url(#navy)" stroke-width="54"/>
+    <path d="M300 275 C350 365 465 410 600 410 C735 410 850 365 900 275" fill="none" stroke="#0a376d" stroke-width="40" stroke-linecap="round"/>
+    <g opacity=".28" fill="#dceaff">
+      <rect x="330" y="225" width="30" height="86" rx="15"/><rect x="390" y="206" width="30" height="102" rx="15"/>
+      <rect x="780" y="206" width="30" height="102" rx="15"/><rect x="840" y="225" width="30" height="86" rx="15"/>
+    </g>
+    <path d="M585 105 L500 146 L500 220 Q500 286 585 330 Z" fill="url(#blue)"/>
+    <path d="M615 105 L700 146 L700 220 Q700 286 615 330 Z" fill="url(#teal)"/>
+    <path d="M590 315 L445 420 L300 495 L585 535 Z" fill="url(#blue)"/>
+    <path d="M610 315 L755 420 L900 495 L615 535 Z" fill="url(#teal)"/>
+    <path d="M600 302 L600 535" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+    <g fill="none" stroke="#7dd3fc" stroke-width="8" stroke-linecap="round">
+      <path d="M420 470 L470 432 L515 385"/>
+      <circle cx="420" cy="470" r="13" fill="#7dd3fc"/><circle cx="470" cy="432" r="10" fill="#7dd3fc"/><circle cx="515" cy="385" r="8" fill="#7dd3fc"/>
+    </g>
+    <g fill="none" stroke="#5eead4" stroke-width="8" stroke-linecap="round">
+      <path d="M780 470 L730 432 L685 385"/>
+      <circle cx="780" cy="470" r="13" fill="#5eead4"/><circle cx="730" cy="432" r="10" fill="#5eead4"/><circle cx="685" cy="385" r="8" fill="#5eead4"/>
+    </g>
+    <g stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <circle cx="600" cy="218" r="18"/>
+      <path d="M600 236 L600 365 M520 248 Q600 270 680 248"/>
+      <path d="M535 252 L500 320 M665 252 L700 320"/>
+      <path d="M467 320 H533 Q500 360 467 320 Z" fill="#0f68b3"/>
+      <path d="M667 320 H733 Q700 360 667 320 Z" fill="#0ea59c"/>
+      <path d="M565 366 H635"/>
+    </g>
+  </g>
+  <text x="600" y="650" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="98" font-weight="800" letter-spacing="-4">
+    <tspan fill="#071b3f">Agentic </tspan><tspan fill="url(#word)">Arena</tspan>
+  </text>
+  <text x="600" y="716" text-anchor="middle" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" letter-spacing="7" fill="#24415f">TEST  |  GOVERN  |  DEPLOY  |  WITH CONFIDENCE</text>
+</svg>

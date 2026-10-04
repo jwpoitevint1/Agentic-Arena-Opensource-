@@ -1,11 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm --prefix ui install --no-fund",
+  "installCommand": "npm --prefix ui ci --no-fund",
   "buildCommand": "npm --prefix ui run build",
   "outputDirectory": "ui/dist",
   "functions": {
     "api/proxy.js": {
-      "maxDuration": 60
+      "maxDuration": 150
     }
   },
   "headers": [

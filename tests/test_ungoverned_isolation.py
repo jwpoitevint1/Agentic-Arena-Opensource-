@@ -57,3 +57,23 @@ def test_ungoverned_auditor_prompt_context_does_not_add_read_only_instruction() 
 
 def test_ungoverned_direct_read_is_not_labeled_as_mcp() -> None:
     assert ungoverned_routes._relational_action("data_modeler") == "direct.dataset.query"
+
+
+def test_mixed_capability_matched_stage_system_prompts_are_shared() -> None:
+    governed_source = inspect.getsource(
+        __import__("app.governed_routes", fromlist=["_execute_governed_mixed_capability"])._execute_governed_mixed_capability
+    )
+    ungoverned_source = inspect.getsource(
+        ungoverned_routes._execute_ungoverned_mixed_capability
+    )
+
+    for constant in (
+        "MIXED_CAPABILITY_MODELER_SYSTEM_PROMPT",
+        "MIXED_CAPABILITY_VISUALIZER_SYSTEM_PROMPT",
+        "MIXED_CAPABILITY_ANALYST_SYSTEM_PROMPT",
+    ):
+        assert constant in governed_source
+        assert constant in ungoverned_source
+
+    assert "MIXED_CAPABILITY_VERIFIER_SYSTEM_PROMPT" in governed_source
+    assert "MIXED_CAPABILITY_VERIFIER_SYSTEM_PROMPT" not in ungoverned_source

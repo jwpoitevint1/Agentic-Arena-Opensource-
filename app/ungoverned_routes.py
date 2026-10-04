@@ -4,8 +4,12 @@ import json
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.agentic_dataset_context import DatasetContextError, neon_dataset_context
-from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
+from app.contracts import (
+    AGENTIC_EVIDENCE_ROW_LIMIT,
+    AGENTIC_MAX_OUTPUT_TOKENS,
+    AGENTIC_MIN_OUTPUT_TOKENS,
+    AGENTIC_PAIRING_CONTRACT,
+)
 from app.agentic_run_store import audit_run_history, record_agentic_run
 from app.database import database_url
 from app.datasets import dataset_for_system
@@ -17,8 +21,18 @@ from app.governed_functions import (
     governed_function_for_key,
     governed_functions,
 )
-from app.mcp.data_access import MCPDataError, MCPDataUnavailable, query_table
+from app.ungoverned_data_access import (
+    UngovernedDataError,
+    UngovernedDataUnavailable,
+    dataset_context as ungoverned_dataset_context,
+    read_source_rows,
+)
 from app.model_registry import ModelKind, model_for_key
+from app.mixed_capability_prompts import (
+    MIXED_CAPABILITY_ANALYST_SYSTEM_PROMPT,
+    MIXED_CAPABILITY_MODELER_SYSTEM_PROMPT,
+    MIXED_CAPABILITY_VISUALIZER_SYSTEM_PROMPT,
+)
 from app.openrouter import OpenRouterError, chat_completion
 from app.telemetry import build_test_record, emit_test_record
 
@@ -75,7 +89,7 @@ def _relational_action(function_key: str) -> str:
 
 
 def _relational_rows(*, target: object, function_key: str) -> list[dict[str, object]]:
-    return query_table(target, table="source_data", limit=100)
+    return read_source_rows(target, limit=AGENTIC_EVIDENCE_ROW_LIMIT)
 
 
 def _serialize_rows(rows: list[dict[str, object]]) -> str:
@@ -287,6 +301,84 @@ def _execute_ungoverned_auditor(
     return result
 
 
+def _mixed_ungoverned_call(model_key: str, system_prompt: str, user_content: str, max_tokens: int) -> dict[str, object]:
+    try:
+        return chat_completion(model_key=model_key, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}], max_tokens=max_tokens)
+    except OpenRouterError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+
+def _mixed_content(result: dict[str, object]) -> str | None:
+    payload = result.get("result")
+    choices = payload.get("choices") if isinstance(payload, dict) else None
+    message = choices[0].get("message") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
+    content = message.get("content") if isinstance(message, dict) else None
+    return content if isinstance(content, str) and content.strip() else None
+
+
+def _mixed_json(text: str) -> dict[str, object] | None:
+    candidate = text.strip()
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        candidate = "\n".join(lines).strip()
+        if candidate.lower().startswith("json"):
+            candidate = candidate[4:].lstrip()
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _execute_ungoverned_mixed_capability(*, request: UngovernedExecuteRequest, function: object, domain: object, dataset: object, model: object) -> dict[str, object]:
+    target = resolve_database_target(_ungoverned_context(request.system_id))
+    try:
+        dataset_context, _ = ungoverned_dataset_context(target)
+        rows = _relational_rows(target=target, function_key=function.key.value)
+    except (UngovernedDataUnavailable, UngovernedDataError) as exc:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_DATA_UNAVAILABLE", "message": str(exc)}) from exc
+    if not rows:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_DATA_EMPTY"})
+    evidence = json.dumps({"profile": dataset_context, "rows": rows}, ensure_ascii=False, separators=(",", ":"), default=str)
+
+    model_stage = _mixed_ungoverned_call(request.model_key, MIXED_CAPABILITY_MODELER_SYSTEM_PROMPT, request.task + "\n\nDATA:\n" + evidence, request.max_tokens)
+    simple_model = _mixed_content(model_stage)
+    if not simple_model:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_MODEL_FAILED"})
+
+    visual_stage = _mixed_ungoverned_call(request.model_key, MIXED_CAPABILITY_VISUALIZER_SYSTEM_PROMPT, "SIMPLE DATA MODEL:\n" + simple_model + "\n\nDATA:\n" + evidence, 1800)
+    visual = _mixed_json(_mixed_content(visual_stage) or "")
+    if not isinstance(visual, dict) or not isinstance(visual.get("data"), list) or not visual.get("data"):
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_VISUAL_FAILED"})
+
+    analysis_stage = _mixed_ungoverned_call(request.model_key, MIXED_CAPABILITY_ANALYST_SYSTEM_PROMPT, request.task + "\n\nSIMPLE DATA MODEL:\n" + simple_model + "\n\nVISUAL:\n" + json.dumps(visual, default=str) + "\n\nDATA:\n" + evidence, request.max_tokens)
+    analysis = _mixed_content(analysis_stage)
+    if not analysis:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_ANALYSIS_FAILED"})
+
+    result = analysis_stage
+    result["mixed_capability"] = {"trigger": "model_complete+visual_complete", "stages": ["modeler", "visualizer", "analyst"], "simple_data_model": simple_model, "visualization_spec": visual, "analysis": analysis}
+    result["visualization_spec"] = visual
+    route = {
+        "function_key": function.key.value, "display_name": function.display_name, "system_id": domain.system_id,
+        "domain": domain.domain, "dataset": dataset.kaggle_slug, "database_target": target.value,
+        "dataset_source": "direct_server_read", "dataset_provided": True, "data_access_mode": "direct_server_read",
+        "cv11_enforced": False, "opa_called": False, "mcp_called": False, "verified_evidence_layer": False,
+        "mixed_capability_triggered": True, "mixed_capability_stage_count": 3,
+    }
+    result["ungoverned_function"] = route
+    metrics = build_test_record(result=result, model=model, governance="ungoverned", operation="ungoverned_mixed_capability.execute", system_id=domain.system_id, domain=domain.domain, dataset=dataset.kaggle_slug, function_key=function.key.value, policy=None, loop_cycles=3, tool_calls=0, retries=0)
+    result["test_metrics"] = metrics
+    recorded = record_agentic_run(governance="ungoverned", record=metrics, route_metadata=route, prompt_text=request.task)
+    result["run_recorded"] = recorded
+    emit_test_record(metrics)
+    if not recorded:
+        raise HTTPException(status_code=503, detail="Mixed Capability ungoverned run recording failed.")
+    return result
+
+
 @router.get("/functions")
 def list_ungoverned_functions() -> dict[str, object]:
     function_items = governed_functions()
@@ -315,16 +407,7 @@ def list_ungoverned_functions() -> dict[str, object]:
             "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "pairing": "governed_vs_ungoverned",
         },
-        "pairing_contract": {
-            "same_function": True,
-            "same_system_and_dataset": True,
-            "same_model_key": True,
-            "same_task_and_source_context": True,
-            "same_neon_evidence_window": True,
-            "same_max_tokens": True,
-            "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
-            "intended_difference": "CV1.1 governance and governed prompt constraints are absent",
-        },
+        "pairing_contract": AGENTIC_PAIRING_CONTRACT,
     }
 
 
@@ -350,6 +433,7 @@ def list_ungoverned_functions_for_domain(system_id: int) -> dict[str, object]:
             "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "pairing": "governed_vs_ungoverned",
         },
+        "pairing_contract": AGENTIC_PAIRING_CONTRACT,
         "functions": [item.to_dict() for item in governed_functions()],
     }
 
@@ -384,6 +468,11 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
             detail="ungoverned functions require an agent model",
         )
 
+    if function.key.value == "mixed_capability":
+        return _execute_ungoverned_mixed_capability(
+            request=request, function=function, domain=domain, dataset=dataset, model=model
+        )
+
     if function.key.value == "evaluator":
         return _execute_ungoverned_auditor(
             request=request,
@@ -402,13 +491,13 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
     tool_calls = 0
 
     try:
-        dataset_context, dataset_profile = neon_dataset_context(target)
-    except DatasetContextError as exc:
+        dataset_context, dataset_profile = ungoverned_dataset_context(target)
+    except UngovernedDataUnavailable as exc:
         result = _unavailable_result(
             model.key,
             model.model_id,
-            code=exc.code,
-            message=exc.message,
+            code="DATABASE_UNAVAILABLE",
+            message=str(exc),
         )
     else:
         result = None
@@ -425,19 +514,19 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
                     code="DATASET_EMPTY",
                     message="Dataset is empty.",
                 )
-        except MCPDataUnavailable:
+        except UngovernedDataUnavailable:
             result = _unavailable_result(
                 model.key,
                 model.model_id,
                 code="DATABASE_UNAVAILABLE",
                 message="Relational dataset could not be read.",
             )
-        except MCPDataError:
+        except UngovernedDataError:
             result = _unavailable_result(
                 model.key,
                 model.model_id,
-                code="MCP_DATA_ERROR",
-                message="Relational dataset query failed.",
+                code="UNGOVERNED_DATA_ERROR",
+                message="Direct relational dataset query failed.",
             )
 
     if result is None and dataset_context is None and request.source_context is None:

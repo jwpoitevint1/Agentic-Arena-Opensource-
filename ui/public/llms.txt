@@ -7,6 +7,7 @@ Open-source repository: https://github.com/jwpoitevint1/Agentic-Arena-Opensource
 License: Apache-2.0
 
 ## Start here
+
 - [Agentic Arena — Governed AI Runtime Lab](https://agenticarena.space/): Run live governed vs. ungoverned AI comparisons across six business domains. Inspect policy decisions, runtime telemetry, bounded authority, and tamper-evident audit evidence.
 - [Arena Lab — Run Governed vs. Ungoverned AI](https://agenticarena.space/arena/): Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence.
 - [CV 1.1 Runtime Governance Project](https://agenticarena.space/project/): Technical overview of CV 1.1: deterministic AI runtime governance, bounded authority, fail-closed controls, scoped MCP tools, evidence, and enterprise adaptation.
@@ -20,6 +21,7 @@ License: Apache-2.0
 - [Agentic Arena Runtime Diagnostics](https://agenticarena.space/diagnostics/): Read-only diagnostics for Agentic Arena backend readiness, CV 1.1 status, audit integrity, model registry, governed functions, and MCP entities.
 
 ## Core concepts
+
 - Deterministic authorization and policy outside the model.
 - Bounded business functions, data targets, and MCP tools.
 - Governed and ungoverned paths using matched tasks and source data.
@@ -30,4 +32,5 @@ License: Apache-2.0
 - Human accountability remains outside the model.
 
 ## Scope note
+
 Agentic Arena is a bounded implementation and reference architecture. Regulatory mappings are alignment references, not a certification, audit opinion, legal advice, or compliance determination.

@@ -8,7 +8,7 @@ from app.governed_functions import (
 )
 
 
-def test_four_functions_are_registered() -> None:
+def test_five_functions_are_registered() -> None:
     items = governed_functions()
 
     assert [item.key for item in items] == list(GovernedFunctionType)
@@ -17,6 +17,7 @@ def test_four_functions_are_registered() -> None:
         "data_modeler_runner",
         "evaluator_runner",
         "advisor_runner",
+        "mixed_capability_runner",
     }
 
 
@@ -104,7 +105,9 @@ def test_data_modeler_governed_prompt_is_relational_only_and_control_keeps_visua
     assert "Your job is that of a data modeler: ONLY create a relational data model representation of how the supplied data is organized, stored, and related. Do nothing else." in governed_prompt
     assert "Persisted source tables and workspace state are read-only" in governed_prompt
     assert "must be supplied through the governed MCP boundary" in governed_prompt
-    assert "VISUALIZATION_SPEC" not in governed_prompt
+    assert "Visualization is a runtime artifact generated from the verified Simple Flat Sheet" in governed_prompt
+    assert "Do not emit VISUALIZATION_SPEC" in governed_prompt
+    assert "A missing model-authored visualization is not a contract failure" in governed_prompt
     assert "Choose one source-supported visualization" not in governed_prompt
     assert "Aggregation is permitted" not in governed_prompt
     assert "statistics" not in governed_prompt.lower()
@@ -112,7 +115,7 @@ def test_data_modeler_governed_prompt_is_relational_only_and_control_keeps_visua
 
     assert "Data Modeler output contract:" in ungoverned_prompt
     assert "VISUALIZATION_SPEC" in ungoverned_prompt
-    assert "Choose one source-supported visualization without prioritizing a particular field, category, metric, outcome, or narrative." in ungoverned_prompt
+    assert "Choose the visual based on the information available in this run." in ungoverned_prompt
 
     assert "CV1.1" not in ungoverned_prompt
     assert "governed MCP" not in ungoverned_prompt

@@ -6,7 +6,7 @@
 
 Agentic Arena is a controlled AI research lab for comparing governed and ungoverned agentic workflows against the same tasks and source data. The governed path is constrained by CV 1.1, OPA/Rego policy, fixed runtime roles, bounded MCP capabilities, server-selected database targets, domain-aware output controls, and tamper-evident telemetry. The ungoverned path is retained as the experimental control.
 
-> Project status: launch hardening and analytical presentation. The core execution paths, six paired datasets, telemetry, integrity chain, Railway backend, Vercel UI, Security CI and deterministic comparative analytics are operational. Remaining work is primarily database-level hardening, final production verification, a post-metadata smoke run, additional data views, cleanup and public-repository synchronization.
+> Project status: launch hardening and analytical presentation. The core execution paths, six paired datasets, telemetry, integrity chain, Railway backend, Vercel UI and deterministic comparative analytics are operational. Remaining work is primarily database-level hardening, final production verification, a post-metadata smoke run, additional data views, cleanup and public-repository synchronization.
 
 ## Operational scope
 
@@ -17,6 +17,18 @@ Coding, programming, data propagation, automation, orchestration and other opera
 Analytics and auditing were selected because they are pivotal business functions across the chosen domains and provide repeatable conditions for evaluating runtime behavior. These workflows require models to interpret structured data, operate within defined roles, access bounded resources, use evidence, comply with policy and produce controlled outputs.
 
 For this phase of the platform, that narrower task surface provides a more viable way to observe and compare role binding, scoped data access, policy enforcement, egress controls, telemetry and integrity under governed and ungoverned execution. The Arena therefore demonstrates runtime-governance capabilities **within the tested analytics and auditing scope**. It does not claim to represent every enterprise AI workload.
+
+## T2 governed agent surfaces
+
+The current interface also exposes a separate T2 test harness through the Arena proxy. It contains bounded agent surfaces for:
+
+- coding assistance with editor-only revision output and no local execution or deployment;
+- medical operations analysis with authorized dataset access, deterministic validation and bounded charts;
+- financial risk analysis without approval or transaction authority;
+- logistics management analysis without end-to-end ERP/CRM authority;
+- aviation/travel analysis within its declared data scope.
+
+Each surface has a fixed role, declared capabilities, a server-controlled model allowlist, scoped session state and telemetry. The evaluator reports governance-function results; it does not certify the system or replace independent assessment. Some surfaces remain active development/test interfaces rather than production claims.
 
 ## Experimental methodology
 
@@ -270,21 +282,7 @@ The FastAPI backend is deployed on Railway and the UI is deployed through Vercel
 
 The Docker image runs as a non-root user and includes OPA.
 
-Security CI currently performs:
-
-```text
-Python 3.12 setup
-compile app + scripts
-security gate pytest suite
-full pytest regression run
-pip-audit
-Docker build
-OPA strict validation and policy tests
-npm dependency audit
-frontend production build
-```
-
-The latest verified private-repo Security CI run passed both backend and frontend jobs.
+Automated tests, dependency audits, Docker validation, OPA validation, and frontend production builds remain available as engineering verification tools. They are not runtime contracts, service requirements, or deployment prerequisites.
 
 ## Local run
 
