@@ -295,7 +295,20 @@ def test_data_modeler_requires_bounded_mcp_evidence_path(monkeypatch) -> None:
         return {"structuredContent": payloads[tool_name]}
 
     monkeypatch.setattr("app.governed_routes.execute_governed_mcp_tool", fake_mcp)
-    monkeypatch.setattr("app.governed_routes.chat_completion", lambda **kwargs: _model_result())
+    model_calls = {"count": 0}
+
+    def fake_modeler_chat(**kwargs):
+        model_calls["count"] += 1
+        if model_calls["count"] == 1:
+            return _model_result(
+                'Simple Data Model: Shipment_ID is the shipment identifier.\n'
+                'VISUALIZATION_SPEC: {"type":"bar","title":"Shipment sample","x_label":"Shipment","y_label":"Count","data":[{"label":"S-002","value":1}]}'
+            )
+        return _model_result(
+            '{"valid":true,"reason":"visual matches supplied MCP row","verified_fields":["Shipment_ID"]}'
+        )
+
+    monkeypatch.setattr("app.governed_routes.chat_completion", fake_modeler_chat)
 
     result = execute_governed_function(
         GovernedExecuteRequest(

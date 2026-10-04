@@ -1,6 +1,9 @@
 from pathlib import Path
 
-from app.governed_routes import _visualization_spec_from_statistics
+from app.governed_routes import (
+    _build_modeler_visualization_from_flat_sheet,
+    _verified_simple_flat_sheet,
+)
 from app.mcp.entities import entity_for_key, tool_for_entity
 
 
@@ -11,6 +14,10 @@ def test_governed_mcp_function_read_matrix() -> None:
             "dataset.statistics", "dataset.profile", "rag.retrieve",
         },
         "data_modeler": {
+            "dataset.describe", "dataset.schema", "dataset.sample", "dataset.query",
+            "dataset.aggregate", "dataset.statistics", "dataset.profile", "rag.retrieve",
+        },
+        "mixed_capability": {
             "dataset.describe", "dataset.schema", "dataset.sample", "dataset.query",
             "dataset.aggregate", "dataset.statistics", "dataset.profile", "rag.retrieve",
         },
@@ -30,7 +37,7 @@ def test_no_governed_mcp_mutation_tools_are_exposed() -> None:
         "dataset.insert", "dataset.update", "dataset.delete", "dataset.write",
         "dataset.upsert", "dataset.drop", "dataset.alter", "sql.execute",
     }
-    for key in ("analyst", "data_modeler", "evaluator", "advisor"):
+    for key in ("analyst", "data_modeler", "mixed_capability", "evaluator", "advisor"):
         exposed = {tool.name for tool in entity_for_key(key).tools}
         assert exposed.isdisjoint(forbidden)
 
@@ -55,55 +62,64 @@ def test_data_modeler_mcp_declares_modeling_only_scope() -> None:
     )
 
 
-def test_mcp_statistics_promote_to_deterministic_visualization() -> None:
-    spec = _visualization_spec_from_statistics(
-        {
-            "sample_row_count": 100,
-            "columns": {
-                "loan_status": {
-                    "non_null_count": 100,
-                    "null_count": 0,
-                    "distinct_count": 3,
-                    "value_counts": {"approved": 45, "pending": 30, "rejected": 25},
-                }
-            },
-        }
-    )
-
-    assert spec is not None
-    assert spec["source"] == "mcp.dataset.statistics"
-    assert spec["type"] == "bar"
-    assert spec["title"] == "Loan Status distribution (bounded n=100)"
-    assert spec["data"] == [
-        {"label": "approved", "value": 45.0},
-        {"label": "pending", "value": 30.0},
-        {"label": "rejected", "value": 25.0},
-    ]
-
-
-def test_numeric_statistics_have_visualization_fallback() -> None:
-    spec = _visualization_spec_from_statistics(
-        {
-            "sample_row_count": 100,
-            "columns": {
-                "age": {
-                    "numeric": {"count": 100, "min": 18, "avg": 42.5, "max": 85}
-                }
-            },
-        }
-    )
-
-    assert spec is not None
-    assert spec["data"] == [
-        {"label": "MIN", "value": 18.0},
-        {"label": "AVG", "value": 42.5},
-        {"label": "MAX", "value": 85.0},
-    ]
-
-
-def test_data_modeler_statistics_stay_outside_model_prompt() -> None:
+def test_data_modeler_visual_is_runtime_derived_from_verified_flat_sheet() -> None:
     source = Path("app/governed_routes.py").read_text(encoding="utf-8")
 
     assert "DETERMINISTIC MCP STATISTICS — SERVER-COMPUTED FROM THE SAME BOUNDED SOURCE WINDOW" not in source
-    assert "visualization_spec = _visualization_spec_from_statistics(statistics_payload)" in source
+    assert "_validate_modeler_visualization(" not in source
+    assert "MODELER_VISUAL_REQUIRED" not in source
+    assert "_verified_simple_flat_sheet(" in source
+    assert "_build_modeler_visualization_from_flat_sheet(" in source
+    assert '"source": "verified_simple_flat_sheet"' in source
+    assert '"visualization_model_validated": False' in source
+    assert '"visualization_runtime_validated": bool(' in source
     assert '"mcp_statistics_provided": statistics_context is not None' in source
+
+
+def test_verified_flat_sheet_generates_visual_without_model_spec() -> None:
+    rows = [
+        {"warehouse": "ATL", "cost": 10},
+        {"warehouse": "ATL", "cost": 20},
+        {"warehouse": "MIA", "cost": 30},
+    ]
+    statistics = {
+        "table": "source_data",
+        "sample_row_count": 3,
+        "sample_limit": 100,
+        "max_categories": 20,
+        "columns": {
+            "warehouse": {
+                "non_null_count": 3,
+                "null_count": 0,
+                "distinct_count": 2,
+                "value_counts": {"ATL": 2, "MIA": 1},
+            },
+            "cost": {
+                "non_null_count": 3,
+                "null_count": 0,
+                "numeric": {
+                    "count": 3,
+                    "sum": 60.0,
+                    "avg": 20.0,
+                    "min": 10.0,
+                    "max": 30.0,
+                },
+            },
+        },
+    }
+
+    flat_sheet = _verified_simple_flat_sheet(rows=rows, statistics=statistics)
+    visual, validation = _build_modeler_visualization_from_flat_sheet(flat_sheet)
+
+    assert flat_sheet["row_count"] == 3
+    assert flat_sheet["sha256"]
+    assert visual["source"] == "verified_simple_flat_sheet"
+    assert visual["source_field"] == "warehouse"
+    assert visual["statistic"] == "value_counts"
+    assert visual["data"] == [
+        {"label": "ATL", "value": 2.0},
+        {"label": "MIA", "value": 1.0},
+    ]
+    assert validation["validated"] is True
+    assert validation["model_required"] is False
+    assert validation["validator"] == "server_deterministic_flat_sheet"

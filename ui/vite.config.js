@@ -17,6 +17,12 @@ const pageInputs = {
   governance: "governance/index.html",
   alignment: "regulatory-alignment/index.html",
   diagnostics: "diagnostics/index.html",
+  codingAssistant: "coding-assistant/index.html",
+  medicalAnalystAssistant: "medical-analyst-assistant/index.html",
+  financialRiskAnalyst: "financial-risk-analyst/index.html",
+  logisticsManagementAssistant: "logistics-management-assistant/index.html",
+  aviationTravelAssistant: "aviation-travel-assistant/index.html",
+  executionPass: "execution-pass/index.html",
 };
 
 export default defineConfig({

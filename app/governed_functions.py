@@ -10,6 +10,7 @@ class GovernedFunctionType(str, Enum):
     DATA_MODELER = "data_modeler"
     EVALUATOR = "evaluator"
     ADVISOR = "advisor"
+    MIXED_CAPABILITY = "mixed_capability"
 
 
 @dataclass(frozen=True)
@@ -76,6 +77,24 @@ _FUNCTIONS: dict[GovernedFunctionType, GovernedFunctionDefinition] = {
             "constraints",
             "quality_checks",
             "visualization_spec",
+        ),
+        permitted_actions=("model.chat", "data.read", "data.model", "output.write"),
+    ),
+    GovernedFunctionType.MIXED_CAPABILITY: GovernedFunctionDefinition(
+        key=GovernedFunctionType.MIXED_CAPABILITY,
+        display_name="Mixed Capability",
+        runtime_role="mixed_capability_runner",
+        objective=(
+            "Run a triggered three-stage workflow: create a Simple Data Model, visualize the modeled evidence, "
+            "then analyze the completed model and visual."
+        ),
+        output_contract=(
+            "simple_data_model",
+            "visualization_spec",
+            "visualization_verification",
+            "analysis",
+            "evidence",
+            "data_quality_notes",
         ),
         permitted_actions=("model.chat", "data.read", "data.model", "output.write"),
     ),
@@ -217,6 +236,8 @@ def _focus_for(function: GovernedFunctionDefinition, domain: DomainProfile) -> t
         return domain.analytical_focus
     if function.key is GovernedFunctionType.DATA_MODELER:
         return domain.modeling_focus
+    if function.key is GovernedFunctionType.MIXED_CAPABILITY:
+        return domain.modeling_focus + domain.analytical_focus
     if function.key is GovernedFunctionType.EVALUATOR:
         return (
             "record structure and completeness",
@@ -237,9 +258,11 @@ def _data_modeler_output_lines(function: GovernedFunctionDefinition) -> tuple[st
         "- Provide the relational or dimensional model in human-readable form before the visualization specification.",
         "- Finish with exactly one VISUALIZATION_SPEC line followed by one compact JSON object. A colon after VISUALIZATION_SPEC is optional.",
         "- VISUALIZATION_SPEC schema: {\"type\":\"bar|line\",\"title\":\"...\",\"x_label\":\"...\",\"y_label\":\"...\",\"data\":[{\"label\":\"...\",\"value\":0}]}",
-        "- Choose one source-supported visualization without prioritizing a particular field, category, metric, outcome, or narrative.",
-        "- The visualization should represent the supplied data neutrally and must not add analytical interpretation.",
-        "- Limit visualization data to at most 12 points.",
+        "- You WILL provide a simple rendering of a visual against the data model and it WILL be verified before rendering.",
+        "- Visualize information from the supplied data context that is represented by the Simple Data Model.",
+        "- Choose the visual based on the information available in this run. Do not default to the first field, first dimension, row count, source-table count, or a fixed visualization pattern.",
+        "- The visual may use any modeled field, measure, category, relationship, or supported aggregation supported by the supplied data.",
+        "- Keep the rendering simple and directly connected to the modeled artifact."
     )
 
 
@@ -253,6 +276,10 @@ def _governed_data_modeler_lines(function: GovernedFunctionDefinition) -> tuple[
         "- Persisted source tables and workspace state are read-only.",
         "- Data Modeler evidence must be supplied through the governed MCP boundary. Do not substitute direct source access or unsupported assumptions for required MCP context.",
         "- The derived relational data model must remain in the returned artifact only; do not claim or attempt a write back to the source database or persisted workspace.",
+        "- Make modeled fields, grain, entities/facts, dimensions, keys, relationships, constraints, and quality checks explicit.",
+        "- Visualization is a runtime artifact generated from the verified Simple Flat Sheet after model completion.",
+        "- Do not emit VISUALIZATION_SPEC and do not fabricate, recalculate, or supply chart values.",
+        "- A missing model-authored visualization is not a contract failure; the runtime owns visualization selection, verification, and rendering."
     )
 
 

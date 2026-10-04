@@ -198,8 +198,8 @@ def _secure_headers(request_id: str, *, secure_transport: bool) -> dict[str, str
         "x-request-id": request_id,
         "x-content-type-options": "nosniff",
         "x-frame-options": "DENY",
-        "referrer-policy": "no-referrer",
-        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
         "cross-origin-opener-policy": "same-origin",
         "cross-origin-resource-policy": "same-origin",
     }

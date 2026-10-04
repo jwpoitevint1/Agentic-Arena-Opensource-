@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 const DEFAULT_BACKEND = "https://agentic-arena-api-production.up.railway.app";
+const DEFAULT_T2_BACKEND = "https://t2-agentic-test-harness-production.up.railway.app";
 const ROUTE_CONTRACTS = [
   { pattern: /^\/health$/, methods: new Set(["GET"]) },
   { pattern: /^\/ready$/, methods: new Set(["GET"]) },
@@ -12,9 +13,14 @@ const ROUTE_CONTRACTS = [
   { pattern: /^\/api\/v1\/chatbot\/capabilities\/[1-6]$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/chatbot\/message$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/mcp\/governed\/entities$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/mcp\/governed\/(?:analyst|data_modeler|evaluator|auditor|advisor)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/mcp\/governed\/(?:analyst|data_modeler|mixed_capability|evaluator|auditor|advisor)$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/analytics\/(?:profile|schema|query|aggregate)$/, methods: new Set(["POST"]) },
-  { pattern: /^\/api\/v1\/system\/(?:cv11|audit\/integrity|telemetry\/tokens-by-model|telemetry\/comparison-runs|runtime-logbook|databases|datasets(?:\/[1-6])?)$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/system\/(?:cv11|audit\/integrity|telemetry\/tokens-by-model|telemetry\/totals|telemetry\/comparison-runs|runtime-logbook|databases|datasets(?:\/[1-6])?)$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/telemetry\/latest(?:\/medical)?$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/(?:config|roles|domains)$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/sessions$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/sessions\/[A-Za-z0-9-]+\/(?:turns|mcp|reset|evaluation|coding\/stream|chat\/stream)$/, methods: new Set(["POST"]) },
+  { pattern: /^\/api\/v1\/sessions\/[A-Za-z0-9-]+\/telemetry$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/system\/database\/(?:resolve|probe)$/, methods: new Set(["POST"]) },
 ];
 const ALLOWED_METHODS = new Set(["GET", "POST", "HEAD", "OPTIONS"]);
@@ -25,7 +31,6 @@ const MAX_REQUEST_BYTES = Math.min(
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const UPSTREAM_TIMEOUT_MS = 120000;
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-const HEADER_NAME_PATTERN = /^[A-Za-z0-9-]+$/;
 
 function normalizePath(value) {
   if (Array.isArray(value)) value = value[0];
@@ -94,7 +99,10 @@ function safeError(error) {
 }
 
 function backendTarget(path) {
-  const backend = process.env.BACKEND_URL || DEFAULT_BACKEND;
+  const isT2Route = /^\/api\/v1\/(?:config|roles|domains|sessions(?:\/|$)|telemetry(?:\/|$))/.test(path);
+  const backend = isT2Route
+    ? (process.env.T2_BACKEND_URL || DEFAULT_T2_BACKEND)
+    : (process.env.BACKEND_URL || DEFAULT_BACKEND);
   const base = new URL(backend);
   if (base.protocol !== "https:") {
     throw new Error("backend URL must use HTTPS");
@@ -127,13 +135,9 @@ export default async function handler(req, res) {
       "x-request-id": requestId,
     };
 
-    const authHeader = process.env.BACKEND_AUTH_HEADER;
     const authValue = process.env.BACKEND_AUTH_VALUE;
-    if (authHeader && authValue) {
-      if (!HEADER_NAME_PATTERN.test(authHeader)) {
-        throw new Error("backend auth header name is invalid");
-      }
-      headers[authHeader] = authValue;
+    if (authValue) {
+      headers["x-arena-api-key"] = authValue;
     }
 
     let body;

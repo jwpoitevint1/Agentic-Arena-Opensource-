@@ -30,7 +30,7 @@ BACKEND_AUTH_VALUE
 
 Do not expose those values through `VITE_*` variables.
 
-The public mirror uses a placeholder backend host if `BACKEND_URL` is not supplied. Set `BACKEND_URL` explicitly for your deployment. For production, set `BACKEND_URL` explicitly in Vercel.
+The proxy defaults to the current public Railway API host if `BACKEND_URL` is not supplied. For production, set `BACKEND_URL` explicitly in Vercel.
 
 The frontend keeps experiment evidence intentionally small and non-sensitive: timing, usage, cost, effectiveness, policy version, redaction counts, completion state, and pair deltas. It does not persist raw task text, source context, or model responses in local storage.
 

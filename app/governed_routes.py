@@ -5,7 +5,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agentic_dataset_context import DatasetContextError, neon_dataset_context
-from app.contracts import AGENTIC_MAX_OUTPUT_TOKENS, AGENTIC_MIN_OUTPUT_TOKENS
+from app.contracts import (
+    AGENTIC_EVIDENCE_ROW_LIMIT,
+    AGENTIC_MAX_OUTPUT_TOKENS,
+    AGENTIC_MIN_OUTPUT_TOKENS,
+    AGENTIC_PAIRING_CONTRACT,
+)
 from app.agentic_run_store import audit_run_history, record_agentic_run, verify_agentic_run_chain
 from app.cv11 import (
     CV11Decision,
@@ -29,6 +34,12 @@ from app.mcp.entities import entity_for_key
 from app.mcp.rag import rag_profile, retrieval_pattern
 from app.mcp.routes import execute_governed_mcp_tool
 from app.model_registry import ModelKind, model_for_key
+from app.mixed_capability_prompts import (
+    MIXED_CAPABILITY_ANALYST_SYSTEM_PROMPT,
+    MIXED_CAPABILITY_MODELER_SYSTEM_PROMPT,
+    MIXED_CAPABILITY_VERIFIER_SYSTEM_PROMPT,
+    MIXED_CAPABILITY_VISUALIZER_SYSTEM_PROMPT,
+)
 from app.openrouter import OpenRouterError, chat_completion
 from app.telemetry import build_test_record, emit_test_record
 from app.verified_evidence import (
@@ -387,20 +398,22 @@ def _relational_action(function_key: str) -> str:
 def _authorized_rows(*, target: object, function_key: str) -> list[dict[str, object]]:
     # Keep the matched relational evidence window bounded while giving Data Modeler
     # enough authorized rows to construct a useful derived model.
-    return query_table(target, table="source_data", limit=100)
+    return query_table(target, table="source_data", limit=AGENTIC_EVIDENCE_ROW_LIMIT)
 
 
 def _serialize_rows(rows: list[dict[str, object]]) -> str:
     return json.dumps(rows, ensure_ascii=False, separators=(",", ":"), default=str)
 
 
-def _visualization_spec_from_statistics(statistics: dict[str, object] | None) -> dict[str, object] | None:
-    """Build one deterministic chart spec from the same bounded MCP statistics window."""
+def _visualization_candidates_from_statistics(
+    statistics: dict[str, object] | None,
+) -> list[dict[str, object]]:
+    """Build server-derived chart candidates from the same bounded MCP statistics window."""
     if not isinstance(statistics, dict):
-        return None
+        return []
     columns = statistics.get("columns")
     if not isinstance(columns, dict):
-        return None
+        return []
 
     sample_row_count = statistics.get("sample_row_count")
     try:
@@ -411,55 +424,255 @@ def _visualization_spec_from_statistics(statistics: dict[str, object] | None) ->
     def label_for(column: str) -> str:
         return column.replace("_", " ").strip().title()
 
+    candidates: list[dict[str, object]] = []
     for column, raw_summary in columns.items():
         if not isinstance(column, str) or not isinstance(raw_summary, dict):
             continue
         counts = raw_summary.get("value_counts")
-        if not isinstance(counts, dict) or not 2 <= len(counts) <= 12:
-            continue
-        data: list[dict[str, object]] = []
-        for raw_label, raw_value in counts.items():
-            try:
-                value = float(raw_value)
-            except (TypeError, ValueError):
-                continue
-            data.append({"label": str(raw_label)[:48], "value": value})
-        if len(data) >= 2:
-            suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
-            return {
-                "type": "bar",
-                "title": f"{label_for(column)} distribution{suffix}",
-                "x_label": label_for(column),
-                "y_label": "Record count",
-                "data": data,
-                "source": "mcp.dataset.statistics",
-            }
+        if isinstance(counts, dict) and 2 <= len(counts) <= 12:
+            data: list[dict[str, object]] = []
+            for raw_label, raw_value in counts.items():
+                try:
+                    value = float(raw_value)
+                except (TypeError, ValueError):
+                    continue
+                data.append({"label": str(raw_label)[:48], "value": value})
+            if len(data) >= 2:
+                suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
+                candidates.append({
+                    "type": "bar",
+                    "title": f"{label_for(column)} distribution{suffix}",
+                    "x_label": label_for(column),
+                    "y_label": "Record count",
+                    "data": data,
+                    "source": "mcp.dataset.statistics",
+                    "source_field": column,
+                    "statistic": "value_counts",
+                })
 
-    for column, raw_summary in columns.items():
-        if not isinstance(column, str) or not isinstance(raw_summary, dict):
-            continue
         numeric = raw_summary.get("numeric")
-        if not isinstance(numeric, dict):
-            continue
-        data: list[dict[str, object]] = []
-        for label in ("min", "avg", "max"):
-            raw_value = numeric.get(label)
+        if isinstance(numeric, dict):
+            data = []
+            for label in ("min", "avg", "max"):
+                raw_value = numeric.get(label)
+                try:
+                    value = float(raw_value)
+                except (TypeError, ValueError):
+                    continue
+                data.append({"label": label.upper(), "value": value})
+            if len(data) == 3:
+                suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
+                candidates.append({
+                    "type": "bar",
+                    "title": f"{label_for(column)} summary{suffix}",
+                    "x_label": "Statistic",
+                    "y_label": label_for(column),
+                    "data": data,
+                    "source": "mcp.dataset.statistics",
+                    "source_field": column,
+                    "statistic": "min_avg_max",
+                })
+    return candidates[:24]
+
+
+def _model_message_content(result: dict[str, object]) -> str | None:
+    payload = result.get("result")
+    if not isinstance(payload, dict):
+        return None
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        return None
+    message = choices[0].get("message")
+    if not isinstance(message, dict):
+        return None
+    content = message.get("content")
+    return content if isinstance(content, str) and content.strip() else None
+
+
+def _parse_json_object(text: str) -> dict[str, object] | None:
+    candidate = text.strip()
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()
+        if lines:
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        candidate = "\n".join(lines).strip()
+        if candidate.lower().startswith("json"):
+            candidate = candidate[4:].lstrip()
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _verified_simple_flat_sheet(
+    *,
+    rows: list[dict[str, object]],
+    statistics: dict[str, object],
+) -> dict[str, object]:
+    """Bind bounded governed MCP rows and deterministic statistics into one verified flat-sheet artifact."""
+    if not rows:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "MODELER_FLAT_SHEET_EMPTY",
+                "message": "Governed Data Modeler failed closed because the verified Simple Flat Sheet had no rows.",
+            },
+        )
+
+    sample_row_count = statistics.get("sample_row_count")
+    try:
+        statistics_row_count = int(sample_row_count)
+    except (TypeError, ValueError):
+        statistics_row_count = -1
+
+    if statistics_row_count != len(rows):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "MODELER_FLAT_SHEET_VERIFICATION_FAILED",
+                "message": "Governed Data Modeler failed closed because bounded rows and deterministic statistics did not reconcile.",
+            },
+        )
+
+    payload = {
+        "table": "source_data",
+        "row_count": len(rows),
+        "rows": rows,
+        "statistics": statistics,
+        "source": "governed_mcp",
+    }
+    serialized = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    payload["sha256"] = _sha256(serialized)
+    return payload
+
+
+def _build_modeler_visualization_from_flat_sheet(
+    flat_sheet: dict[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Create a deterministic visual from the verified Simple Flat Sheet; the model never supplies chart values."""
+    statistics = flat_sheet.get("statistics")
+    if not isinstance(statistics, dict):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "MODELER_VISUALIZATION_SOURCE_UNAVAILABLE",
+                "message": "Governed Data Modeler failed closed because verified flat-sheet statistics were unavailable.",
+            },
+        )
+
+    candidates = _visualization_candidates_from_statistics(statistics)
+
+    def identifier_like(candidate: dict[str, object]) -> bool:
+        field = str(candidate.get("source_field") or "").strip().lower()
+        normalized = field.replace("-", "_").replace(" ", "_")
+        return (
+            normalized in {"id", "index", "key"}
+            or normalized.endswith("_id")
+            or normalized.endswith("_key")
+            or normalized.endswith("_index")
+            or normalized.startswith("id_")
+        )
+
+    categorical = [
+        item
+        for item in candidates
+        if item.get("statistic") == "value_counts" and not identifier_like(item)
+    ]
+    numeric = [
+        item
+        for item in candidates
+        if item.get("statistic") == "min_avg_max" and not identifier_like(item)
+    ]
+
+    selected_candidate: dict[str, object] | None = (
+        categorical[0]
+        if categorical
+        else numeric[0]
+        if numeric
+        else candidates[0]
+        if candidates
+        else None
+    )
+
+    selection_rule = "categorical_distribution_then_numeric_summary"
+    if selected_candidate is None:
+        columns = statistics.get("columns")
+        if not isinstance(columns, dict) or not columns:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "MODELER_VISUALIZATION_UNAVAILABLE",
+                    "message": "Governed Data Modeler failed closed because the verified Simple Flat Sheet could not produce a deterministic visual.",
+                },
+            )
+
+        completeness_data: list[dict[str, object]] = []
+        for column, summary in list(columns.items())[:12]:
+            if not isinstance(column, str) or not isinstance(summary, dict):
+                continue
+            raw_value = summary.get("non_null_count")
             try:
                 value = float(raw_value)
             except (TypeError, ValueError):
                 continue
-            data.append({"label": label.upper(), "value": value})
-        if len(data) == 3:
-            suffix = f" (bounded n={sample_count})" if sample_count is not None else ""
-            return {
-                "type": "bar",
-                "title": f"{label_for(column)} summary{suffix}",
-                "x_label": "Statistic",
-                "y_label": label_for(column),
-                "data": data,
-                "source": "mcp.dataset.statistics",
-            }
-    return None
+            completeness_data.append(
+                {
+                    "label": column.replace("_", " ").strip().title()[:48],
+                    "value": value,
+                }
+            )
+
+        if not completeness_data:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "MODELER_VISUALIZATION_UNAVAILABLE",
+                    "message": "Governed Data Modeler failed closed because the verified Simple Flat Sheet had no renderable values.",
+                },
+            )
+
+        selected_candidate = {
+            "type": "bar",
+            "title": f"Data completeness (bounded n={flat_sheet.get('row_count')})",
+            "x_label": "Field",
+            "y_label": "Non-null records",
+            "data": completeness_data,
+            "source_field": None,
+            "statistic": "non_null_count",
+        }
+        selection_rule = "non_null_completeness_fallback"
+
+    selected = {
+        "type": selected_candidate.get("type"),
+        "title": str(selected_candidate.get("title") or "Verified data visualization")[:120],
+        "x_label": str(selected_candidate.get("x_label") or "")[:80],
+        "y_label": str(selected_candidate.get("y_label") or "")[:80],
+        "data": selected_candidate.get("data"),
+        "source": "verified_simple_flat_sheet",
+        "source_field": selected_candidate.get("source_field"),
+        "statistic": selected_candidate.get("statistic"),
+    }
+    validation_record = {
+        "validated": True,
+        "validator": "server_deterministic_flat_sheet",
+        "model_required": False,
+        "selection_rule": selection_rule,
+        "flat_sheet_hash": flat_sheet.get("sha256"),
+        "statistics_hash": _sha256(
+            json.dumps(statistics, sort_keys=True, separators=(",", ":"), default=str)
+        ),
+        "visualization_hash": _sha256(json.dumps(selected, sort_keys=True, default=str)),
+    }
+    return selected, validation_record
 
 
 def _sha256(value: str | None) -> str | None:
@@ -502,6 +715,113 @@ def _dataset_source(neon_context: str | None, supplied_context: str | None) -> s
     return None
 
 
+def _mixed_stage_result(model_key: str, system_prompt: str, user_content: str, max_tokens: int) -> dict[str, object]:
+    try:
+        return chat_completion(
+            model_key=model_key,
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
+            max_tokens=max_tokens,
+        )
+    except OpenRouterError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+
+def _execute_governed_mixed_capability(
+    *,
+    request: GovernedExecuteRequest,
+    function: GovernedFunctionDefinition,
+    domain: object,
+    dataset: object,
+    model: object,
+    decision: CV11Decision,
+    telemetry_operation: str,
+) -> dict[str, object]:
+    """Triggered Modeler -> Visualizer/Verifier -> Analyst governed chain."""
+    target = resolve_database_target(_execution_context(request.system_id))
+    try:
+        schema_call = execute_governed_mcp_tool(entity_key="mixed_capability", system_id=request.system_id, model_key=request.model_key, tool_name="dataset.schema", arguments={})
+        query_call = execute_governed_mcp_tool(entity_key="mixed_capability", system_id=request.system_id, model_key=request.model_key, tool_name="dataset.query", arguments={"table": "source_data", "limit": 100})
+        stats_call = execute_governed_mcp_tool(entity_key="mixed_capability", system_id=request.system_id, model_key=request.model_key, tool_name="dataset.statistics", arguments={"table": "source_data", "limit": 100, "max_categories": 20})
+        schema = schema_call.get("structuredContent")
+        query = query_call.get("structuredContent")
+        stats = stats_call.get("structuredContent")
+        rows = query.get("rows") if isinstance(query, dict) else None
+        if not isinstance(schema, dict) or not isinstance(stats, dict) or not isinstance(rows, list) or not rows:
+            raise MCPDataError("Mixed Capability requires schema, rows, and statistics")
+    except (MCPDataUnavailable, MCPDataError, KeyError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_EVIDENCE_UNAVAILABLE", "message": str(exc)}) from exc
+
+    evidence = json.dumps({"schema": schema, "rows": rows, "statistics": stats}, ensure_ascii=False, separators=(",", ":"), default=str)
+    model_stage = _mixed_stage_result(
+        request.model_key,
+        MIXED_CAPABILITY_MODELER_SYSTEM_PROMPT,
+        request.task + "\n\nAUTHORIZED GOVERNED MCP EVIDENCE:\n" + evidence,
+        request.max_tokens,
+    )
+    simple_model = _model_message_content(model_stage)
+    if not simple_model:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_MODEL_FAILED"})
+
+    visual_stage = _mixed_stage_result(
+        request.model_key,
+        MIXED_CAPABILITY_VISUALIZER_SYSTEM_PROMPT,
+        "SIMPLE DATA MODEL:\n" + simple_model + "\n\nAUTHORIZED GOVERNED MCP EVIDENCE:\n" + evidence,
+        1800,
+    )
+    visual = _parse_json_object(_model_message_content(visual_stage) or "")
+    if not isinstance(visual, dict) or not isinstance(visual.get("data"), list) or not visual.get("data"):
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_VISUAL_FAILED"})
+
+    verify_stage = _mixed_stage_result(
+        request.model_key,
+        MIXED_CAPABILITY_VERIFIER_SYSTEM_PROMPT,
+        "SIMPLE DATA MODEL:\n" + simple_model + "\n\nPROPOSED VISUAL:\n" + json.dumps(visual, default=str) + "\n\nAUTHORIZED GOVERNED MCP EVIDENCE:\n" + evidence,
+        1000,
+    )
+    verification = _parse_json_object(_model_message_content(verify_stage) or "")
+    if not isinstance(verification, dict) or verification.get("valid") is not True:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_VISUAL_VERIFICATION_FAILED", "verification": verification})
+
+    analysis_stage = _mixed_stage_result(
+        request.model_key,
+        MIXED_CAPABILITY_ANALYST_SYSTEM_PROMPT,
+        request.task + "\n\nSIMPLE DATA MODEL:\n" + simple_model + "\n\nVERIFIED VISUAL:\n" + json.dumps(visual, default=str) + "\n\nAUTHORIZED GOVERNED MCP EVIDENCE:\n" + evidence,
+        request.max_tokens,
+    )
+    analysis = _model_message_content(analysis_stage)
+    if not analysis:
+        raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_ANALYSIS_FAILED"})
+
+    result = analysis_stage
+    result["mixed_capability"] = {
+        "trigger": "model_complete+visual_complete+verification_passed",
+        "stages": ["modeler", "visualizer", "verifier", "analyst"],
+        "simple_data_model": simple_model,
+        "visualization_spec": visual,
+        "visualization_verification": verification,
+        "analysis": analysis,
+    }
+    result["visualization_spec"] = visual
+    result["governed_function"] = {
+        "function_key": function.key.value, "display_name": function.display_name, "runtime_role": function.runtime_role,
+        "system_id": domain.system_id, "domain": domain.domain, "dataset": dataset.kaggle_slug,
+        "database_target": target.value, "dataset_source": "governed_mcp", "dataset_provided": True,
+        "mcp_required": True, "mcp_tools_used": ["dataset.schema", "dataset.query", "dataset.statistics"],
+        "visualization_provided": True, "visualization_source": "mixed_capability_model_designed_mcp_verified",
+        "visualization_model_validated": True, "visualization_validation": verification,
+        "mixed_capability_triggered": True, "mixed_capability_stage_count": 4,
+    }
+    result["cv11"] = decision.to_dict()
+    test_metrics = build_test_record(result=result, model=model, governance="governed", operation=telemetry_operation, system_id=domain.system_id, domain=domain.domain, dataset=dataset.kaggle_slug, function_key=function.key.value, policy=decision.to_dict(), loop_cycles=4, tool_calls=3, retries=0)
+    result["test_metrics"] = test_metrics
+    recorded = record_agentic_run(governance="governed", record=test_metrics, route_metadata=result["governed_function"], prompt_text=request.task)
+    result["run_recorded"] = recorded
+    emit_test_record(test_metrics)
+    if not recorded:
+        raise HTTPException(status_code=503, detail="Mixed Capability governed run recording failed.")
+    return result
+
+
 @router.get("/functions")
 def list_governed_functions() -> dict[str, object]:
     function_items = governed_functions()
@@ -516,6 +836,7 @@ def list_governed_functions() -> dict[str, object]:
             "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "pairing": "governed_vs_ungoverned",
         },
+        "pairing_contract": AGENTIC_PAIRING_CONTRACT,
         "bindings": [
             {
                 "system_id": domain.system_id,
@@ -546,6 +867,7 @@ def list_functions_for_domain(system_id: int) -> dict[str, object]:
             "max_output_tokens": AGENTIC_MAX_OUTPUT_TOKENS,
             "pairing": "governed_vs_ungoverned",
         },
+        "pairing_contract": AGENTIC_PAIRING_CONTRACT,
         "functions": [item.to_dict() for item in governed_functions()],
     }
 
@@ -582,6 +904,17 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         )
 
     decision = _enforce_function_policy(request=request, function=function)
+    if function.key.value == "mixed_capability":
+        return _execute_governed_mixed_capability(
+            request=request,
+            function=function,
+            domain=domain,
+            dataset=dataset,
+            model=model,
+            decision=decision,
+            telemetry_operation=telemetry_operation,
+        )
+
     if function.key.value == "evaluator":
         return _execute_governed_auditor(
             request=request,
@@ -624,7 +957,11 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
     verified_evidence: dict[str, object] | None = None
     verified_evidence_context: str | None = None
     statistics_context: str | None = None
+    simple_flat_sheet: dict[str, object] | None = None
+    simple_flat_sheet_hash: str | None = None
     visualization_spec: dict[str, object] | None = None
+    visualization_candidates: list[dict[str, object]] = []
+    visualization_validation: dict[str, object] | None = None
 
     if mcp_required:
         # Data Modeler fails closed unless its schema/profile/query evidence crosses
@@ -690,9 +1027,14 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
                 separators=(",", ":"),
                 default=str,
             )
-            visualization_spec = _visualization_spec_from_statistics(statistics_payload)
+            visualization_candidates = _visualization_candidates_from_statistics(statistics_payload)
             relational_action = "mcp.dataset.query"
             if row_items:
+                simple_flat_sheet = _verified_simple_flat_sheet(
+                    rows=row_items,
+                    statistics=statistics_payload,
+                )
+                simple_flat_sheet_hash = str(simple_flat_sheet.get("sha256") or "") or None
                 relational_context = _serialize_rows(row_items)
                 mcp_context_hash = _sha256(
                     dataset_context + relational_context + statistics_context
@@ -909,8 +1251,26 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
     if not isinstance(sanitized_result, dict):
         raise HTTPException(status_code=500, detail="governed output sanitation failed")
     result = sanitized_result
-    if function.key.value == "data_modeler" and visualization_spec is not None:
+    if function.key.value == "data_modeler":
+        if simple_flat_sheet is None:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "MODELER_FLAT_SHEET_UNAVAILABLE",
+                    "message": "Governed Data Modeler failed closed because the verified Simple Flat Sheet was unavailable.",
+                },
+            )
+        visualization_spec, visualization_validation = _build_modeler_visualization_from_flat_sheet(
+            simple_flat_sheet
+        )
+        result["simple_flat_sheet"] = {
+            "table": simple_flat_sheet.get("table"),
+            "row_count": simple_flat_sheet.get("row_count"),
+            "source": simple_flat_sheet.get("source"),
+            "sha256": simple_flat_sheet_hash,
+        }
         result["visualization_spec"] = visualization_spec
+        result["visualization_validation"] = visualization_validation
 
     result["governed_function"] = {
         "function_key": function.key.value,
@@ -941,9 +1301,14 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_context_hash": mcp_context_hash,
         "mcp_statistics_hash": _sha256(statistics_context),
         "mcp_statistics_provided": statistics_context is not None,
+        "simple_flat_sheet_hash": simple_flat_sheet_hash,
+        "simple_flat_sheet_row_count": simple_flat_sheet.get("row_count") if simple_flat_sheet is not None else None,
         "visualization_provided": visualization_spec is not None,
         "visualization_source": visualization_spec.get("source") if visualization_spec is not None else None,
         "visualization_spec_hash": _sha256(json.dumps(visualization_spec, sort_keys=True, default=str)) if visualization_spec is not None else None,
+        "visualization_model_validated": False,
+        "visualization_runtime_validated": bool(visualization_validation and visualization_validation.get("validated")),
+        "visualization_validation": visualization_validation,
         "rag_context_hash": _sha256(rag_context),
         "rag_pattern": rag_pattern,
         "rag_retrieval_used": rag_context is not None,
@@ -994,10 +1359,15 @@ def execute_governed_function(request: GovernedExecuteRequest, telemetry_operati
         "mcp_tools_used": mcp_tools_used,
         "mcp_context_hash": mcp_context_hash,
         "mcp_statistics_provided": statistics_context is not None,
+        "simple_flat_sheet_hash": simple_flat_sheet_hash,
+        "simple_flat_sheet_row_count": simple_flat_sheet.get("row_count") if simple_flat_sheet is not None else None,
         "mcp_statistics_hash": _sha256(statistics_context),
         "visualization_provided": visualization_spec is not None,
         "visualization_source": visualization_spec.get("source") if visualization_spec is not None else None,
         "visualization_spec_hash": _sha256(json.dumps(visualization_spec, sort_keys=True, default=str)) if visualization_spec is not None else None,
+        "visualization_model_validated": False,
+        "visualization_runtime_validated": bool(visualization_validation and visualization_validation.get("validated")),
+        "visualization_validation": visualization_validation,
         "modeling_authorized": modeling_decision.allow if modeling_decision is not None else None,
         "modeling_action": "data.model" if modeling_decision is not None else None,
         "rag_retrieval_used": rag_context is not None,

@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
+import AnalyticsDashboard from "./analytics-dashboard.jsx";
 import "./styles.css";
+import T2BotChat, { T2_BOT_KEYS } from "./t2-bot-chat.jsx";
+import RegulatoryFramework from "./regulatory-framework.jsx";
 
 const DOMAINS = [
   { id: 1, key: "finance", name: "Finance", source: "Synthetic financial activity", shape: "5,000 rows · 19 fields", status: "Schema Paired", tone: "ready", privacy: "Financial / personal data controls" },
@@ -32,12 +35,26 @@ const FALLBACK_MODELS = [
   { key: "llama_3_1_euryale_70b_v2_2", display_name: "Llama 3.1 Euryale 70B v2.2", vendor: "Sao10K", kind: "agent", access_class: "open_weights", parameter_size: "70B dense", parameter_total_b: 70 },
   { key: "mercury_2_5", display_name: "Mercury 2.5", vendor: "Inception", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "ling_3_0_flash", display_name: "Ling 3.0 Flash", vendor: "inclusionAI", kind: "agent", access_class: "open_weights", parameter_size: "124B total / 5.1B active", parameter_total_b: 124 },
-  { key: "glm_5_3_prime", display_name: "GLM 5.3 Prime", vendor: "Z.ai", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "muse_spark_1_3", display_name: "Muse Spark 1.3", vendor: "Meta", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "qwen_3_8_27b", display_name: "Qwen3.8 27B", vendor: "Qwen", kind: "agent", access_class: "open_weights", parameter_size: "27B dense", parameter_total_b: 27 },
   { key: "qwen_3_7_plus", display_name: "Qwen3.7 Plus", vendor: "Qwen", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "qwen_3_6_flash", display_name: "Qwen3.6 Flash", vendor: "Qwen", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
 ];
+
+const PROVIDER_STATED_CAPABILITIES = {
+  gemini_3_8_flash: "Google describes Gemini 3.8 Flash for long-horizon software engineering, autonomous agents, complex enterprise workflows, multimodal input, function calling, structured output, code execution, search grounding, and configurable thinking.",
+  gemini_3_7_flash: "Google describes Gemini 3.7 Flash as a previous-generation Flash model for complex coding, agentic workflows, and reliable multi-step execution.",
+  gemini_3_6_flash: "Google describes Gemini 3.6 Flash as balancing speed and multimodal capabilities across general agentic and everyday tasks.",
+  gemini_3_5_flash: "Google describes Gemini 3.5 Flash as a legacy Flash model for baseline speed and routine, high-throughput workloads.",
+  gemini_3_5_flash_lite: "Google describes Gemini 3.5 Flash-Lite as its fastest, most cost-effective 3.5 model for high-throughput execution.",
+  gpt_5_6_sol: "OpenAI describes GPT-5.6 Sol as the flagship GPT-5.6 model, with strengths across coding, knowledge work, cybersecurity, science, tool use, computer use, and long-horizon professional workflows.",
+  gpt_5_6_terra: "OpenAI describes GPT-5.6 Terra as a balanced lower-cost GPT-5.6 option for everyday work, with capability positioned between Sol and Luna.",
+  gpt_5_6_luna: "OpenAI describes GPT-5.6 Luna as the fastest and most cost-efficient GPT-5.6 tier, intended for cost-sensitive, high-volume workloads and supporting configurable reasoning effort.",
+};
+
+function providerCapabilitySummary(model) {
+  return model?.provider_capabilities || PROVIDER_STATED_CAPABILITIES[model?.key] || "No provider capability summary is asserted here. Consult the model provider's current documentation for supported capabilities and limits.";
+}
 
 const ARENA_MODEL_KEYS = new Set(FALLBACK_MODELS.map((model) => model.key));
 
@@ -105,6 +122,7 @@ function ModelOptions({ models }) {
 const FALLBACK_FUNCTIONS = [
   { key: "analyst", display_name: "Analyst", runtime_role: "analyst_runner", objective: "Analyze domain data and summarize patterns and findings." },
   { key: "data_modeler", display_name: "Data Modeler", runtime_role: "data_modeler_runner", objective: "Relational and dimensional modeling with visualization output." },
+  { key: "mixed_capability", display_name: "Mixed Capability", runtime_role: "mixed_capability_runner", objective: "Triggered Modeler → Visualizer → Analyst workflow." },
   { key: "evaluator", display_name: "Auditor", runtime_role: "evaluator_runner", objective: "Review recorded runs for patterns, inconsistencies, anomalies, and differences." },
   { key: "advisor", display_name: "Advisor", runtime_role: "advisor_runner", objective: "Compare options, tradeoffs, risks, and next steps using domain data." },
 ];
@@ -123,15 +141,22 @@ const FRAMEWORKS = [
 ];
 
 const NAV = [
-  ["lab", "Arena Lab", "01"],
-  ["evidence", "Evidence", "02"],
-  ["logbook", "Runtime Logbook", "03"],
-  ["observations", "Observations", "04"],
-  ["models", "Models", "05"],
-  ["enterprise", "Enterprise", "06"],
-  ["governance", "Governance + MCP", "07"],
+  ["lab", "Runtime Testbed", "01"],
+  ["enterprise", "Performance", "02"],
+  ["holding", "Agent Benchmark Testing Suite", "03"],
+  ["models", "Model Registry", "04"],
+  ["evidence", "KPIs + Performance Metrics", "04"],
+  ["logbook", "Runtime Logbook", "05"],
+  ["observations", "Systems Stress Indicators", "06"],
+  ["governance", "Governance Plan Implementation", "07"],
   ["alignment", "Alignment", "08"],
-  ["diagnostics", "Diagnostics", "09"],
+  ["diagnostics", "Operational Assurance", "09"],
+  ["t2_coding", "Coding Assistant", "10"],
+  ["t2_medical", "Medical Analyst / Assistant", "11"],
+  ["t2_financial", "Financial Risk Analyst", "12"],
+  ["t2_logistics", "Logistics Management Analyst / Assistant", "13"],
+  ["t2_aviation", "Aviation Travel Assistant", "14"],
+  ["t2_execution", "Regulatory Framework", "15"],
 ];
 
 const VIEW_ROUTES = {
@@ -143,25 +168,39 @@ const VIEW_ROUTES = {
   observations: "/observations/",
   models: "/models/",
   enterprise: "/enterprise/",
+  holding: "/holding/",
   governance: "/governance/",
   alignment: "/regulatory-alignment/",
   diagnostics: "/diagnostics/",
+  t2_coding: "/coding-assistant/",
+  t2_medical: "/medical-analyst-assistant/",
+  t2_financial: "/financial-risk-analyst/",
+  t2_logistics: "/logistics-management-assistant/",
+  t2_aviation: "/aviation-travel-assistant/",
+  t2_execution: "/regulatory-framework/",
 };
 
-const ROUTE_VIEWS = Object.fromEntries(Object.entries(VIEW_ROUTES).map(([viewKey, route]) => [route, viewKey]));
+const ROUTE_VIEWS = { ...Object.fromEntries(Object.entries(VIEW_ROUTES).map(([viewKey, route]) => [route, viewKey])), "/execution-pass/": "t2_execution" };
 
 const VIEW_META = {
-  home: { title: "Agentic Arena | Governed AI Runtime Lab & CV 1.1", description: "Live governed vs. ungoverned AI runtime comparisons across six business domains with inspectable policy decisions, telemetry, and tamper-evident audit evidence." },
-  lab: { title: "Arena Lab | Governed vs. Ungoverned AI Runtime Comparison", description: "Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence." },
+  home: { title: "Joshua Poitevint | AI Systems Engineering Portfolio · Agentic Arena", description: "Working AI systems engineering portfolio featuring Agentic Arena, CV 1.1 runtime enforcement, governed agent systems, analytics, operational evidence, and deployment architecture." },
+  lab: { title: "Runtime Testbed | Governed vs. Ungoverned AI Runtime Comparison", description: "Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence." },
   overview: { title: "CV 1.1 Project | Agentic Arena Runtime Governance Architecture", description: "Technical overview of CV 1.1: deterministic AI runtime governance, bounded authority, fail-closed controls, scoped MCP tools, evidence, and enterprise adaptation." },
-  evidence: { title: "Runtime Evidence | Agentic Arena", description: "Inspect governed and ungoverned AI execution evidence, including responses, latency, token usage, cost telemetry, policy outcomes, and captured comparison records." },
+  evidence: { title: "KPIs + Performance Metrics | Agentic Arena", description: "Inspect governed and ungoverned AI execution KPIs and performance metrics, including latency, token usage, cost telemetry, policy outcomes, and captured comparison records." },
   logbook: { title: "Runtime Logbook | Agentic Arena", description: "Inspect recent Agentic Arena execution records and runtime evidence from governed and ungoverned AI paths." },
-  observations: { title: "Testing Observations | Agentic Arena", description: "Review documented observations from governed and ungoverned AI testing across models, functions, and business-domain datasets." },
+  observations: { title: "Systems Stress Indicators | Agentic Arena", description: "Review documented systems stress indicators from governed and ungoverned AI testing across models, functions, and business-domain datasets." },
   models: { title: "Model Registry | Agentic Arena", description: "Explore the curated Agentic Arena model registry, model classes, parameter information, access classes, and runtime risk categories." },
-  enterprise: { title: "Enterprise AI Governance Reference Architecture | Agentic Arena", description: "Reference architecture for adapting CV 1.1 to enterprise AI services with segmented APIs, Kubernetes, failover, bounded authority, and cross-functional governance." },
-  governance: { title: "Governance + MCP Controls | Agentic Arena CV 1.1", description: "Inspect CV 1.1 governance controls, OPA/Rego policy enforcement, role boundaries, MCP tool scope, fail-closed behavior, and runtime authorization." },
+  enterprise: { title: "Performance | Agentic Arena", description: "Inspect runtime telemetry, token usage, latency, cost, and recorded execution evidence." },
+  holding: { title: "Agent Benchmark Testing Suite | Agentic Arena", description: "Benchmark testing suite for the five agent styles currently in Agent Benchmark: Coding Assistant, Medical Analyst / Assistant, Financial Risk Analyst, Logistics Management Analyst / Assistant, and Aviation Travel Assistant." },
+  governance: { title: "Governance Plan Implementation | Agentic Arena CV 1.1", description: "See how governance requirements are translated into runtime roles, policy-as-code, bounded tools and data, validation, evidence, monitoring, exception handling, and change control." },
   alignment: { title: "Regulatory Alignment | Agentic Arena CV 1.1", description: "Engineering alignment mappings for AI governance, privacy, security, and risk frameworks. Alignment only; no certification or legal compliance claim." },
-  diagnostics: { title: "Runtime Diagnostics | Agentic Arena", description: "Read-only diagnostics for Agentic Arena backend readiness, CV 1.1 status, audit integrity, model registry, governed functions, and MCP entities." },
+  diagnostics: { title: "Operational Assurance | Agentic Arena", description: "Enterprise operational view of service readiness, control status, evidence integrity, model configuration, governed capabilities, and integration health." },
+  t2_coding: { title: "Coding Assistant | Agent Benchmark", description: "Agent Benchmark coding agent interface for the Coding Assistant." },
+  t2_medical: { title: "Medical Analyst / Assistant | Agent Benchmark", description: "Agent Benchmark chat interface for the Medical Analyst / Assistant." },
+  t2_financial: { title: "Financial Risk Analyst | Agent Benchmark", description: "Agent Benchmark chat interface for the Financial Risk Analyst." },
+  t2_logistics: { title: "Logistics Management Analyst / Assistant | Agent Benchmark", description: "Agent Benchmark chat interface for logistics management and assistant workflows." },
+  t2_aviation: { title: "Aviation Travel Assistant | Agent Benchmark", description: "Agent Benchmark chat interface for bounded live travel search and price listing." },
+  t2_execution: { title: "Regulatory Framework | CV 1.1", description: "Claim-free working implementation framework mapping candidate CV 1.1 runtime controls for assessment against ISO/IEC 42001:2023." },
 };
 
 function isKnownView(value) {
@@ -268,8 +307,11 @@ function fmtCost(value) {
 }
 
 function safeDelta(governed, ungoverned, section, key) {
-  const g = Number(metric(governed, section, key));
-  const u = Number(metric(ungoverned, section, key));
+  const gRaw = metric(governed, section, key);
+  const uRaw = metric(ungoverned, section, key);
+  if (gRaw === null || gRaw === undefined || gRaw === "" || uRaw === null || uRaw === undefined || uRaw === "") return null;
+  const g = Number(gRaw);
+  const u = Number(uRaw);
   return Number.isFinite(g) && Number.isFinite(u) ? g - u : null;
 }
 
@@ -376,6 +418,9 @@ function Control({ name, desc, state, tone = "good" }) {
   return <div className="control-row"><div className={`control-icon ${tone}`}>{tone === "warn" ? "!" : tone === "neutral" ? "•" : "✓"}</div><div><div className="control-name">{name}</div><div className="control-desc">{desc}</div></div><div className="control-state">{state}</div></div>;
 }
 
+const UNDER_DEVELOPMENT_VIEWS = new Set(["t2_financial", "t2_logistics", "t2_aviation"]);
+const SITE_STATUS_NOTE = "Agentic Arena is functional. Financial Analyst, Logistics Analyst, and Aviation Assistant are under development and locked.";
+
 function App() {
   const [view, setViewState] = useState(viewFromLocation);
   const [ready, setReady] = useState(null);
@@ -420,21 +465,28 @@ function App() {
     (async () => {
       const results = await Promise.allSettled([
         apiRequest("/ready", { timeoutMs: 15000 }),
-        apiRequest("/api/v1/system/cv11", { timeoutMs: 15000 }),
         apiRequest("/api/v1/models", { timeoutMs: 20000 }),
         apiRequest("/api/v1/governed/functions", { timeoutMs: 20000 }),
         apiRequest("/api/v1/mcp/governed/entities", { timeoutMs: 20000 }),
       ]);
       if (cancelled) return;
-      if (results[0].status === "fulfilled") setReady(results[0].value);
-      if (results[1].status === "fulfilled") setCv11(results[1].value);
-      if (results[2].status === "fulfilled") {
-        const agents = (results[2].value.models || [])
+      if (results[0].status === "fulfilled") {
+        const readiness = results[0].value;
+        setReady(readiness);
+        setCv11({
+          policy: "CV1.1",
+          decision_engine: "OPA / Rego",
+          opa_healthy: readiness.cv11_opa_healthy === true,
+          governed_failure_mode: "fail_closed",
+        });
+      }
+      if (results[1].status === "fulfilled") {
+        const agents = (results[1].value.models || [])
           .filter((item) => item.kind === "agent" && ARENA_MODEL_KEYS.has(item.key));
         if (agents.length) setModels(agents);
       }
-      if (results[3].status === "fulfilled" && results[3].value.functions?.length) setFunctions(results[3].value.functions);
-      if (results[4].status === "fulfilled" && results[4].value.entities?.length) setMcpEntities(results[4].value.entities);
+      if (results[2].status === "fulfilled" && results[2].value.functions?.length) setFunctions(results[2].value.functions);
+      if (results[3].status === "fulfilled" && results[3].value.entities?.length) setMcpEntities(results[3].value.entities);
       const failed = results.filter((item) => item.status === "rejected");
       if (failed.length) setBootstrapError(`${failed.length} live bootstrap call${failed.length > 1 ? "s" : ""} unavailable. Static lab metadata remains available.`);
     })();
@@ -457,29 +509,32 @@ function App() {
   }
 
   const title = view === "home" ? "Home" : view === "overview" ? "Project" : (NAV.find(([key]) => key === view)?.[1] || "Agentic Arena");
+  const isAgentBenchmarkView = view === "holding" || T2_BOT_KEYS.includes(view);
 
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand brand-button" href="/" onClick={(event) => { event.preventDefault(); setView("home"); }} aria-label="Agentic Arena home">
         <div className="brand-mark"><img src="/agentic-arena-mark.svg" alt="" aria-hidden="true" /></div>
-        <div><div className="brand-title">Agentic Arena</div><div className="brand-subtitle">CV 1.1 governed lab</div></div>
+        <div><div className="brand-title">Agentic Arena</div><div className="brand-subtitle">{isAgentBenchmarkView ? "Agent Benchmark" : "CV 1.1 runtime enforcement"}</div></div>
       </a>
       <nav className="nav" aria-label="Primary navigation">
-        {NAV.map(([key, label, icon]) => <a key={key} href={VIEW_ROUTES[key]} className={`nav-button nav-${key} ${view === key ? "active" : ""}`} onClick={(event) => { event.preventDefault(); setView(key); }}><span className="nav-icon">{icon}</span><span>{label}</span></a>)}
+        {NAV.map(([key, label, icon]) => <a key={key} href={UNDER_DEVELOPMENT_VIEWS.has(key) ? undefined : VIEW_ROUTES[key]} aria-disabled={UNDER_DEVELOPMENT_VIEWS.has(key) || undefined} tabIndex={UNDER_DEVELOPMENT_VIEWS.has(key) ? -1 : undefined} className={`nav-button nav-${key} ${view === key ? "active" : ""}`} onClick={(event) => { event.preventDefault(); if (!UNDER_DEVELOPMENT_VIEWS.has(key)) setView(key); }}><span className="nav-icon">{icon}</span><span>{label}{UNDER_DEVELOPMENT_VIEWS.has(key) && <small style={{ display: "block" }}>🔒 Under development</small>}</span></a>)}
       </nav>
-      <div className="sidebar-footer"><strong>Experimental posture</strong><span>Matched governed / ungoverned execution. Alignment only; no certification or legal compliance claim.</span></div>
+      <div className="sidebar-footer">{isAgentBenchmarkView ? <><strong>Agent Benchmark</strong><span>Five role-specific agent styles for domain testing and adversarial input.</span></> : <><strong>Engineering test posture</strong><span>Matched governed / ungoverned execution. Portfolio evidence only; no certification or legal compliance claim.</span></>}</div>
     </aside>
 
     <main className="main">
       <header className="topbar">
-        <div><div className="eyebrow">Controlled AI execution</div><h1>{title}</h1></div>
+        <div><div className="eyebrow">{isAgentBenchmarkView ? "Agent Benchmark" : "Runtime enforcement layer"}</div><h1>{title}</h1></div>
         <div className="topbar-meta">
           <StatusPill good={ready?.status === "ready" ? true : ready ? false : null} label={ready?.status === "ready" ? "Backend ready" : "Backend status"} />
-          <StatusPill good={cv11?.opa_healthy === true ? true : cv11 ? false : null} label="CV 1.1 / OPA" />
+          {!isAgentBenchmarkView && <StatusPill good={cv11?.opa_healthy === true ? true : cv11 ? false : null} label="CV 1.1 / OPA" />}
           <StatusPill good={ready?.openrouter_configured === true ? true : ready ? false : null} label="Model gateway" />
         </div>
       </header>
 
+      <div className="notice page-notice" role="status">{SITE_STATUS_NOTE}</div>
+      {UNDER_DEVELOPMENT_VIEWS.has(view) && <section className="section card"><div className="eyebrow">🔒 Under development</div><h2>{title}</h2><p>This tab is locked while development is in progress.</p></section>}
       {bootstrapError && <div className="notice error-notice page-notice">{bootstrapError}</div>}
       {view === "home" && <Home setView={setView} models={models} functions={functions} />}
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
@@ -488,7 +543,9 @@ function App() {
       {view === "logbook" && <RuntimeLogbook />}
       {view === "observations" && <TestingObservations />}
       {view === "models" && <ModelRegistry models={models} />}
-      {view === "enterprise" && <EnterpriseDeployment />}
+      {view === "enterprise" && <Performance evidence={evidence} onClear={clearEvidence} models={models} />}
+      {view === "holding" && !UNDER_DEVELOPMENT_VIEWS.has(view) && <Holding />}
+      {view === "t2_execution" && <RegulatoryFramework />}\n      {T2_BOT_KEYS.includes(view) && view !== "t2_execution" && !UNDER_DEVELOPMENT_VIEWS.has(view) && <T2BotChat botKey={view} />}
       {view === "chat" && <Chatbot models={models} />}
       {view === "governance" && <div className="governance-mcp-view"><Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} /><MCPConsole models={models} entities={mcpEntities} /></div>}
       {view === "alignment" && <Alignment />}
@@ -497,62 +554,279 @@ function App() {
   </div>;
 }
 
+function PerformanceLiveTotals() {
+  const [totals, setTotals] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const payload = await apiRequest("/api/v1/system/telemetry/totals", { timeoutMs: 15000 });
+        if (!cancelled) {
+          setTotals(payload);
+          setError("");
+        }
+      } catch (err) {
+        if (!cancelled) setError(err?.message || "Live telemetry totals unavailable");
+      }
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const runCount = Number(totals?.runs || 0);
+  const foot = error ? error : `Runtime Enforced + OEM Settings Neon telemetry · ${fmtNumber(runCount)} persisted records · refreshes every 5 seconds`;
+  return <div className="grid-2 performance-live-totals">
+    <Metric label="Live total token count" value={totals ? fmtNumber(totals.total_tokens || 0) : "—"} foot={foot} />
+    <Metric label="Live total cost" value={totals ? fmtCost(totals.total_cost_usd || 0) : "—"} foot="All-time aggregate from both Neon evidence databases" />
+  </div>;
+}
+
+function Performance({ evidence, onClear, models }) {
+  return <>
+    <section className="hero">
+      <div className="eyebrow">Operational performance</div>
+      <h2>Runtime KPIs and comparative analytics</h2>
+      <p>Inspect model token consumption, latency, cost, run history, and recorded execution evidence.</p>
+      <PerformanceLiveTotals />
+    </section>
+    <Evidence evidence={evidence} onClear={onClear} models={models} showLedger={false} />
+  </>;
+}
+
+function Holding() {
+  const agents = [
+    {
+      number: "01",
+      name: "Coding Assistant",
+      domain: "Software engineering",
+      reason: "Tests whether an agent can translate an intended change into structured code while respecting repository boundaries, interface contracts, and review requirements.",
+      conditions: "Incomplete requirements, existing architecture, dependency constraints, syntax accuracy, change isolation, and CI feedback.",
+      capability: "Planning, code generation, revision, debugging, and traceable delivery into a controlled repository workflow.",
+    },
+    {
+      number: "02",
+      name: "Medical Analyst / Assistant",
+      domain: "Healthcare operations",
+      reason: "Tests analysis in a sensitive domain where missing values, inconsistent records, privacy boundaries, and unsupported conclusions carry greater consequences.",
+      conditions: "Synthetic healthcare records, incomplete observations, limited data scope, arithmetic verification, privacy controls, and strict output boundaries.",
+      capability: "Evidence-based analysis, uncertainty handling, data minimization, anomaly identification, and refusal when support is insufficient.",
+    },
+    {
+      number: "03",
+      name: "Financial Risk Analyst",
+      domain: "Financial analysis",
+      reason: "Tests whether an agent can distinguish recorded facts, calculated values, risk signals, and interpretation without inventing precision or authority.",
+      conditions: "Synthetic financial records, deterministic arithmetic checks, model selection, inconsistent inputs, restricted fields, and bounded recommendations.",
+      capability: "Reconciliation, numeric reasoning, risk classification, exception detection, and supportable explanation of financial findings.",
+    },
+    {
+      number: "04",
+      name: "Logistics Management Analyst / Assistant",
+      domain: "ERP, CRM, LMS, and logistics operations",
+      reason: "Tests multi-system operational reasoning across related records that remain distinct, as they would across enterprise business systems.",
+      conditions: "Relational records across separate sources, shipment status, schedules, missed dates, contact routing, planning constraints, and data-quality conflicts.",
+      capability: "Cross-source reasoning, scheduling support, operational prioritization, exception routing, and bounded coordination across business functions.",
+    },
+    {
+      number: "05",
+      name: "Aviation Travel Assistant",
+      domain: "Travel search and service operations",
+      reason: "Tests a time-sensitive assistant that must separate live availability from model knowledge and present changing external results without overstating certainty.",
+      conditions: "Date and route constraints, live API dependency, price volatility, incomplete availability, traveler requirements, and no authority to complete a purchase.",
+      capability: "Constraint resolution, live search, option comparison, source-aware responses, and graceful failure when current data is unavailable.",
+    },
+  ];
+
+  return <>
+    <section className="hero">
+      <div className="eyebrow">Agent Benchmark</div>
+      <h2>Agent Benchmark Testing Suite</h2>
+      <p>The suite uses five agent styles because each one places a different kind of pressure on the model and the system around it. Together they test code creation, sensitive analysis, numeric judgment, multi-system operations, and live external information.</p>
+      <p>The purpose is to observe how agent behavior changes when the job, data, tools, permissions, verification requirements, and failure conditions change by domain.</p>
+    </section>
+
+    <section className="section card">
+      <div className="eyebrow">Selection logic</div>
+      <div className="section-title">Five roles that expose different operating demands</div>
+      <p className="body-copy">A single generic prompt cannot represent the range of work expected from an operational agent. These roles were selected to create distinct tests of reasoning, data handling, tool use, verification, uncertainty, and bounded authority. The benchmark evaluates the agent inside each working environment rather than treating every task as the same conversation.</p>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Current benchmark set</div>
+          <div className="section-title">Five agent types across five domains</div>
+          <div className="section-note">Each role has its own task structure, source context, permitted capabilities, and failure conditions.</div>
+        </div>
+        <span className="badge">5 agent styles</span>
+      </div>
+      <div className="grid-2">
+        {agents.map((agent) => <article className="card" key={agent.number}>
+          <div className="card-title-row">
+            <div>
+              <div className="domain-number">{agent.number} · {agent.domain}</div>
+              <div className="section-title">{agent.name}</div>
+            </div>
+            <span className="badge">Benchmark role</span>
+          </div>
+          <div className="eyebrow">Why this agent is included</div>
+          <p className="body-copy">{agent.reason}</p>
+          <dl className="kv kv-roomy">
+            <dt>Operating conditions</dt><dd>{agent.conditions}</dd>
+            <dt>Capability tested</dt><dd>{agent.capability}</dd>
+          </dl>
+        </article>)}
+      </div>
+    </section>
+
+    <section className="section grid-3">
+      <div className="card"><div className="eyebrow">Across roles</div><div className="section-title">Reasoning under constraints</div><p className="body-copy">The agent must work within the assigned function, use only the available context and tools, and state what the evidence can support.</p></div>
+      <div className="card"><div className="eyebrow">Across domains</div><div className="section-title">Different failure consequences</div><p className="body-copy">A coding defect, unsupported clinical inference, incorrect financial calculation, missed shipment dependency, and stale travel result fail in different ways and require different controls.</p></div>
+      <div className="card"><div className="eyebrow">Across executions</div><div className="section-title">Comparable runtime evidence</div><p className="body-copy">Outputs, tool use, latency, tokens, cost, validation results, and failures provide a common evidence layer while the work itself remains domain-specific.</p></div>
+    </section>
+  </>;
+}
+
 function Home({ setView, models, functions }) {
   return <>
     <section className="hero">
-      <div className="eyebrow">Live governed AI lab</div>
-      <h2>Run the experiment. Inspect the evidence.</h2>
-      <p>Agentic Arena compares the same task through governed and ungoverned AI execution paths using matched models, business functions, domain data, and source context. Start with a live run, then inspect what the control layer changed and what evidence it produced.</p>
+      <div className="eyebrow">Joshua Poitevint · AI systems engineering portfolio</div>
+      <h2>Downstream AI engineering built around the environment where AI actually operates.</h2>
+      <p>I design and build AI systems around operational reality: data, APIs, business rules, permissions, failure conditions, evidence, and existing workflows. My work sits at the intersection of AI deployment, analytics, runtime enforcement, governance implementation, and process transformation.</p>
+      <p><strong>Agentic Arena is my working engineering portfolio.</strong> It is a live environment I built to develop, deploy, break, observe, and refine governed agent systems across multiple operational domains. CV 1.1 places deterministic controls around probabilistic execution so authority remains outside the model.</p>
+      <p>The portfolio is intentionally inspectable: runtime records, policy decisions, model behavior, performance telemetry, integrity evidence, system stress indicators, and working control documentation are exposed as artifacts of the engineering work.</p>
       <div className="hero-actions">
-        <a className="primary" href="/arena/" onClick={(event) => { event.preventDefault(); setView("lab"); }}>Open Arena Lab</a>
-        <a className="secondary" href="/project/" onClick={(event) => { event.preventDefault(); setView("overview"); }}>View Project</a>
+        <a className="primary" href="/arena/" onClick={(event) => { event.preventDefault(); setView("lab"); }}>Explore the Live Arena</a>
+        <a className="secondary" href="/project/" onClick={(event) => { event.preventDefault(); setView("overview"); }}>View Architecture</a>
       </div>
     </section>
 
     <section className="section grid-4">
-      <Metric label="Domains" value="6" foot="Finance · environmental · healthcare · retail · aviation · freight" />
-      <Metric label="Functions" value={String(functions.length)} foot="Bounded business functions" />
-      <Metric label="Models" value={String(models.length)} foot="Curated backend allowlist" />
+      <Metric label="Portfolio focus" value="AI systems" foot="Deployment · runtime enforcement · analytics" />
+      <Metric label="Evidence" value="Live" foot="Runtime decisions · telemetry · integrity records" />
+      <Metric label="Test surface" value="6 domains" foot={`${functions.length} bounded functions · ${models.length} curated models`} />
       <Metric label="Comparison" value="Matched" foot="Governed vs. ungoverned execution" />
     </section>
 
     <section className="section grid-3">
       <div className="card">
-        <div className="eyebrow">01 · Choose</div>
-        <div className="section-title">Pick a domain, function, and model</div>
-        <p className="body-copy">Use one of the six paired business domains and select the model and function you want to test.</p>
+        <div className="eyebrow">01 · AI runtime engineering</div>
+        <div className="section-title">Build around the operating environment</div>
+        <p className="body-copy">Multi-model execution, agent workflows, bounded capabilities, data interfaces, failure handling, and deployment architecture are treated as one operational system.</p>
       </div>
       <div className="card">
-        <div className="eyebrow">02 · Run</div>
-        <div className="section-title">Execute the matched comparison</div>
-        <p className="body-copy">The Arena sends the same task through governed and ungoverned paths so the governance layer is the intended experimental variable.</p>
+        <div className="eyebrow">02 · Runtime enforcement</div>
+        <div className="section-title">Keep authority outside the model</div>
+        <p className="body-copy">OPA/Rego policy, fixed roles, bounded MCP operations, validation, output controls, and fail-closed behavior constrain what the AI can access and do.</p>
       </div>
       <div className="card">
-        <div className="eyebrow">03 · Inspect</div>
-        <div className="section-title">Review output and runtime evidence</div>
-        <p className="body-copy">Compare responses, latency, tokens, cost telemetry, policy decisions, and the evidence left behind by each execution path.</p>
+        <div className="eyebrow">03 · Operational evidence</div>
+        <div className="section-title">Engineering leaves evidence behind</div>
+        <p className="body-copy">Policy outcomes, telemetry, integrity records, test results, failures, and implementation documentation make the work inspectable instead of relying on architecture claims alone.</p>
       </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Flagship project · Agentic Arena</div>
+          <div className="section-title">Run it instead of taking the architecture on faith</div>
+          <div className="section-note">A working environment for developing, pressure-testing, and observing governed agent systems across multiple operational domains.</div>
+        </div>
+      </div>
+      <div className="grid-3">
+        <div className="card">
+          <div className="eyebrow">Choose</div>
+          <div className="section-title">Select the workload</div>
+          <p className="body-copy">Choose a paired business domain, bounded function, curated model, and task.</p>
+        </div>
+        <div className="card">
+          <div className="eyebrow">Execute</div>
+          <div className="section-title">Run both conditions</div>
+          <p className="body-copy">Agentic Arena executes the governed runtime path and its matched ungoverned control path against the same business problem.</p>
+        </div>
+        <div className="card">
+          <div className="eyebrow">Inspect</div>
+          <div className="section-title">Review output and evidence</div>
+          <p className="body-copy">Compare responses, latency, tokens, cost telemetry, policy decisions, control outcomes, and the evidence left behind by execution.</p>
+        </div>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Documentation & audit materials</div>
+          <div className="section-title">Download the working control documentation</div>
+          <div className="section-note">Claim-free working material for architecture review, traceability, implementation planning, and independent assessment. Mapping is not certification or conformity.</div>
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="eyebrow">ISO/IEC 42001:2023</div>
+          <div className="section-title">AIMS Implementation & Audit Map</div>
+          <p className="body-copy">Maps the organizational governance, management, runtime-enforcement, assurance, evidence, audit, and certification-readiness responsibilities surrounding a CV 1.1 deployment.</p>
+          <div className="hero-actions">
+            <a className="secondary" href="/docs/cv11-iso-iec-42001-aims-implementation-audit-map-claim-free.txt" download>Download Audit Map</a>
+          </div>
+        </div>
+        <div className="card">
+          <div className="eyebrow">CV 1.1 contracts</div>
+          <div className="section-title">Full Contract Register + Agentic Arena Crosswalk</div>
+          <p className="body-copy">Defines the working CV 1.1 contract taxonomy and cross-references Agentic Arena implementation contracts while keeping architectural invariants separate from lab-specific behavior.</p>
+          <div className="hero-actions">
+            <a className="secondary" href="/docs/cv11-full-contract-register-agentic-arena-crosswalk.txt" download>Download Contract Register</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section className="section card">
+      <div className="eyebrow">Engineering approach</div>
+      <div className="section-title">Work from the operating environment backward</div>
+      <p className="body-copy">Business outcome → requirements and obligations → data governance → authoritative context / RAG → bounded APIs and MCP → runtime policy enforcement → validation and output sanitation → evidence and monitoring → change control.</p>
+      <p className="body-copy">The model is one component of the system, not the system itself. Agentic Arena is a portfolio implementation—not a scientific benchmark or a claim of universal deployment suitability.</p>
     </section>
 
     <section className="section grid-2">
       <div className="card">
-        <div className="eyebrow">Start here</div>
-        <div className="section-title">Experience the control before reading the architecture</div>
-        <p className="body-copy">Run a comparison first. The Project page documents CV 1.1, the trust boundaries, control architecture, deployment model, and regulatory-alignment posture when you want the deeper explanation.</p>
-        <div className="hero-actions">
-          <a className="primary" href="/arena/" onClick={(event) => { event.preventDefault(); setView("lab"); }}>Go to Arena Lab</a>
-        </div>
-      </div>
-      <div className="card">
         <div className="eyebrow">Evidence path</div>
         <div className="section-title">The result does not end at model output</div>
-        <p className="body-copy">After a run, use Evidence for the side-by-side comparison and Runtime Logbook for recent recorded executions. Source datasets remain separate from the AI runtime.</p>
+        <p className="body-copy">Use Evidence for side-by-side comparison and Runtime Logbook for recent recorded executions. Source datasets remain separate from the AI runtime.</p>
         <div className="hero-actions">
           <a className="secondary" href="/evidence/" onClick={(event) => { event.preventDefault(); setView("evidence"); }}>Open Evidence</a>
           <a className="ghost" href="/runtime-logbook/" onClick={(event) => { event.preventDefault(); setView("logbook"); }}>Runtime Logbook</a>
         </div>
       </div>
+      <div className="card">
+        <div className="eyebrow">Iteration method</div>
+        <div className="section-title">Build → Execute → Observe → Break → Diagnose → Correct → Verify</div>
+        <p className="body-copy">Agentic Arena intentionally stresses controls, models, contracts, interfaces, and imperfect datasets to expose failure boundaries. Problems are traced through the surrounding architecture before a fix is treated as complete.</p>
+        <div className="hero-actions">
+          <a className="primary" href="/arena/" onClick={(event) => { event.preventDefault(); setView("lab"); }}>Open Runtime Testbed</a>
+        </div>
+      </div>
     </section>
+    <section className="section card">
+      <div className="eyebrow">About the engineer</div>
+      <div className="section-title">Operations, analytics, process engineering, and AI deployment</div>
+      <p className="body-copy">I'm Joshua Poitevint. I spent most of my career in aircraft maintenance and Air Force operations, leading 31 people across six work centers before moving into operational analysis and automation. That shift felt natural because both domains rely on the same core principle. You find where a system breaks, trace the cause, and build tools people can actually rely on. I later completed an MBA in Project Management.</p>
+      <p className="body-copy">Agentic Arena grew out of that operational mindset. I built it to test how AI models behave when they step out of polished demos and into real-world conditions. In the Arena, a model gets a job, specific data, limited tools, and immutable guardrails. To mirror real operating environments, the underlying data is intentionally messy.</p>
+      <p className="body-copy">This isn't a formal scientific benchmark, and I didn't build it to declare a winning model. It is a practical engineering lab where I can stress test failure points, adapt the surrounding system architecture, and measure what happens next. The model generates the response, but the system dictates its authority.</p>
+      <p className="body-copy"><strong>Build Disclosure:</strong> I designed Agentic Arena and used Codex as my primary coding tool to implement the application and its supporting architecture.</p>
+      <div className="hero-actions">
+        <a className="primary" href="/project/" onClick={(event) => { event.preventDefault(); setView("overview"); }}>Technical Project Overview</a>
+        <a className="secondary" href="/governance/" onClick={(event) => { event.preventDefault(); setView("governance"); }}>Governance Implementation</a>
+        <a className="ghost" href="https://github.com/jwpoitevint1/Agentic-Arena-Opensource-" target="_blank" rel="noreferrer">Open-Source Repository</a>
+      </div>
+    </section>
+
   </>;
 }
 
@@ -561,10 +835,10 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
   return <>
     <section className="hero project-hero">
       <div className="project-logo-panel"><img src="/agentic-arena-logo.svg" alt="Agentic Arena: Test, Govern, Deploy with Confidence" /></div>
-      <div className="eyebrow">Project overview</div>
-      <h2>Agentic Arena · Compliance Verification 1.1</h2>
-      <p><strong>CV 1.1 (Compliance Verification)</strong> is an open-source AI runtime-governance reference architecture that places deterministic policy, bounded functions, scoped data and tool access, fail-closed controls, and verifiable evidence around probabilistic AI execution.</p>
-      <p>Agentic Arena is the public working lab for CV 1.1. It compares governed and ungoverned execution using matched models, tasks, domains, and source data so the governance layer is the intended experimental variable.</p>
+      <div className="eyebrow">Enterprise AI systems architecture</div>
+      <h2>Governed AI execution with bounded authority and operational evidence</h2>
+      <p><strong>Agentic Arena</strong> demonstrates an enterprise-oriented approach to implementing AI around existing systems, data, and business authority. <strong>CV 1.1 (Compliance Verification)</strong> is the open-source runtime-enforcement reference architecture used to apply deterministic policy, bounded functions, scoped data and tool access, fail-closed controls, and verifiable operational evidence around probabilistic AI execution.</p>
+      <p>The environment combines architecture, governance implementation, model integration, operational controls, and performance evidence in one working portfolio system. Governed and comparison paths use matched models, tasks, domains, and source data so the effect of runtime controls can be inspected without presenting the results as generalized research conclusions.</p>
       <p><strong>Open-source repository:</strong> <a href="https://github.com/jwpoitevint1/Agentic-Arena-Opensource-" target="_blank" rel="noreferrer">github.com/jwpoitevint1/Agentic-Arena-Opensource-</a></p>
       <p>This architecture is licensed under the Apache 2.0 license and is intended to be adapted to deployment-specific business, technical, regulatory, and operational requirements.</p>
     </section>
@@ -573,14 +847,14 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
       <div className="section-header">
         <div>
           <div className="eyebrow">At a glance</div>
-          <div className="section-note">Public comparative lab · runtime governance · evidence-first testing.</div>
+          <div className="section-note">Enterprise AI architecture · runtime enforcement · governed integration · operational assurance.</div>
         </div>
       </div>
       <div className="grid-4">
         <Metric label="Domains" value="6" foot="Paired governed / ungoverned schemas" />
-        <Metric label="Functions" value={String(functions.length)} foot="Analyst · Modeler · Auditor · Advisor" />
-        <Metric label="Models" value={String(models.length)} foot="Backend allowlist" />
-        <Metric label="Pairs" value={String(successfulPairs)} foot="Browser-local evidence" />
+        <Metric label="Functions" value={String(functions.length)} foot="Analyst · Modeler · Mixed Capability · Auditor · Advisor" />
+        <Metric label="Models" value={String(models.filter((model) => model.key !== "glm_5_3_prime").slice(0, 23).length)} foot="Approved UI registry" />
+        <Metric label="Comparisons" value={String(successfulPairs)} foot="Recorded matched execution evidence" />
       </div>
     </section>
 
@@ -590,20 +864,26 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
         <p className="body-copy">The model does not choose its own role, permissions, tools, data target, or execution authority. Those controls are resolved outside the model.</p>
       </div>
       <div className="card">
-        <div className="section-title">Matched comparison</div>
-        <p className="body-copy">Governed and ungoverned paths are run against matched tasks and source data so differences can be observed without intentionally changing the business problem.</p>
+        <div className="section-title">Control validation</div>
+        <p className="body-copy">Matched execution paths provide a practical way to inspect how runtime controls affect behavior, tool use, performance, and evidence without changing the underlying business task.</p>
       </div>
       <div className="card">
-        <div className="section-title">Evidence and verification</div>
-        <p className="body-copy">Runtime telemetry, policy decisions, integrity records, and the public Runtime Logbook make the control path inspectable rather than purely descriptive.</p>
+        <div className="section-title">Operational traceability</div>
+        <p className="body-copy">Runtime telemetry, policy decisions, integrity records, and execution history provide traceability for operational review, governance assessment, and control verification.</p>
       </div>
     </section>
 
     <section className="section card">
-      <div className="eyebrow">System separation</div>
-      <div className="section-title">Data plane separate from AI execution</div>
-      <p className="body-copy">The six domain datasets are intentionally separated from the AI runtime. In the lab, they act as stand-ins for external operational systems while the AI accesses them only through bounded application and governance interfaces. CV 1.1 controls the bridge between the source-data plane and the AI execution plane rather than making the source system part of the AI itself.</p>
-      <p className="body-copy">That separation models an enterprise deployment in which systems such as ERP, maintenance, finance, logistics, or analytics platforms remain the systems of record. If the AI or its governance runtime fails closed, the underlying operational system does not have to fail with it. Deterministic automation, monitoring streams, and human workflows can remain available as continuity paths. Agentic Arena demonstrates this architectural separation; it is not a claim that the lab itself is a production-certified deployment.</p>
+      <div className="eyebrow">Enterprise architecture principle</div>
+      <div className="section-title">Preserve systems of record while governing AI access</div>
+      <p className="body-copy">The six domain datasets are intentionally separated from the AI runtime. In this environment, they act as stand-ins for external operational systems while the AI accesses them only through bounded application and governance interfaces. CV 1.1 controls the bridge between the source-data plane and the AI execution plane rather than making the source system part of the AI itself.</p>
+      <p className="body-copy">That separation models an enterprise deployment in which systems such as ERP, maintenance, finance, logistics, or analytics platforms remain the systems of record. If the AI or its governance runtime fails closed, the underlying operational system does not have to fail with it. Deterministic automation, monitoring streams, and human workflows can remain available as continuity paths. Agentic Arena demonstrates this architectural separation; it is not a claim that the portfolio environment itself is a production-certified deployment.</p>
+    </section>
+
+    <section className="section card">
+      <div className="eyebrow">Execution model</div>
+      <div className="section-title">Event-driven, bounded agentic workflows</div>
+      <p className="body-copy">The workflows shown here are agentic but currently trigger-based. In an autonomous deployment, execution triggers could be tied to changes in input conditions—such as time or date, file updates, changes in system output, or streaming data crossing defined operating ranges. Those external events would initiate the bounded workflow; they would not expand the model's authority or bypass its runtime controls.</p>
     </section>
 
     <section className="section">
@@ -620,9 +900,9 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Test surface</div>
-          <div className="section-title">Paired business domains</div>
-          <div className="section-note">Six domain datasets support governed / ungoverned comparison across the same underlying workload.</div>
+          <div className="eyebrow">Business-domain coverage</div>
+          <div className="section-title">Cross-domain implementation environment</div>
+          <div className="section-note">Six representative business domains support governed and comparison execution across consistent underlying workloads.</div>
         </div>
         <span className="badge">6 paired systems</span>
       </div>
@@ -631,7 +911,7 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
 
     <section className="section grid-2">
       <div className="card">
-        <div className="section-title">Implementation stack</div>
+        <div className="section-title">Technology and control stack</div>
         <dl className="kv kv-roomy">
           <dt>Application</dt><dd>FastAPI backend · React / Vite UI</dd>
           <dt>Policy</dt><dd>CV 1.1 · OPA / Rego</dd>
@@ -642,7 +922,7 @@ function Overview({ setView, ready, cv11, models, functions, evidence }) {
         </dl>
       </div>
       <div className="card">
-        <div className="card-title-row"><div className="section-title">Live runtime state</div><StatusPill good={ready?.status === "ready" ? true : ready ? false : null} label={ready?.status || "Checking"} /></div>
+        <div className="card-title-row"><div className="section-title">Current platform status</div><StatusPill good={ready?.status === "ready" ? true : ready ? false : null} label={ready?.status || "Checking"} /></div>
         <dl className="kv kv-roomy">
           <dt>Database wiring</dt><dd>{ready ? (ready.databases_configured ? "Configured" : "Incomplete") : "Checking"}</dd>
           <dt>Model gateway</dt><dd>{ready ? (ready.openrouter_configured ? "Configured" : "Not configured") : "Checking"}</dd>
@@ -661,7 +941,7 @@ function DomainCard({ domain, onRun }) {
     <div className="domain-source">{domain.source}<br />{domain.shape}</div>
     <div className="domain-privacy">{domain.privacy}</div>
     <div className="domain-status"><span>Paired workload</span><span className={domain.tone}>{domain.status}</span></div>
-    {onRun && <button className="text-button" onClick={onRun}>Open in Arena Lab →</button>}
+    {onRun && <button className="text-button" onClick={onRun}>Open in Runtime Testbed →</button>}
   </div>;
 }
 
@@ -695,10 +975,15 @@ function LabRunner({ models, functions, onCapture, setView }) {
   const selectedFunction = functions.find((item) => item.key === functionKey);
   const auditorSelected = functionKey === "evaluator" || functionKey === "auditor";
   const dataModelerSelected = functionKey === "data_modeler";
+  const mixedCapabilitySelected = functionKey === "mixed_capability";
   const summary = useMemo(() => pairSummary(governed, ungoverned), [governed, ungoverned]);
 
   function loadTemplate(domainId, nextFunctionKey = functionKey) {
     const domain = DOMAINS.find((item) => item.id === Number(domainId)) || DOMAINS[5];
+    if (nextFunctionKey === "mixed_capability") {
+      setTask(`Model the ${domain.name} evidence, create a simple visualization of the modeled information, then analyze the completed model and visualization.`);
+      return;
+    }
     if (nextFunctionKey === "data_modeler") {
       setTask(dataModelerTask(domain));
       return;
@@ -747,9 +1032,15 @@ function LabRunner({ models, functions, onCapture, setView }) {
   return <>
     <div className="notice good-notice">{auditorSelected
       ? "Auditor mode reads a bounded window of prior governed and ungoverned AI runs from the recording databases. It is read-only against source and workspace state. Every audit execution and its action ledger are written to the signed recording database; manual source context is disabled."
-      : dataModelerSelected
-        ? "Data Modeler returns two output artifacts in the Lab: a modeled-data representation and a data visualization. The governed path requires its schema and bounded row context through the governed MCP boundary and fails closed if that context is unavailable. Persisted source and workspace state remain read-only."
-        : "Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage."}</div>
+      : mixedCapabilitySelected
+        ? "Mixed Capability is a triggered three-agent workflow: Modeler → Visualizer → Analyst. In the governed path, the visual must pass verification against governed MCP evidence before the Analyst is triggered. The ungoverned control runs the matched functional sequence without the governed verification gate."
+        : dataModelerSelected
+          ? "Data Modeler returns two output artifacts in the Lab: a Simple Data Model and a data visualization. The governed path requires its schema and bounded row context through the governed MCP boundary and fails closed if that context is unavailable. Persisted source and workspace state remain read-only."
+          : "Matched-pair mode holds the model, function, domain, task, source context, and token ceiling constant. Results are captured as metrics-only browser evidence; raw model outputs are not written to local storage."}</div>
+
+    <div className="notice">
+      <strong>Intentional dirty-data test surface.</strong> The datasets intentionally include null values, missing entries, inconsistent or mismatched headers, and other imperfect structures—including a field named <span className="mono-cell">merged</span>. These defects are retained on purpose rather than cleaned away. The testbed uses them to stress AI workflows and demonstrate how poor data quality can affect model interpretation, aggregation, downstream output, and runtime controls. Observed effects are development evidence from this portfolio environment, not generalized scientific conclusions.
+    </div>
 
     <section className="section form-panel">
       <div className="form-grid four-cols">
@@ -784,9 +1075,11 @@ function LabRunner({ models, functions, onCapture, setView }) {
       <div className="live-stage-strip">
         {(auditorSelected
           ? ["Dispatch", "Policy / control boundary", "Recording database read", "Audit model execution", "Signed audit telemetry"]
-          : dataModelerSelected
-            ? ["Dispatch", "Policy / control boundary", "Required governed MCP read", "Derived data modeling", "Model + visualization output", "Egress + telemetry"]
-            : ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"]
+          : mixedCapabilitySelected
+            ? ["Dispatch", "Policy / control boundary", "Governed MCP evidence", "Simple Data Model", "Visualization", "Verification gate", "Triggered Analyst", "Egress + telemetry"]
+            : dataModelerSelected
+              ? ["Dispatch", "Policy / control boundary", "Required governed MCP read", "Derived data modeling", "Model + visualization output", "Egress + telemetry"]
+              : ["Dispatch", "Policy / control boundary", "Neon dataset read", "Model execution", "Egress + telemetry"]
         ).map((stage) => <div className="live-stage" key={stage}>{stage}</div>)}
       </div>
     </section>}
@@ -794,13 +1087,13 @@ function LabRunner({ models, functions, onCapture, setView }) {
     {(governed || ungoverned || errors.governed || errors.ungoverned) && <section className="section">
       <div className="section-header"><div><div className="section-title">Pair result</div><div className="section-note">Same inputs, two execution conditions.</div></div>{captured && <button className="ghost small-button" onClick={() => setView("evidence")}>Evidence captured →</button>}</div>
       <div className="grid-2">
-        <ResultPanel title="CV 1.1 governed" tone="good" result={governed} error={errors.governed} dataModeler={dataModelerSelected} />
-        <ResultPanel title="Ungoverned control" tone="warn" result={ungoverned} error={errors.ungoverned} dataModeler={dataModelerSelected} />
+        <ResultPanel title="CV 1.1 governed" tone="good" result={governed} error={errors.governed} dataModeler={dataModelerSelected} mixedCapability={mixedCapabilitySelected} />
+        <ResultPanel title="Ungoverned control" tone="warn" result={ungoverned} error={errors.ungoverned} dataModeler={dataModelerSelected} mixedCapability={mixedCapabilitySelected} />
       </div>
       {summary && <DeltaPanel summary={summary} />}
     </section>}
 
-    {!governed && !ungoverned && !running && <section className="section empty-state"><div className="empty-mark">AA</div><strong>No pair has run in this session.</strong><span>Configure the experiment above and execute both paths together.</span></section>}
+    {!governed && !ungoverned && !running && <section className="section empty-state"><div className="empty-mark">AA</div><strong>No pair has run in this session.</strong><span>Configure the test above and execute both paths together.</span></section>}
   </>;
 }
 
@@ -971,17 +1264,36 @@ function DataModelVisualization({ spec }) {
   </div>;
 }
 
-function ResultPanel({ title, tone, result, error, dataModeler = false }) {
+function ResultPanel({ title, tone, result, error, dataModeler = false, mixedCapability = false }) {
   const text = assistantText(result);
   const modelerOutput = dataModeler ? parseDataModelerOutput(result) : null;
+  const mixed = mixedCapability ? result?.mixed_capability : null;
+  const mixedVisual = mixedCapability ? normalizeDataModelVisualization(mixed?.visualization_spec || result?.visualization_spec) : null;
   const test = result?.test_metrics;
   const nuances = Array.isArray(test?.behavior?.behavioral_nuances) ? test.behavior.behavioral_nuances : [];
   const decisionPath = observableDecisionPath(result, tone);
   return <div className={`card result-panel ${tone === "good" ? "governed-panel" : "control-panel"}`}>
-    <div className="result-head"><div><strong>{title}</strong><div className="micro">{tone === "good" ? "Policy-enforced treatment path" : "CV1.1-off control path"}</div></div><StatusPill good={error ? false : result ? (tone === "good" ? true : null) : null} label={error ? "Error" : result ? "Complete" : "Waiting"} /></div>
-    {error ? <div className="notice error-notice">{error}</div> : dataModeler ? <div className="modeler-output-stack">
+    <div className="result-head"><div><strong>{title}</strong><div className="micro">{tone === "good" ? "Policy-enforced governed path" : "CV1.1-off baseline path"}</div></div><StatusPill good={error ? false : result ? (tone === "good" ? true : null) : null} label={error ? "Error" : result ? "Complete" : "Waiting"} /></div>
+    {error ? <div className="notice error-notice">{error}</div> : mixedCapability ? <div className="modeler-output-stack">
       <div className="modeler-output-box">
-        <div className="section-title">Modeled data output</div>
+        <div className="section-title">Simple Data Model</div>
+        <div className="section-note">{tone === "good" ? "Scope-bound Modeler · governed MCP evidence" : "Modeler · direct control-path data"}</div>
+        {mixed?.simple_data_model ? <div className="result-body modeler-result-body">{mixed.simple_data_model}</div> : <div className="result-empty compact-empty">No modeled output returned.</div>}
+      </div>
+      <div className="modeler-output-box">
+        <div className="section-title">Data visualization</div>
+        <div className="section-note">{tone === "good" ? "Model-designed visual · verification required before Analyst trigger" : "Visualizer output · no governed verification gate"}</div>
+        <DataModelVisualization spec={mixedVisual} />
+        {tone === "good" && mixed?.visualization_verification && <div className="framework-tags"><span className="tag">verification: {mixed.visualization_verification.valid === true ? "passed" : "failed"}</span>{mixed.visualization_verification.reason && <span className="tag">{String(mixed.visualization_verification.reason)}</span>}</div>}
+      </div>
+      <div className="modeler-output-box">
+        <div className="section-title">Triggered Analyst</div>
+        <div className="section-note">{tone === "good" ? "Triggered only after model + visual + verification PASS" : "Triggered after model + visual completion"}</div>
+        {mixed?.analysis ? <div className="result-body modeler-result-body">{mixed.analysis}</div> : <div className="result-empty compact-empty">Analyst was not triggered.</div>}
+      </div>
+    </div> : dataModeler ? <div className="modeler-output-stack">
+      <div className="modeler-output-box">
+        <div className="section-title">Simple Data Model</div>
         <div className="section-note">{tone === "good" ? "Output artifact only · source and workspace remain read-only" : "Model-generated data representation from the supplied task and data"}</div>
         {modelerOutput?.text ? <div className="result-body modeler-result-body">{modelerOutput.text}</div> : <div className="result-empty compact-empty">No modeled output returned.</div>}
       </div>
@@ -1077,23 +1389,25 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
   if (!data.length) return <div className="result-empty compact-empty">No recorded model token usage yet.</div>;
 
   const modelNames = new Map((models || []).map((item) => [item.key, item.display_name || item.key]));
-  const width = Math.max(900, data.length * 105);
-  const height = 440;
+  const paired = data.every((item) => String(item.model_key || "").includes("::"));
+  const groupKeys = paired ? [...new Set(data.map((item) => String(item.model_key).split("::")[0]))] : data.map((item) => item.model_key);
+  const width = Math.max(900, groupKeys.length * (paired ? 220 : 105));
+  const height = 460;
   const left = 96;
   const right = 24;
   const top = 34;
-  const bottom = 122;
+  const bottom = 140;
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const maxValue = Math.max(...data.map((item) => Number(item[valueKey])), 1);
   const costs = data.map((item) => Number(item.cost_usd)).filter((value) => Number.isFinite(value) && value >= 0);
   const maxCost = Math.max(...costs, 0);
-  const slotWidth = plotWidth / data.length;
-  const barWidth = Math.min(58, slotWidth * 0.62);
+  const slotWidth = plotWidth / groupKeys.length;
+  const barWidth = Math.min(62, slotWidth * (paired ? 0.3 : 0.62));
   const ticks = [0, 0.25, 0.5, 0.75, 1];
 
   return <div className="token-chart-scroll">
-    <svg className="token-usage-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${slice === "all" ? "Total" : slice === "governed" ? "Governed" : "Ungoverned"} recorded token usage by model`}>
+    <svg className="token-usage-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${slice === "all" ? "Total" : slice === "governed" ? "Runtime Enforced" : "OEM Settings"} recorded token usage by model`}>
       <text x="20" y={top + plotHeight / 2} className="token-axis-title" transform={`rotate(-90 20 ${top + plotHeight / 2})`}>Token count</text>
       {ticks.map((fraction) => {
         const y = top + plotHeight - fraction * plotHeight;
@@ -1108,43 +1422,53 @@ function TokenUsageChart({ rows, models, slice = "all" }) {
       {data.map((item, index) => {
         const value = Number(item[valueKey]);
         const barHeight = Math.max(2, (value / maxValue) * plotHeight);
-        const x = left + index * slotWidth + (slotWidth - barWidth) / 2;
+        const baseKey = paired ? String(item.model_key).split("::")[0] : item.model_key;
+        const groupIndex = paired ? groupKeys.indexOf(baseKey) : index;
+        const governed = Number(item.governed_tokens || 0) > 0;
+        const pairIndex = governed ? 0 : 1;
+        const x = paired
+          ? left + groupIndex * slotWidth + (slotWidth - barWidth * 2) / 2 + pairIndex * barWidth
+          : left + groupIndex * slotWidth + (slotWidth - barWidth) / 2;
         const y = top + plotHeight - barHeight;
         const cost = Number(item.cost_usd);
         const hasCost = Number.isFinite(cost) && cost >= 0;
         const costY = hasCost ? top + plotHeight - (maxCost > 0 ? (cost / maxCost) * plotHeight : 0) : null;
         const label = modelNames.get(item.model_key) || item.requested_model_id || item.model_key;
-        const shortLabel = label.length > 24 ? label.slice(0, 22) + "…" : label;
+        const baseLabel = paired ? String(label).replace(/ · (Runtime Enforced|OEM Settings)$/, "") : label;
+        const shortLabel = baseLabel.length > 24 ? baseLabel.slice(0, 22) + "…" : baseLabel;
         return <g key={item.model_key}>
-          <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" className="token-bar">
-            <title>{`${label}: ${fmtNumber(value)} tokens · governed ${fmtNumber(item.governed_tokens || 0)} · ungoverned ${fmtNumber(item.ungoverned_tokens || 0)} · ${fmtNumber(item.runs || 0)} runs`}</title>
+          <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" className={`token-bar ${governed ? "token-bar-governed" : "token-bar-ungoverned"}`}>
+            <title>{`${label}: ${fmtNumber(value)} tokens · ${fmtNumber(item.runs || 0)} run${Number(item.runs || 0) === 1 ? "" : "s"}`}</title>
           </rect>
           {hasCost && <circle cx={x + barWidth / 2} cy={costY} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5"><title>{`${label} cost: ${fmtCost(cost)}`}</title></circle>}
           <text x={x + barWidth / 2} y={Math.max(18, y - 8)} textAnchor="middle" className="token-bar-value">{compactAxisNumber(value)}</text>
-          <text x={x + barWidth / 2} y={top + plotHeight + 12} textAnchor="middle" className="token-x-label">{shortLabel}</text>
+          {(!paired || pairIndex === 0) && <text x={paired ? left + groupIndex * slotWidth + slotWidth / 2 : x + barWidth / 2} y={top + plotHeight + 15} textAnchor="middle" className="token-x-label">{shortLabel}</text>}
         </g>;
       })}
       <text x={left + plotWidth / 2} y={height - 8} textAnchor="middle" className="token-x-axis-title">Models</text>
     </svg>
-    <div className="comparison-chart-legend"><span><i className="comparison-cost-dot-key"/>Cost</span><span className="section-note">Red dot position is scaled to selected-model cost. Hover for exact USD.</span></div>
+    <div className="comparison-chart-legend">
+      <span><i className="comparison-cost-dot-key"/>Cost</span>
+      <span className="section-note">Red dot position is scaled to selected-model cost. Hover for exact USD.</span>
+    </div>
   </div>;
+}
+
+function telemetryUse(run) {
+  const operation = String(run?.operation || "").toLowerCase();
+  const fn = String(run?.function_key || "").toLowerCase();
+  return operation === "chat" ||
+    operation === "chatbot" ||
+    operation.startsWith("chatbot.") ||
+    fn === "chat" ||
+    fn === "chatbot"
+    ? "chatbot"
+    : "arena";
 }
 
 function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
   const names = new Map((models || []).map((m) => [m.key, m.display_name || m.key]));
   const totals = new Map();
-
-  const telemetryUse = (run) => {
-    const operation = String(run?.operation || "").toLowerCase();
-    const fn = String(run?.function_key || "").toLowerCase();
-    return operation === "chat" ||
-      operation === "chatbot" ||
-      operation.startsWith("chatbot.") ||
-      fn === "chat" ||
-      fn === "chatbot"
-      ? "chatbot"
-      : "arena";
-  };
 
   for (const run of runs || []) {
     if (!run?.model_key) continue;
@@ -1203,7 +1527,7 @@ function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
       <div className="section-note">
         {metric === "latency"
           ? (splitByUse ? "Average post-MCP latency per completed model call by model and use" : "Average post-MCP latency per completed model call by model")
-          : (splitByUse ? "Stacked prompt, reasoning, and completion token usage by model and use" : "Stacked prompt, reasoning, and completion token usage by model")}
+          : (splitByUse ? "Cumulative prompt, reasoning, and completion token usage across completed model calls by model and use" : "Cumulative prompt, reasoning, and completion token usage across completed model calls by model")}
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="token-chart">
         {[0, .25, .5, .75, 1].map((p) => <g key={p}>
@@ -1216,7 +1540,7 @@ function OverallConsumptionCharts({ runs, models, splitByUse = false }) {
             const value = latencyValue(r);
             const h = (value / max) * ph;
             return <g key={r.key}>
-              <rect x={x} y={top + ph - h} width={bw} height={h} rx="3" className="token-bar">
+              <rect x={x} y={top + ph - h} width={bw} height={h} rx="3" className="token-bar token-bar-governed">
                 <title>{`${r.label}: ${fmtNumber(value, 1)} ms average across ${fmtNumber(r.runs)} run${r.runs === 1 ? "" : "s"}`}</title>
               </rect>
               <text x={x + bw / 2} y={top + ph + 12} textAnchor="middle" className="token-x-label">{r.label}</text>
@@ -1269,20 +1593,89 @@ function FreeModelUsageTable({ runs, models }) {
   return <div className="free-model-metrics">
     <div className="section-title">Free model usage metrics</div>
     <div className="section-note">{freeNames} · Arena vs Chatbot from recorded telemetry</div>
-    <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Use</th><th>Runs</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Completion tokens</th><th>Total tokens</th><th>Latency</th></tr></thead><tbody>
-      {rows.map((r) => <tr key={r.key}><td>{r.label}</td><td>{fmtNumber(r.runs)}</td><td>{fmtNumber(r.prompt)}</td><td>{fmtNumber(r.reasoning)}</td><td>{fmtNumber(r.completion)}</td><td>{fmtNumber(r.total)}</td><td>{fmtMs(r.latency)}</td></tr>)}
+    <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Use</th><th>Runs</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Completion tokens</th><th>Total tokens</th><th>Avg latency</th></tr></thead><tbody>
+      {rows.map((r) => <tr key={r.key}><td>{r.label}</td><td>{fmtNumber(r.runs)}</td><td>{fmtNumber(r.prompt)}</td><td>{fmtNumber(r.reasoning)}</td><td>{fmtNumber(r.completion)}</td><td>{fmtNumber(r.total)}</td><td>{fmtMs(r.runs > 0 ? r.latency / r.runs : null)}</td></tr>)}
     </tbody></table></div>
+  </div>;
+}
+
+
+function MixedCapabilityLatestComparison({ runs, models }) {
+  const mixedRuns = useMemo(() => [...(runs || [])]
+    .filter((run) => String(run?.function_key || "").toLowerCase() === "mixed_capability")
+    .sort((a, b) => String(b?.recorded_at || "").localeCompare(String(a?.recorded_at || ""))), [runs]);
+
+  const modelNames = useMemo(
+    () => new Map((models || []).map((model) => [model.key, model.display_name || model.key])),
+    [models],
+  );
+
+  const rows = useMemo(() => {
+    const latestOrder = [];
+    const pathsByModel = new Map();
+    for (const run of mixedRuns) {
+      if (!run?.model_key) continue;
+      if (!latestOrder.includes(run.model_key)) latestOrder.push(run.model_key);
+      const paths = pathsByModel.get(run.model_key) || new Set();
+      if (run.governance === "governed" || run.governance === "ungoverned") paths.add(run.governance);
+      pathsByModel.set(run.model_key, paths);
+    }
+    const ordered = [
+      ...latestOrder.filter((key) => (pathsByModel.get(key)?.size || 0) === 2),
+      ...latestOrder.filter((key) => (pathsByModel.get(key)?.size || 0) !== 2),
+    ].slice(0, 4);
+    return ordered.map((modelKey) => ({
+      modelKey,
+      label: modelNames.get(modelKey) || modelKey,
+      governed: mixedRuns.find((run) => run.model_key === modelKey && run.governance === "governed") || null,
+      ungoverned: mixedRuns.find((run) => run.model_key === modelKey && run.governance === "ungoverned") || null,
+    }));
+  }, [mixedRuns, modelNames]);
+
+  if (!rows.length) {
+    return <div className="mixed-comparison-block">
+      <div className="section-header"><div><div className="section-title">Latest Mixed Capability comparison</div><div className="section-note">Governed and ungoverned telemetry by model.</div></div></div>
+      <div className="result-empty compact-empty">No Mixed Capability telemetry has been recorded yet.</div>
+    </div>;
+  }
+
+  const pair = (row, key, formatter) => <div className="mixed-compact-pair">
+    <span title={row.governed?.run_id ? `Governed run ${row.governed.run_id}` : ""}>G&nbsp; {row.governed?.[key] == null ? "N/A" : formatter(row.governed[key])}</span>
+    <span title={row.ungoverned?.run_id ? `Ungoverned run ${row.ungoverned.run_id}` : ""}>U&nbsp; {row.ungoverned?.[key] == null ? "N/A" : formatter(row.ungoverned[key])}</span>
+  </div>;
+
+  return <div className="mixed-comparison-block">
+    <div className="section-header">
+      <div><div className="section-title">Latest Mixed Capability comparison</div><div className="section-note">Latest governed and ungoverned run for four models. Hover a value for its run ID.</div></div>
+      <span className="badge">{rows.length} model{rows.length === 1 ? "" : "s"}</span>
+    </div>
+    <div className="table-wrap mixed-latest-run-table">
+      <table className="evidence-table">
+        <thead><tr><th>Model</th><th>Latency</th><th>Total tokens</th><th>Cost</th><th>Recorded</th></tr></thead>
+        <tbody>{rows.map((row) => <tr key={row.modelKey}>
+          <td><strong>{row.label}</strong></td>
+          <td>{pair(row, "latency_ms", fmtMs)}</td>
+          <td>{pair(row, "total_tokens", (value) => fmtNumber(value))}</td>
+          <td>{pair(row, "selected_cost_usd", fmtCost)}</td>
+          <td className="mixed-compact-pair">
+            <span>G&nbsp; {row.governed?.recorded_at ? new Date(row.governed.recorded_at).toLocaleString() : "N/A"}</span>
+            <span>U&nbsp; {row.ungoverned?.recorded_at ? new Date(row.ungoverned.recorded_at).toLocaleString() : "N/A"}</span>
+          </td>
+        </tr>)}</tbody>
+      </table>
+    </div>
   </div>;
 }
 
 const EVIDENCE_FUNCTION_OPTIONS = [
   ["analyst", "Analyst"],
   ["data_modeler", "Data Modeler"],
+  ["mixed_capability", "Mixed Capability"],
   ["auditor", "Auditor"],
   ["advisor", "Advisor"],
 ];
 
-function Evidence({ evidence, onClear, models }) {
+function Evidence({ evidence, onClear, models, showLedger = true }) {
   const complete = evidence.filter((item) => item.governed?.completed && item.ungoverned?.completed);
   const avg = (path) => {
     const values = complete.map(path).filter((value) => Number.isFinite(Number(value))).map(Number);
@@ -1295,6 +1688,7 @@ function Evidence({ evidence, onClear, models }) {
 
   const [comparisonRuns, setComparisonRuns] = useState([]);
   const [comparisonError, setComparisonError] = useState("");
+  const [domainSlice, setDomainSlice] = useState("6");
   const [pathSlice, setPathSlice] = useState("governed");
   const [functionSlice, setFunctionSlice] = useState("analyst");
   const [modelOne, setModelOne] = useState("");
@@ -1304,6 +1698,7 @@ function Evidence({ evidence, onClear, models }) {
   const [overallPathSlice, setOverallPathSlice] = useState("all");
   const [overallFunctionSlice, setOverallFunctionSlice] = useState("all");
   const [overallFamily, setOverallFamily] = useState("all");
+  const [overallUseSlice, setOverallUseSlice] = useState("arena");
 
   useEffect(() => {
     let cancelled = false;
@@ -1327,14 +1722,22 @@ function Evidence({ evidence, onClear, models }) {
   }, [evidence.length]);
 
   const normalizeFunction = (value) => value === "evaluator" ? "auditor" : String(value || "").toLowerCase();
+  const runMatchesDomain = (run, domainId) => {
+    const domain = DOMAINS.find((item) => String(item.id) === String(domainId));
+    if (!domain) return true;
+    const numericId = run.system_id ?? run.domain_id;
+    if (numericId != null && String(numericId) === String(domain.id)) return true;
+    const recordedDomain = String(run.domain_key ?? run.domain ?? run.domain_name ?? "").toLowerCase();
+    return recordedDomain === domain.key.toLowerCase() || recordedDomain === domain.name.toLowerCase();
+  };
   const availableModels = useMemo(() => {
     const keys = [];
     for (const run of comparisonRuns) {
-      if (run.governance !== pathSlice || normalizeFunction(run.function_key) !== functionSlice) continue;
+      if (!runMatchesDomain(run, domainSlice) || normalizeFunction(run.function_key) !== functionSlice) continue;
       if (run.model_key && !keys.includes(run.model_key)) keys.push(run.model_key);
     }
     return keys;
-  }, [comparisonRuns, pathSlice, functionSlice]);
+  }, [comparisonRuns, domainSlice, functionSlice]);
 
   useEffect(() => {
     if (!availableModels.length) {
@@ -1350,49 +1753,78 @@ function Evidence({ evidence, onClear, models }) {
 
   const selectedRuns = useMemo(() => {
     const selected = [modelOne, modelTwo, modelThree, modelFour].filter(Boolean).filter((key, index, values) => values.indexOf(key) === index);
-    return selected.map((modelKey) => comparisonRuns.find((run) =>
-      run.model_key === modelKey &&
-      run.governance === pathSlice &&
-      normalizeFunction(run.function_key) === functionSlice
-    )).filter(Boolean);
-  }, [comparisonRuns, pathSlice, functionSlice, modelOne, modelTwo, modelThree, modelFour]);
+    const numericMean = (runs, key) => {
+      const values = runs.map((run) => Number(run[key])).filter(Number.isFinite);
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    };
+    return selected.flatMap((modelKey) => ["governed", "ungoverned"].map((governance) => {
+      const matches = comparisonRuns
+        .filter((run) =>
+          run.model_key === modelKey &&
+          runMatchesDomain(run, domainSlice) &&
+          run.governance === governance &&
+          normalizeFunction(run.function_key) === functionSlice
+        )
+        .sort((a, b) => new Date(b.recorded_at || 0) - new Date(a.recorded_at || 0));
+      if (!matches.length) return null;
+      if (functionSlice === "mixed_capability") {
+        return { ...matches[0], sample_size: 1, aggregation: "latest" };
+      }
+      return {
+        ...matches[0],
+        prompt_tokens: numericMean(matches, "prompt_tokens"),
+        reasoning_tokens: numericMean(matches, "reasoning_tokens"),
+        completion_tokens: numericMean(matches, "completion_tokens"),
+        total_tokens: numericMean(matches, "total_tokens"),
+        latency_ms: numericMean(matches, "latency_ms"),
+        selected_cost_usd: numericMean(matches, "selected_cost_usd"),
+        sample_size: matches.length,
+        aggregation: "mean",
+      };
+    }).filter(Boolean));
+  }, [comparisonRuns, domainSlice, functionSlice, modelOne, modelTwo, modelThree, modelFour]);
+
+  const comparisonChartRows = selectedRuns.map((run) => ({
+    model_key: `${run.model_key}::${run.governance}`,
+    total_tokens: Number(run.total_tokens || 0),
+    governed_tokens: run.governance === "governed" ? Number(run.total_tokens || 0) : 0,
+    ungoverned_tokens: run.governance === "ungoverned" ? Number(run.total_tokens || 0) : 0,
+    cost_usd: run.selected_cost_usd == null ? null : Number(run.selected_cost_usd),
+    runs: run.sample_size || 1,
+  }));
+  const comparisonChartModels = selectedRuns.map((run) => ({
+    key: `${run.model_key}::${run.governance}`,
+    display_name: `${(models || []).find((model) => model.key === run.model_key)?.display_name || run.model_key} · ${run.governance === "governed" ? "Runtime Enforced" : "OEM Settings"}`,
+  }));
 
   const modelFamilyClass = (key) => {
     const model = (models || []).find((item) => item.key === key);
     const identity = [key, model?.display_name, model?.model_id, model?.requested_model_id].filter(Boolean).join(" ").toLowerCase();
-    if (identity.includes("ling")) return "free_model";
     if (!model) return "unknown";
     if (model.access_class === "open_weights") return "open_weights";
     if (model.access_class === "frontier") return "frontier";
     return "other";
   };
   const overallConsumptionRuns = useMemo(() => comparisonRuns.filter((run) =>
+    (overallUseSlice === "all" || telemetryUse(run) === overallUseSlice) &&
     (overallPathSlice === "all" || run.governance === overallPathSlice) &&
     (overallFunctionSlice === "all" || normalizeFunction(run.function_key) === overallFunctionSlice) &&
     (overallFamily === "all" || modelFamilyClass(run.model_key) === overallFamily)
-  ), [comparisonRuns, overallPathSlice, overallFunctionSlice, overallFamily, models]);
+  ), [comparisonRuns, overallUseSlice, overallPathSlice, overallFunctionSlice, overallFamily, models]);
 
   const freeModelMetricRuns = useMemo(() => comparisonRuns.filter((run) =>
     modelFamilyClass(run.model_key) === "free_model"
   ), [comparisonRuns, models]);
 
-  const chartRows = selectedRuns.map((run) => ({
-    model_key: run.model_key,
-    total_tokens: Number(run.total_tokens || 0),
-    governed_tokens: pathSlice === "governed" ? Number(run.total_tokens || 0) : 0,
-    ungoverned_tokens: pathSlice === "ungoverned" ? Number(run.total_tokens || 0) : 0,
-    cost_usd: run.selected_cost_usd == null ? null : Number(run.selected_cost_usd),
-    runs: 1,
-  }));
-
   const modelLabel = (key) => (models || []).find((model) => model.key === key)?.display_name || key;
+  const domainLabel = DOMAINS.find((domain) => String(domain.id) === String(domainSlice))?.name || "All domains";
   const functionLabel = EVIDENCE_FUNCTION_OPTIONS.find(([key]) => key === functionSlice)?.[1] || functionSlice;
-  const pathLabel = pathSlice === "governed" ? "Governed" : "Ungoverned";
+  const pathLabel = "Runtime Enforced + OEM Settings";
+  const comparisonBasis = functionSlice === "mixed_capability"
+    ? "Latest logged Runtime Enforced and latest logged OEM Settings Mixed Capability run for each selected model."
+    : `Separate Runtime Enforced and OEM Settings means across all logged ${functionLabel} runs for each selected model and domain.`;
 
   return <>
-    <div className="notice">
-      <strong>Current telemetry epoch:</strong> Post-MCP deterministic-statistics tuning only. {ARCHIVED_TELEMETRY_RUNS} earlier signed runs at or before {new Date(TELEMETRY_EPOCH_START).toLocaleString()} are archived for audit/integrity and excluded from current comparison metrics. Browser evidence also starts a new v2 history from this epoch. The model set is curated rather than exhaustive and reflects selected AI models informed in part by publicly disclosed or publicized deployment examples. Gaps in model, provider, version, and deployment coverage are expected, and the evidence should be interpreted within that curated scope.
-    </div>
     <div className="notice">
       <strong>Development note:</strong> During testing, a 1,200-output-token limit was found to truncate model output in Agentic Arena. The output-token limit was therefore increased from 1,200 to 2,500, and then increased a final time to 5,000 tokens.
     </div>
@@ -1402,9 +1834,17 @@ function Evidence({ evidence, onClear, models }) {
       {comparisonError ? <div className="notice error-notice">{comparisonError}</div> : <>
         <div className="overall-chart-controls">
           <div className="field">
+            <label>Overall chart use</label>
+            <div className="token-slicer" role="group" aria-label="Overall chart use slicer">
+              {[["arena","Arena"],["chatbot","Chatbot"],["all","All (split)"]].map(([key,label]) =>
+                <button key={key} className={`token-slicer-button ${overallUseSlice === key ? "active" : ""}`} onClick={() => setOverallUseSlice(key)}>{label}</button>
+              )}
+            </div>
+          </div>
+          <div className="field">
             <label>Overall chart path</label>
             <div className="token-slicer" role="group" aria-label="Overall chart governance path slicer">
-              {[["all","All"],["governed","Governed"],["ungoverned","Ungoverned"]].map(([key,label]) =>
+              {[["all","All"],["governed","Runtime Enforced"],["ungoverned","OEM Settings"]].map(([key,label]) =>
                 <button key={key} className={`token-slicer-button ${overallPathSlice === key ? "active" : ""}`} onClick={() => setOverallPathSlice(key)}>{label}</button>
               )}
             </div>
@@ -1426,19 +1866,24 @@ function Evidence({ evidence, onClear, models }) {
             </div>
           </div>
         </div>
-        <OverallConsumptionCharts runs={overallConsumptionRuns} models={models} splitByUse={overallFamily === "free_model"} />
+        <OverallConsumptionCharts runs={overallConsumptionRuns} models={models} splitByUse={overallUseSlice === "all"} />
         {overallFamily === "free_model" && <FreeModelUsageTable runs={freeModelMetricRuns} models={models} />}
-              <div className="section-header">
+        <div className="section-header">
         <div>
-          <div className="section-title">Four-model evidence comparison</div>
-          <div className="section-note">Latest recorded run for each selected model · compare up to four models live from Neon telemetry</div>
+          <div className="section-title">Four-model performance comparison</div>
+          <div className="section-note">{comparisonBasis}</div>
         </div>
-        <span className="badge">{pathLabel} · {functionLabel}</span>
+        <span className="badge">{domainLabel} · {pathLabel} · {functionLabel}</span>
       </div>
 
-        <TokenUsageChart rows={chartRows} models={models} slice={pathSlice} />
       <div className="evidence-comparison-controls evidence-comparison-controls-vertical">
         <div className="comparison-slicer-row">
+          <div className="field">
+            <label>Domain</label>
+            <select value={domainSlice} onChange={(event) => setDomainSlice(event.target.value)} aria-label="Comparison domain">
+              {DOMAINS.map((domain) => <option key={domain.id} value={String(domain.id)}>{domain.name}</option>)}
+            </select>
+          </div>
           <div className="field">
             <label>Function</label>
             <div className="token-slicer" role="group" aria-label="Function slicer">
@@ -1448,11 +1893,10 @@ function Evidence({ evidence, onClear, models }) {
             </div>
           </div>
           <div className="field">
-            <label>Path</label>
-            <div className="token-slicer" role="group" aria-label="Governance path slicer">
-              {[["governed","Governed"],["ungoverned","Ungoverned"]].map(([key,label]) =>
-                <button key={key} className={`token-slicer-button ${pathSlice === key ? "active" : ""}`} onClick={() => setPathSlice(key)}>{label}</button>
-              )}
+            <label>Paths shown</label>
+            <div className="token-slicer" role="group" aria-label="Execution paths shown">
+              <button className="token-slicer-button active" type="button">Runtime Enforced</button>
+              <button className="token-slicer-button active" type="button">OEM Settings</button>
             </div>
           </div>
         </div>
@@ -1463,20 +1907,21 @@ function Evidence({ evidence, onClear, models }) {
           <div className="field"><label>Model 4</label><select value={modelFour} onChange={(e) => setModelFour(e.target.value)}><option value="">None</option>{availableModels.map((key) => <option key={key} value={key}>{modelLabel(key)}</option>)}</select></div>
         </div>
       </div>
+        <TokenUsageChart rows={comparisonChartRows} models={comparisonChartModels} slice="all" />
         <div className="table-wrap model-telemetry-table-wrap">
           <table className="evidence-table">
-            <thead><tr><th>Model</th><th>Function</th><th>Path</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Total tokens</th><th>Latency</th><th>Cost</th><th>Run ID</th></tr></thead>
+            <thead><tr><th>Model</th><th>Function</th><th>Path</th><th>Prompt tokens</th><th>Reasoning tokens</th><th>Total tokens</th><th>Latency</th><th>Cost</th><th>Basis</th></tr></thead>
             <tbody>
-              {selectedRuns.map((run) => <tr key={run.run_id}>
+              {selectedRuns.map((run) => <tr key={`${run.model_key}-${run.governance}`}>
                 <td>{modelLabel(run.model_key)}</td>
                 <td>{functionLabel}</td>
-                <td>{pathLabel}</td>
+                <td>{run.governance === "governed" ? "Runtime Enforced" : "OEM Settings"}</td>
                 <td>{fmtNumber(run.prompt_tokens || 0)}</td>
                 <td>{fmtNumber(run.reasoning_tokens || 0)}</td>
                 <td>{fmtNumber(run.total_tokens || 0)}</td>
                 <td>{run.latency_ms == null ? ", " : `${fmtNumber(run.latency_ms, 1)} ms`}</td>
                 <td>{fmtCost(run.selected_cost_usd)}</td>
-                <td className="mono-cell">{run.run_id}</td>
+                <td className="mono-cell">{run.aggregation === "latest" ? run.run_id : `Mean of ${run.sample_size} runs`}</td>
               </tr>)}
               {!selectedRuns.length && <tr><td colSpan="9">No recorded runs match these slicers.</td></tr>}
             </tbody>
@@ -1485,10 +1930,10 @@ function Evidence({ evidence, onClear, models }) {
       </>}
     </section>
 
-    <section className="section card">
-      <div className="section-header"><div><div className="section-title">Experiment evidence ledger</div><div className="section-note">Newest first · maximum 100 browser-local records</div></div><div className="button-row"><button className="ghost small-button" disabled={!evidence.length} onClick={() => downloadJson(`agentic-arena-evidence-${new Date().toISOString().slice(0,10)}.json`, { exported_at: new Date().toISOString(), records: evidence })}>Export metrics</button><button className="danger-button small-button" disabled={!evidence.length} onClick={onClear}>Clear local evidence</button></div></div>
-      {evidence.length ? <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Time</th><th>Domain</th><th>Function</th><th>Model</th><th>Pair</th><th>Δ latency</th><th>Δ tokens</th><th>Δ cost</th><th>Policy</th></tr></thead><tbody>{evidence.map((item) => <tr key={item.id}><td>{new Date(item.captured_at).toLocaleString()}</td><td>{item.domain_name}</td><td>{item.function_key}</td><td className="mono-cell">{item.model_key}</td><td><StatusPill good={item.governed.completed && item.ungoverned.completed ? true : false} label={item.governed.completed && item.ungoverned.completed ? "Complete" : "Partial"} /></td><td>{item.delta?.latency_ms == null ? ", " : `${item.delta.latency_ms >= 0 ? "+" : ""}${fmtNumber(item.delta.latency_ms, 1)} ms`}</td><td>{item.delta?.tokens == null ? ", " : `${item.delta.tokens >= 0 ? "+" : ""}${fmtNumber(item.delta.tokens)}`}</td><td>{item.delta?.cost == null ? ", " : fmtCost(item.delta.cost)}</td><td>{item.governed.policy || (item.governed.completed ? "1.1" : ", ")}</td></tr>)}</tbody></table></div> : <div className="result-empty compact-empty">No local evidence yet. Run a matched pair in Arena Lab.</div>}
-    </section>
+    {showLedger && <section className="section card">
+      <div className="section-header"><div><div className="section-title">Test evidence ledger</div><div className="section-note">Newest first · maximum 100 browser-local records</div></div><div className="button-row"><button className="ghost small-button" disabled={!evidence.length} onClick={() => downloadJson(`agentic-arena-evidence-${new Date().toISOString().slice(0,10)}.json`, { exported_at: new Date().toISOString(), records: evidence })}>Export metrics</button><button className="danger-button small-button" disabled={!evidence.length} onClick={onClear}>Clear local evidence</button></div></div>
+      {evidence.length ? <div className="table-wrap"><table className="evidence-table"><thead><tr><th>Time</th><th>Domain</th><th>Function</th><th>Model</th><th>Pair</th><th>Δ latency</th><th>Δ tokens</th><th>Δ cost</th><th>Policy</th></tr></thead><tbody>{evidence.map((item) => <tr key={item.id}><td>{new Date(item.captured_at).toLocaleString()}</td><td>{item.domain_name}</td><td>{item.function_key}</td><td className="mono-cell">{item.model_key}</td><td><StatusPill good={item.governed.completed && item.ungoverned.completed ? true : false} label={item.governed.completed && item.ungoverned.completed ? "Complete" : "Partial"} /></td><td>{item.delta?.latency_ms == null ? ", " : `${item.delta.latency_ms >= 0 ? "+" : ""}${fmtNumber(item.delta.latency_ms, 1)} ms`}</td><td>{item.delta?.tokens == null ? ", " : `${item.delta.tokens >= 0 ? "+" : ""}${fmtNumber(item.delta.tokens)}`}</td><td>{item.delta?.cost == null ? ", " : fmtCost(item.delta.cost)}</td><td>{item.governed.policy || (item.governed.completed ? "1.1" : ", ")}</td></tr>)}</tbody></table></div> : <div className="result-empty compact-empty">No local evidence yet. Run a matched pair in Runtime Testbed.</div>}
+    </section>}
 
   </>;
 }
@@ -1579,7 +2024,7 @@ function TestingObservations() {
   const observationGroups = [
     {
       key: "method",
-      eyebrow: "01 · Method and experimental integrity",
+      eyebrow: "01 · Test design and comparison integrity",
       title: "Control the comparison before interpreting the result",
       note: "These observations define what has to stay stable, what can contaminate a matched pair, and what historical evidence can or cannot support.",
       items: [
@@ -1594,19 +2039,14 @@ function TestingObservations() {
           detail: "The control path can be free of CV1.1, OPA, governed MCP execution, claim verification, and governed egress controls while still being linguistically contaminated by shared language. Runtime isolation and prompt neutrality are therefore tested as separate conditions."
         },
         {
-          title: "UI testing can expose experimental drift",
+          title: "UI testing can expose comparison drift",
           status: "Observed",
-          detail: "Backend isolation tests can pass while shared UI task text or result labels still introduce treatment language. Visual review after changes is therefore used as a regression step alongside code tests, telemetry inspection, and prompt-hash checks."
+          detail: "Backend isolation tests can pass while shared UI task text or result labels still introduce governance-specific language. Visual review after changes is therefore used as a regression step alongside code tests, telemetry inspection, and prompt-hash checks."
         },
         {
           title: "Output-token ceilings can change the apparent result",
           status: "Observed",
           detail: "A 1,200-output-token ceiling truncated some model responses. The ceiling was increased to 2,500 and then to 5,000 tokens. Reasoning-heavy routes may consume completion budget before a visible final answer is emitted, so a missing or cut-off answer is not automatically treated as a model or gateway failure."
-        },
-        {
-          title: "Pre-neutrality runs are development evidence, not clean treatment evidence",
-          status: "Method note",
-          detail: "Historical runs created before prompt neutralization remain useful for root-cause analysis and architecture history. They should not be interpreted as clean evidence of runtime-governance effects alone because prompt wording was an additional variable."
         },
       ],
     },
@@ -1622,14 +2062,9 @@ function TestingObservations() {
           detail: "A model can produce a structurally useful relational or dimensional design while manually deriving an incorrect count from row context. Other runs reproduced directly supplied numeric values correctly. This distinction led to tighter separation between model-generated structure and database-computed quantitative evidence."
         },
         {
-          title: "Finance remains a repeatable arithmetic and interpretation stress case",
-          status: "Observed",
-          detail: "During bounded Finance runs, models produced useful schemas and careful caveats yet still miscounted categorical values or extended beyond the supplied evidence. This is not treated as a governance failure by itself. Language models remain probabilistic, while exact arithmetic and grouped statistics are better delegated to deterministic computation."
-        },
-        {
           title: "Required MCP boundaries need fail-closed execution",
           status: "Observed",
-          detail: "Data Modeler testing showed that allowing a direct-data fallback weakens the meaning of an MCP-required treatment. The governed path now requires its declared MCP evidence boundary and stops before model execution when required context is unavailable."
+          detail: "Data Modeler testing showed that allowing a direct-data fallback weakens the meaning of an MCP-required governed path. The governed path now requires its declared MCP evidence boundary and stops before model execution when required context is unavailable."
         },
         {
           title: "Tune governance to the observed failure mode, not only the model name",
@@ -1650,25 +2085,9 @@ function TestingObservations() {
           detail: "Across four post-MCP Finance Analyst matched pairs using GPT-5.5, governed responses repeatedly converged on the same bounded factual analysis. Governed pairwise output similarity averaged 0.888, versus 0.822 for controls. Governed runs averaged 24.48 seconds latency, 735 reasoning tokens, 2,698 completion tokens, and $0.1160 selected cost; controls averaged 43.61 seconds, 2,713 reasoning tokens, 4,672 completion tokens, and $0.1708. All four governed runs ended normally with stop, while two of four controls reached the 5,000-token ceiling. This remains a repeated observation within this model, domain, and function configuration, not a general causal claim."
         },
         {
-          title: "Model capability varies by task, function, and domain",
-          status: "Observed",
-          detail: "Matched testing shows that models do not exhibit one uniform capability profile across tasks. Some models are stronger at bounded analytical synthesis, some at structured data modeling, some at concise evidence summarization, and some are more prone to semantic expansion or manual aggregation drift. Agentic Arena therefore evaluates model performance within the specific domain, function, evidence path, and execution condition being tested."
-        },
-        {
-          title: "Model capacity appears to matter differently by function",
-          status: "Emerging",
-          detail: "Current runs suggest that heavier reasoning-capable models are better suited to Analyst work where the task requires evidence reconciliation, uncertainty handling, qualification, and bounded interpretation. Cheaper or lighter models can perform well in Data Modeler work when the function is constrained to structure, grain, entities or facts, dimensions, relationships, validation, and visualization. This is not treated as a model ranking or a conclusion that reasoning-token use itself causes better analysis. The practical design implication is to match model capacity to function complexity and keep the Data Modeler boundary explicit: model the data only, do not perform analytics."
-        },
-
-        {
           title: "Governance tuning should account for model capacity, capability, and function",
           status: "Observed",
           detail: "Current matched-pair runs show that the same governance representation does not produce the same response or operational effect across models. Differences appear in evidence handling, secondary aggregation, semantic expansion, reasoning use, latency, completion length, and response stability. Model capacity, native capabilities, tool use, assigned function, domain, and evidence requirements should inform tuning while deterministic enforcement boundaries remain consistent."
-        },
-        {
-          title: "Potential model-family compatibility effect",
-          status: "Method note",
-          detail: "Some model families may align more naturally with CV1.1's natural-language control contract, including its emphasis on evidence boundaries, uncertainty, concise output, human oversight, and separation of observation from inference. This is treated as a potential compatibility effect or experimental confound, not evidence that CV1.1 is optimized for OpenAI or any other vendor. Controlled prompt-representation testing would be required to determine whether a vendor-specific compatibility effect is actually present."
         },
       ],
     },
@@ -1689,9 +2108,9 @@ function TestingObservations() {
           detail: "Matched runs expose changes in latency, token use, cost, tool calls, context utilization, response length, and completion state. These measurements are treated as execution characteristics, not benchmark scores or automatic quality judgments."
         },
         {
-          title: "Fallback routing should preserve model family where possible",
-          status: "Observed",
-          detail: "Model families can exhibit materially different evidence handling, semantic expansion, reasoning use, tool use, latency, and response stability under the same function and governance conditions. A fallback model should therefore remain within the same model family when a suitable family member exists. If same-family fallback is unavailable, cross-family contingency should be explicit, separately governed, and observable in telemetry rather than treated as operationally equivalent redundancy."
+          title: "Dirty data can trigger false-positive runtime enforcement",
+          status: "Observed · September 28, 2026",
+          detail: "Runtime enforcement operating against dirty, malformed, inconsistent, or unexpected data can interpret data-quality defects as policy, contract, or execution violations. In a fail-closed architecture, those false-positive detections can stop an otherwise authorized workflow. This observation reinforces the need to treat upstream data quality, schema validation, normalization, and deterministic verification as part of the governed execution boundary rather than assuming every enforcement trigger represents an actual policy breach."
         },
         {
           title: "Capability additions are the primary source of contract mismatch",
@@ -1706,7 +2125,7 @@ function TestingObservations() {
   const empiricalLoop = [
     ["01", "Observe", "Capture the output, telemetry, and failure pattern without assuming a cause."],
     ["02", "Isolate", "Hold model, task, function, data window, and token ceiling constant where the comparison requires it."],
-    ["03", "Compare", "Run the governed treatment and the CV1.1-off control against the matched condition."],
+    ["03", "Compare", "Run the governed path and the CV1.1-off baseline against the matched condition."],
     ["04", "Verify", "Check important claims against deterministic evidence, policy decisions, logs, and signed run records."],
     ["05", "Repeat", "Run enough matched trials to separate a recurring pattern from a one-off result."],
     ["06", "Tune", "Change the control that maps to the observed failure mode, risk, function, or model profile."],
@@ -1715,17 +2134,17 @@ function TestingObservations() {
 
   return <>
     <div className="notice">
-      <strong>Development observations, not formal research conclusions.</strong> Agentic Arena uses controlled comparisons, repeat trials, deterministic verification, and traceable methodology changes to guide governance design. Observations are retained as evidence, but they are not generalized beyond the tested model, function, domain, and execution condition without additional support.
+      <strong>Portfolio systems stress indicators, not generalized claims.</strong> Agentic Arena uses matched comparisons, repeat runs, deterministic verification, and traceable test-design changes to guide engineering decisions. Observations are retained as development evidence and are limited to the tested model, function, domain, and execution condition.
     </div>
 
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Practical empirical method</div>
+          <div className="eyebrow">Engineering validation loop</div>
           <div className="section-title">Observe, isolate, compare, verify, repeat, tune, retest</div>
-          <div className="section-note">The lab is not trying to imitate an academic paper. It uses the parts of scientific method that matter for engineering governance: controlled variables, explicit uncertainty, reproducible evidence, falsifiable assumptions, repeat trials, and documented changes.</div>
+          <div className="section-note">This is an engineering portfolio testbed. Comparisons use matched conditions, explicit uncertainty, repeat runs, deterministic checks, traceable evidence, and documented changes to pressure-test the architecture.</div>
         </div>
-        <span className="badge">{observationCount} documented observations</span>
+        <span className="badge">{observationCount} documented stress indicators</span>
       </div>
       <div className="enterprise-stage-grid">
         {empiricalLoop.map(([step, title, detail]) => <div className="card enterprise-stage-card" key={step}>
@@ -1741,15 +2160,15 @@ function TestingObservations() {
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Experimental integrity</div>
+          <div className="eyebrow">Comparison integrity</div>
           <div className="section-title">Three contamination surfaces stay under active review</div>
-          <div className="section-note">A matched pair is only useful when the difference between paths is understood. Prompt wording, execution helpers, and presentation can each create a false treatment effect.</div>
+          <div className="section-note">A matched pair is only useful when the difference between paths is understood. Prompt wording, execution helpers, and presentation can each create a false apparent difference.</div>
         </div>
       </div>
       <div className="grid-3">
         <div className="card">
           <div className="section-title">Prompt contamination</div>
-          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can introduce governance-coded language into the control condition. Treatment language stays on the governed path unless it is intentionally shared.</p>
+          <p className="body-copy">Shared tasks, system prompts, context wrappers, output contracts, and helper text can introduce governance-coded language into the control condition. Governance-specific language stays on the governed path unless it is intentionally shared.</p>
         </div>
         <div className="card">
           <div className="section-title">Execution-path contamination</div>
@@ -1757,7 +2176,7 @@ function TestingObservations() {
         </div>
         <div className="card">
           <div className="section-title">Presentation / UI contamination</div>
-          <p className="body-copy">Labels, templates, cached state, stale bundles, and UI defaults can make one path appear more governed than it is or reintroduce treatment language. Visual review is part of regression testing, not just presentation polish.</p>
+          <p className="body-copy">Labels, templates, cached state, stale bundles, and UI defaults can make one path appear more governed than it is or reintroduce governance-specific language. Visual review is part of regression testing, not just presentation polish.</p>
         </div>
       </div>
     </section>
@@ -1796,9 +2215,9 @@ function TestingObservations() {
       </div>
       <div className="grid-3">
         <article className="card">
-          <div className="eyebrow">Research / methodology</div>
-          <div className="section-title">Can the observed difference be attributed to the treatment?</div>
-          <p className="body-copy">Review matched conditions, contamination surfaces, confounds, bounded evidence, repeatability, and limits on generalization. Preserve historical runs when the method changes so development evidence remains traceable.</p>
+          <div className="eyebrow">Validation / test design</div>
+          <div className="section-title">Can the observed difference be traced to the changed runtime condition?</div>
+          <p className="body-copy">Review matched conditions, contamination surfaces, confounds, bounded evidence, repeatability, and scope limits. Preserve historical runs when the test design changes so development evidence remains traceable.</p>
         </article>
         <article className="card">
           <div className="eyebrow">Engineering / deployment</div>
@@ -1825,9 +2244,11 @@ function ModelRegistry({ models }) {
   const [query, setQuery] = useState("");
   const [access, setAccess] = useState("all");
 
+  const uiRegistryModels = useMemo(() => models.filter((model) => model.key !== "glm_5_3_prime").slice(0, 23), [models]);
+
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return models
+    return uiRegistryModels
       .filter((model) => access === "all" || model.access_class === access)
       .filter((model) => !needle || [
         model.display_name,
@@ -1837,19 +2258,19 @@ function ModelRegistry({ models }) {
         ...modelRiskCategories(model),
       ].some((value) => String(value || "").toLowerCase().includes(needle)))
       .sort((a, b) => (a.vendor || "").localeCompare(b.vendor || "") || (a.display_name || a.key).localeCompare(b.display_name || b.key));
-  }, [models, query, access]);
+  }, [uiRegistryModels, query, access]);
 
-  const allRisks = Array.from(new Set(models.flatMap(modelRiskCategories))).sort();
-  const openCount = models.filter((model) => model.access_class === "open_weights").length;
-  const frontierCount = models.filter((model) => model.access_class === "frontier").length;
+  const allRisks = Array.from(new Set(uiRegistryModels.flatMap(modelRiskCategories))).sort();
+  const openCount = uiRegistryModels.filter((model) => model.access_class === "open_weights").length;
+  const frontierCount = uiRegistryModels.filter((model) => model.access_class === "frontier").length;
 
   return <>
     <div className="notice">
-      <strong>General risk categorization.</strong> These labels are governance and operational considerations derived from registry metadata. They are not vendor safety scores, capability rankings, or claims that a model is inherently safe or unsafe.
+      <strong>Provider statements + planning assumptions.</strong> Capability summaries on this page are attributed to model-provider documentation or exposed registry metadata; Agentic Arena does not independently certify those capabilities. General risk categories are conservative assumptions used to think through controls and testing. They are not observed defects, vendor safety scores, capability rankings, predictions of model behavior, or claims that any model is safe or unsafe. Actual behavior depends on model version, provider, configuration, context, tools, data, and deployment.
     </div>
 
     <section className="section grid-3">
-      <Metric label="Registry models" value={String(models.length)} foot="Current allowlisted agent models" />
+      <Metric label="Registry models" value={String(uiRegistryModels.length)} foot="UI-visible agent models" />
       <Metric label="Open weights" value={String(openCount)} foot="Models classified as open weights" />
       <Metric label="Frontier / hosted" value={String(frontierCount)} foot="Hosted models with external provider dependency" />
     </section>
@@ -1857,8 +2278,8 @@ function ModelRegistry({ models }) {
     <section className="section card">
       <div className="section-header">
         <div>
-          <div className="section-title">Risk category legend</div>
-          <div className="section-note">Broad control considerations used consistently across the registry.</div>
+          <div className="section-title">Risk-assumption legend</div>
+          <div className="section-note">Broad, non-model-specific assumptions used to identify what may need verification or control in a deployment. Presence of a label does not mean the risk has occurred.</div>
         </div>
         <span className="badge">{allRisks.length} categories in use</span>
       </div>
@@ -1875,7 +2296,7 @@ function ModelRegistry({ models }) {
         <div className="field"><label>Search registry</label><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Model, vendor, parameter size, or risk category" /></div>
         <div className="field"><label>Access class</label><select value={access} onChange={(e) => setAccess(e.target.value)}><option value="all">All models</option><option value="frontier">Frontier / hosted</option><option value="open_weights">Open weights</option></select></div>
       </div>
-      <div className="section-note model-filter-note">Showing {visible.length} of {models.length} registered models.</div>
+      <div className="section-note model-filter-note">Showing {visible.length} of {uiRegistryModels.length} UI registry models.</div>
     </section>
 
     <section className="section model-registry-grid">
@@ -1892,12 +2313,16 @@ function ModelRegistry({ models }) {
           <dl className="model-registry-meta">
             <dt>Registry key</dt><dd>{model.key}</dd>
             <dt>Model ID</dt><dd>{model.model_id || "Not exposed"}</dd>
-            <dt>Parameters</dt><dd>{model.parameter_size || "Undisclosed"}</dd>
-            <dt>Tool capable</dt><dd>{model.tool_capable === false ? "No" : "Yes"}</dd>
-            <dt>Free route</dt><dd>{model.free ? "Yes" : "No"}</dd>
+            <dt>Parameters</dt><dd>{model.parameter_size || "Undisclosed / not verified here"}</dd>
+            <dt>Tool metadata</dt><dd>{model.tool_capable === false ? "Registry marks unsupported" : model.tool_capable === true ? "Registry marks supported" : "Not asserted from local metadata"}</dd>
+            <dt>Free route</dt><dd>{model.free ? "Registry route marked free" : "No free-route claim"}</dd>
           </dl>
           <div className="model-risk-block">
-            <div className="model-risk-title">General risk categories</div>
+            <div className="model-risk-title">Provider-stated capability summary</div>
+            <p className="body-copy">{providerCapabilitySummary(model)}</p>
+          </div>
+          <div className="model-risk-block">
+            <div className="model-risk-title">General risk assumptions for control planning</div>
             <div className="model-risk-tags">{risks.map((risk) => <span className="risk-tag" key={risk}>{risk}</span>)}</div>
           </div>
         </article>;
@@ -1911,11 +2336,13 @@ function MCPConsole({ models, entities }) {
   const effectiveEntities = entities.length ? entities : [
     { key: "analyst", runtime_role: "analyst_runner", read_only_workspace: false, tools: [{ name: "dataset.describe", description: "Describe the authorized governed dataset." }, { name: "dataset.schema", description: "Read source schema." }, { name: "dataset.query", description: "Run bounded read-only query." }, { name: "dataset.aggregate", description: "Run deterministic aggregate." }, { name: "dataset.statistics", description: "Compute deterministic bounded statistics." }, { name: "dataset.profile", description: "Profile the source." }, { name: "rag.retrieve", description: "Retrieve bounded evidence." }] },
     { key: "data_modeler", runtime_role: "data_modeler_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.query" }, { name: "dataset.aggregate" }, { name: "dataset.statistics" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
-    { key: "evaluator", runtime_role: "evaluator_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.query" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
+    { key: "mixed_capability", runtime_role: "mixed_capability_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.schema" }, { name: "dataset.sample" }, { name: "dataset.query" }, { name: "dataset.aggregate" }, { name: "dataset.statistics" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
+    { key: "evaluator", runtime_role: "evaluator_runner", read_only_workspace: true, tools: [] },
     { key: "advisor", runtime_role: "advisor_runner", read_only_workspace: true, tools: [{ name: "dataset.describe" }, { name: "dataset.query" }, { name: "dataset.aggregate" }, { name: "dataset.statistics" }, { name: "dataset.profile" }, { name: "rag.retrieve" }] },
   ];
-  const [entityKey, setEntityKey] = useState(effectiveEntities[0]?.key || "analyst");
-  const entity = effectiveEntities.find((item) => item.key === entityKey) || effectiveEntities[0];
+  const executableEntities = effectiveEntities.filter((item) => Array.isArray(item.tools) && item.tools.length > 0);
+  const [entityKey, setEntityKey] = useState(executableEntities[0]?.key || "analyst");
+  const entity = executableEntities.find((item) => item.key === entityKey) || executableEntities[0];
   const [toolName, setToolName] = useState(entity?.tools?.[0]?.name || "dataset.describe");
   const [systemId, setSystemId] = useState(6);
   const [modelKey, setModelKey] = useState(models[0]?.key || FALLBACK_MODELS[0].key);
@@ -1931,11 +2358,11 @@ function MCPConsole({ models, entities }) {
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    if (!effectiveEntities.some((item) => item.key === entityKey)) setEntityKey(effectiveEntities[0]?.key || "analyst");
-  }, [entities]);
+    if (!executableEntities.some((item) => item.key === entityKey)) setEntityKey(executableEntities[0]?.key || "analyst");
+  }, [entities, entityKey]);
   useEffect(() => {
-    const nextEntity = effectiveEntities.find((item) => item.key === entityKey) || effectiveEntities[0];
-    if (!nextEntity?.tools?.some((tool) => tool.name === toolName)) setToolName(nextEntity?.tools?.[0]?.name || "dataset.describe");
+    const nextEntity = executableEntities.find((item) => item.key === entityKey) || executableEntities[0];
+    if (!nextEntity?.tools?.some((tool) => tool.name === toolName)) setToolName(nextEntity?.tools?.[0]?.name || "");
   }, [entityKey, entities]);
   useEffect(() => { if (!models.some((item) => item.key === modelKey) && models[0]) setModelKey(models[0].key); }, [models, modelKey]);
 
@@ -1980,15 +2407,77 @@ function MCPConsole({ models, entities }) {
 
   const selectedTool = entity?.tools?.find((item) => item.name === toolName);
   const toolNeedsTable = ["dataset.sample", "dataset.query", "dataset.aggregate", "dataset.statistics", "dataset.profile"].includes(toolName);
-  const canExecute = toolName !== "rag.retrieve" || query.trim();
+  const canExecute = Boolean(entity && toolName) && (toolName !== "rag.retrieve" || Boolean(query.trim()));
+
+  const governanceImplementation = [
+    ["01", "Identify requirements", "Define the business purpose, authorized outcome, applicable obligations, data classification, risk tolerance, human authority, and evidence expectations before selecting controls."],
+    ["02", "Translate requirements into controls", "Convert governance language into explicit roles, permitted actions, prohibited actions, data boundaries, tool permissions, output rules, escalation points, and failure behavior."],
+    ["03", "Encode deterministic enforcement", "Implement enforceable controls outside the model through identity, OPA/Rego policy, server-side resource selection, validation contracts, bounded MCP capabilities, and fail-closed execution."],
+    ["04", "Bind the probabilistic component", "Assign the model a fixed runtime role and only the context, data, tools, and operations required for the approved function. The model does not define its own authority."],
+    ["05", "Verify execution", "Capture policy outcomes, request and trace identifiers, tool activity, telemetry, integrity evidence, and output checks so execution can be reconstructed and reviewed."],
+    ["06", "Operate the governance plan", "Monitor exceptions, review evidence, manage policy and schema changes, test regressions, age exceptions, and update controls when the business process, data, model, or risk changes."],
+  ];
 
   return <>
-    <div className="notice good-notice">This console calls only the governed MCP surface. Role, entity, action, and database target are re-derived and authorized server-side before the tool executes.</div>
+    <div className="notice good-notice"><strong>Governance plan implementation.</strong> This page shows how governance intent can be translated into executable technical controls. CV 1.1 is the implementation example used here; it does not establish that a governance program is complete, compliant, certified, or appropriate for another organization.</div>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Plan → control → evidence</div>
+          <div className="section-title">Governance becomes useful when requirements reach the runtime</div>
+          <div className="section-note">Policies and frameworks describe obligations and objectives. Implementation requires those requirements to be converted into system boundaries that can be enforced, observed, tested, reviewed, and changed.</div>
+        </div>
+        <span className="badge">CV 1.1 implementation example</span>
+      </div>
+      <div className="enterprise-stage-grid">
+        {governanceImplementation.map(([step, title, detail]) => <div className="card enterprise-stage-card" key={step}>
+          <div className="enterprise-stage-number">{step}</div>
+          <div><div className="section-title">{title}</div><p className="body-copy">{detail}</p></div>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="section grid-2">
+      <article className="card">
+        <div className="eyebrow">Governance requirement</div>
+        <div className="section-title">What the organization decides</div>
+        <div className="control-list">
+          <Control name="Purpose + authority" desc="What the workflow is allowed to do, for whom, and where human or business authority remains." state="Requirement" />
+          <Control name="Data governance" desc="Which data may be accessed, its classification, purpose limitations, quality expectations, retention, and handling constraints." state="Requirement" />
+          <Control name="Risk + exceptions" desc="What failure means, what must fail closed, what requires escalation, and who can approve an exception." state="Requirement" />
+          <Control name="Evidence + review" desc="What must be logged, retained, verified, reviewed, and available to support operational oversight or audit." state="Requirement" />
+        </div>
+      </article>
+      <article className="card">
+        <div className="eyebrow">Runtime implementation</div>
+        <div className="section-title">What the architecture enforces</div>
+        <div className="control-list">
+          <Control name="Identity + role binding" desc="Resolve trusted identity and bind execution to a fixed role rather than allowing conversational redefinition." state="Enforced" />
+          <Control name="Policy-as-code" desc="Evaluate allowed actions and trusted runtime state through deterministic OPA/Rego policy before execution." state="Enforced" />
+          <Control name="Bounded data + tools" desc="Server-select resources and expose only approved MCP operations, arguments, limits, and data scopes." state="Enforced" />
+          <Control name="Validation + evidence" desc="Validate contracts, constrain egress, fail closed on protected mismatches, and preserve traceable runtime evidence." state="Enforced" />
+        </div>
+      </article>
+    </section>
+
+    <section className="section card">
+      <div className="eyebrow">Implementation traceability</div>
+      <div className="section-title">A governance requirement should have somewhere to land</div>
+      <div className="enterprise-flow">
+        {["Business / regulatory requirement", "Control objective", "Technical requirement", "Policy + contract", "Runtime enforcement", "Telemetry + evidence", "Review + change control"].map((item,index,items)=><React.Fragment key={item}><div className="enterprise-flow-node">{item}</div>{index<items.length-1&&<div className="enterprise-flow-arrow">→</div>}</React.Fragment>)}
+      </div>
+      <p className="body-copy">The implementation goal is traceability in both directions: a runtime control should map back to a requirement, and a material governance requirement should map forward to an owner, control, evidence source, or documented external process. Not every governance obligation belongs in code.</p>
+    </section>
+
+    <section className="section">
+      <div className="section-header"><div><div className="eyebrow">Implementation example</div><div className="section-title">MCP as a bounded execution surface</div><div className="section-note">MCP is one mechanism used by this implementation to expose approved operations. The governance decision exists above the protocol: role, action, arguments, resource target, and model binding are re-derived and authorized server-side before execution.</div></div></div>
+    </section>
     <section className="section grid-2 mcp-layout">
       <div className="form-panel">
         <div className="section-title">Governed MCP request</div>
         <div className="form-grid two-cols form-top-space">
-          <div className="field"><label>Entity</label><select value={entityKey} onChange={(e) => setEntityKey(e.target.value)}>{effectiveEntities.map((item) => <option key={item.key} value={item.key}>{item.key} · {item.runtime_role}</option>)}</select></div>
+          <div className="field"><label>Entity</label><select value={entityKey} onChange={(e) => setEntityKey(e.target.value)}>{executableEntities.map((item) => <option key={item.key} value={item.key}>{item.key} · {item.runtime_role}</option>)}</select></div>
           <div className="field"><label>Tool</label><select value={toolName} onChange={(e) => setToolName(e.target.value)}>{(entity?.tools || []).map((tool) => <option key={tool.name} value={tool.name}>{tool.name}</option>)}</select></div>
           <div className="field"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
           <div className="field"><label>Model binding</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={models} /></select></div>
@@ -2011,7 +2500,7 @@ function MCPConsole({ models, entities }) {
       </div>
     </section>
 
-    <section className="section card"><div className="section-title">Entity permission surface</div><div className="permission-grid">{effectiveEntities.map((item) => <div className="permission-card" key={item.key}><div className="permission-head"><strong>{item.key}</strong><span className="badge">{item.runtime_role}</span></div><span className="micro">Workspace {item.read_only_workspace ? "read-only" : "bounded write-capable"}</span><div className="permission-tools">{(item.tools || []).map((tool) => <span className="tag" key={tool.name}>{tool.name}</span>)}</div></div>)}</div></section>
+    <section className="section card"><div className="eyebrow">Implemented authorization</div><div className="section-title">Entity permission surface</div><div className="permission-grid">{effectiveEntities.map((item) => <div className="permission-card" key={item.key}><div className="permission-head"><strong>{item.key}</strong><span className="badge">{item.runtime_role}</span></div><span className="micro">Workspace {item.read_only_workspace ? "read-only" : "bounded write-capable"}</span><div className="permission-tools">{(item.tools || []).length ? (item.tools || []).map((tool) => <span className="tag" key={tool.name}>{tool.name}</span>) : <span className="tag">No MCP dataset tools · recorded-run audit path</span>}</div></div>)}</div></section>
   </>;
 }
 
@@ -2061,7 +2550,7 @@ function Chatbot({ models }) {
     <div className="form-panel side-config">
       <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(e) => setModelKey(e.target.value)}><ModelOptions models={chatbotModels} /></select></div>
       <div className="field config-gap"><label>Domain</label><select value={systemId} onChange={(e) => setSystemId(Number(e.target.value))}>{DOMAINS.map((domain) => <option key={domain.id} value={domain.id}>{domain.name}</option>)}</select></div>
-      <div className="field config-gap"><label>Workflow</label><select value={workflowKey} onChange={(e) => setWorkflowKey(e.target.value)}><option value="analyst">Analyst</option><option value="auditor">Auditor</option><option value="data_modeler">Data Modeler</option><option value="evaluator">Evaluator</option><option value="advisor">Advisor</option></select></div>
+      <div className="field config-gap"><label>Workflow</label><select value={workflowKey} onChange={(e) => setWorkflowKey(e.target.value)}><option value="analyst">Analyst</option><option value="auditor">Auditor</option><option value="data_modeler">Data Modeler</option><option value="mixed_capability">Mixed Capability</option><option value="evaluator">Evaluator</option><option value="advisor">Advisor</option></select></div>
       <div className="section-title config-title">Chatbot boundaries</div>
       <div className="control-list">
         <Control name="Governed trigger" desc="The chatbot remains inside CV 1.1 and cannot elect an ungoverned mode." state="Fixed" />
@@ -2084,7 +2573,7 @@ function Governance({ ready, cv11, functions, entities }) {
     ["Tamper-evident audit chain", "New run records are SHA-256 hashed, chained to the previous signed event, and authenticated with HMAC-SHA256 before evidence storage.", "HMAC-SHA256", "good"],
     ["Telemetry boundary", "Hashes, model/usage/timing/cost, policy outcome, behavior, and control metadata support evidence without intentionally persisting raw task/output in the browser ledger.", "Active", "good"],
     ["Ingestion deadman switch", "A target that is no longer empty causes ingestion to abort instead of silently appending or overwriting state.", "Armed", "good"],
-    ["Separate ungoverned control", "The ungoverned path is an experimental control group, not a governance mode a governed agent can select.", "Separated", "good"],
+    ["Separate ungoverned baseline", "The ungoverned path is a physically separate comparison baseline, not a governance mode a governed agent can select.", "Separated", "good"],
   ];
 
   return <>
@@ -2098,7 +2587,7 @@ function Governance({ ready, cv11, functions, entities }) {
     <section className="section grid-3">
       <Metric label="Authorization" value="Default deny" foot="Rego policy allows only valid role/action/context bindings" />
       <Metric label="State handling" value="Fail closed" foot="Untrusted or conflicting state does not earn more autonomy" />
-      <Metric label="Control group" value="Physically separate" foot="Governed execution cannot elect the ungoverned path" />
+      <Metric label="Comparison baseline" value="Physically separate" foot="Governed execution cannot elect the ungoverned path" />
     </section>
   </>;
 }
@@ -2134,14 +2623,21 @@ function EnterpriseDeployment() {
   ];
 
   return <>
-    <div className="notice good-notice"><strong>Enterprise deployment path.</strong> This is a reference architecture showing how the Arena governance pattern could be adapted for enterprise use. It is not a claim that the current lab is deployed in this topology.</div>
+    <div className="notice good-notice"><strong>Enterprise architecture showcase.</strong> This section documents how I reason about translating an AI use case into a bounded enterprise architecture. It is a portfolio design example—not a packaged product, managed service, or claim that Agentic Arena is deployed in this topology.</div>
+
+    <section className="section card">
+      <div className="eyebrow">Portfolio intent</div>
+      <div className="section-title">The point is the engineering judgment, not the diagram</div>
+      <p className="body-copy">Enterprise AI work starts before model selection. I would first identify the substantiated business outcome, determine whether AI is needed, inspect the available data and its governance, map the existing systems and interfaces, identify failure and security boundaries, and define human authority. Only then should model capacity, orchestration, runtime controls, infrastructure, and evidence requirements be selected.</p>
+      <p className="body-copy">The topology below is one worked example of that reasoning. A different organization or use case could justify a simpler deterministic workflow, a different cloud pattern, different APIs, different controls, or no AI at all.</p>
+    </section>
 
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Reference architecture</div>
-          <div className="section-title">Governance-first enterprise AI deployment</div>
-          <div className="section-note">Keep business authority inside functional APIs, keep runtime governance stable through infrastructure or model failover, and treat the model as a bounded execution dependency.</div>
+          <div className="eyebrow">Architecture reasoning</div>
+          <div className="section-title">From business requirement to bounded AI system</div>
+          <div className="section-note">A worked architecture example showing how I separate business authority, infrastructure, model execution, data access, policy, resilience, and evidence rather than treating the model as the system.</div>
         </div>
         <span className="badge">REST · Kubernetes · load balanced</span>
       </div>
@@ -2180,8 +2676,8 @@ function EnterpriseDeployment() {
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Enterprise operating model</div>
-          <div className="section-title">Cross-functional governance cell</div>
+          <div className="eyebrow">Requirements reasoning</div>
+          <div className="section-title">Who has to define the system before it is built</div>
           <div className="section-note">CV 1.1 deployment requirements are built as a blended matrix, not as a pure Scrum ceremony or a traditional project handoff. Technical configuration, business requirements, and legal or compliance constraints are developed together into one deployable control package.</div>
         </div>
         <span className="badge">Blended matrix governance</span>
@@ -2233,9 +2729,9 @@ function EnterpriseDeployment() {
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Deployment sequence</div>
-          <div className="section-title">Path from governed lab pattern to enterprise service</div>
-          <div className="section-note">Each stage adds operational capability without moving authorization into the model.</div>
+          <div className="eyebrow">Architecture walkthrough</div>
+          <div className="section-title">How the design changes from testbed pattern to enterprise topology</div>
+          <div className="section-note">This sequence demonstrates the engineering decisions I would evaluate; the actual topology depends on the organization, business outcome, data, risk, and existing infrastructure.</div>
         </div>
       </div>
       <div className="enterprise-stage-grid">
@@ -2294,27 +2790,69 @@ function EnterpriseDeployment() {
 }
 
 function Alignment() {
+  const scenarios = [
+    ["Healthcare","U.S. healthcare operations + governed AI decision support",
+      "Permission-aware RAG over approved clinical, operational, policy, and procedure sources; retrieve only context allowed for the workforce role and purpose.",
+      "Bounded MCP or equivalent APIs expose approved retrieval/query operations. Consequential actions receive separate deterministic authorization, transaction constraints, and fail-closed release conditions.",
+      "OPA/Rego evaluates identity, role, purpose, data scope, action, and trusted runtime state before execution; protected mismatches fail closed.",
+      "Validate output structure, minimize or redact unauthorized sensitive content, preserve source support, and fail closed when required verification or release conditions are not satisfied.",
+      "Data-flow mapping; minimum-necessary access; privacy/security risk assessment; bounded autonomous authority; exception/change management; evidence and incident review.",
+      "HIPAA Privacy/Security Rules and HITECH where applicable; NIST AI RMF; NIST CSF 2.0; ISO/IEC 42001 and 27001 as voluntary references. GDPR is conditional on its actual material and territorial scope."],
+    ["ERP / CRM","Manufacturing, services, or utility operations assistant",
+      "RAG retrieves approved SOPs, asset/service knowledge, and permission-scoped business context while authoritative transactional facts remain tied to governed ERP/CRM records.",
+      "Wrap ERP/CRM APIs as explicit tools rather than unrestricted database/API access. Separate read operations from controlled writes and transactions.",
+      "OPA/Rego evaluates business role, unit, record scope, action type, tool permission, and write authority; validate arguments and server-select resource targets.",
+      "Schema-check payloads, validate identifiers and business rules, suppress internal control fields/secrets, and require deterministic preconditions plus fail-closed transaction controls for consequential writes.",
+      "Process ownership; segregation of duties; data/master-data governance; access review; configuration/change management; reconciliation; exceptions; audit and recovery planning.",
+      "NIST AI RMF; NIST CSF 2.0; ISO/IEC 42001; ISO/IEC 27001; plus applicable privacy, sector, contractual, records, utility, or manufacturing requirements."],
+    ["Finance","Financial analytics, review + controlled advisory workflow",
+      "Use RAG for policies and explanatory context; use deterministic governed queries and aggregations for balances, transactions, reconciliations, and authoritative numeric facts.",
+      "Expose bounded read, aggregate, reconcile, retrieval, and approved case-management tools. Keep consequential financial actions behind separate deterministic authorization, transaction constraints, and fail-closed release conditions.",
+      "OPA/Rego enforces role, account/data scope, action class, thresholds, tool permissions, and escalation rules; deterministic checks verify figures and preconditions.",
+      "Reconcile cited figures to deterministic evidence, redact restricted data, separate facts/derived values/interpretation, and block unsupported transaction instructions.",
+      "Use-case inventory; financial/model risk assessment; lineage and data quality; segregation of duties; validation cadence; monitoring; change control; evidence retention and independent review.",
+      "NIST AI RMF; NIST CSF 2.0; ISO/IEC 42001; ISO/IEC 27001; GLBA/privacy and institution-specific model-risk, consumer-protection, recordkeeping, and supervisory requirements where applicable."],
+    ["Education","Student-services + institutional knowledge assistant",
+      "RAG retrieves approved catalogs, policies, procedures, and permission-scoped student context while keeping public knowledge separate from protected student records.",
+      "Bounded tools support approved lookups and workflow assistance. Grade, discipline, aid, enrollment, or other consequential changes remain outside autonomous authority unless an explicitly governed deployment permits them under deterministic authorization and release controls.",
+      "OPA/Rego evaluates role, student relationship, purpose, record scope, tool, and action class so conversational instructions cannot cross institutional boundaries.",
+      "Redact unauthorized student information, constrain permitted fields, preserve source-backed policy answers, prevent cross-student leakage, and fail closed or route uncertain/consequential cases outside the autonomous execution path.",
+      "FERPA-aware data mapping; role/access governance; policy ownership; bounded autonomous authority; retention/data-quality rules; vendor assessment; accessibility; change and incident management.",
+      "FERPA and applicable U.S. education/privacy requirements; NIST AI RMF; NIST CSF 2.0; ISO/IEC 42001 and 27001 as voluntary references; applicable state, contractual, accessibility, and institutional requirements."]
+  ];
   return <>
-    <div className="notice"><strong>Alignment, not compliance.</strong> These are engineering mappings intended to move the platform toward recognized privacy, security, AI-risk, and sector expectations. Applicability, legal bases, contracts, notices, retention, incident programs, conformity assessment, certification, and jurisdiction-specific obligations remain external organizational responsibilities.</div>
-    <section className="section"><div className="section-header"><div><div className="section-title">Cross-framework control map</div><div className="section-note">Reuse the same technical evidence across overlapping control objectives.</div></div><span className="badge">Engineering lens</span></div><div className="grid-4 alignment-grid">{FRAMEWORKS.map((item) => <div className="card framework-card" key={item.name}><div className="framework-name"><strong>{item.name}</strong></div><span className="framework-type">{item.type}</span><div className="framework-scope">{item.scope}</div><div className="framework-tags">{item.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div></div>)}</div></section>
-    <section className="section grid-2">
-      <div className="card"><div className="section-title">Controls code can support</div><div className="control-list"><Control name="Purpose / data minimization" desc="Bound model context and output to the authorized task, role, and dataset; redact sensitive content where appropriate." state="Engineering" /><Control name="Access control" desc="Fixed roles, action allowlists, server-selected targets, and bounded MCP capabilities." state="Engineering" /><Control name="Traceability" desc="Request IDs, hashes, policy decisions, telemetry, and integrity checks support reconstructable evidence." state="Engineering" /><Control name="Human oversight" desc="Advisor output remains decision support; high-impact final authority is not delegated to the model." state="Engineering" /></div></div>
-      <div className="card"><div className="section-title">Controls requiring an organization</div><div className="control-list"><Control name="Legal basis / notices" desc="Privacy notices, consent or other lawful bases, controller/processor roles, and rights processes." state="External" tone="neutral" /><Control name="Risk ownership" desc="Named accountable owners, approval authorities, review cadence, and formal risk acceptance." state="External" tone="neutral" /><Control name="Retention / deletion" desc="Business retention schedules, legal holds, deletion workflows, backups, and records management." state="External" tone="neutral" /><Control name="Conformity / certification" desc="Independent assessment, legal analysis, supplier controls, formal audits, and certification where applicable." state="External" tone="neutral" /></div></div>
+    <div className="notice"><strong>Autonomous implementation scenarios, not compliance claims.</strong> These examples intentionally exclude human-in-the-loop as the runtime control mechanism. Authority is bounded through deterministic policy, scoped data and actions, validation, sanitation, stop conditions, and fail-closed behavior. This design choice does not override laws, regulations, contracts, or organizational responsibilities that may independently require human accountability or intervention.</div>
+    <section className="section">
+      <div className="section-header"><div><div className="eyebrow">Condensed alignment</div><div className="section-title">Governance frameworks provide the lens; implementation provides the control</div><div className="section-note">Requirements and risk → governed retrieval/data → bounded actions → deterministic authorization → output controls → bounded autonomous authority → evidence, monitoring, and change management.</div></div><span className="badge">4 worked scenarios</span></div>
+      <div className="grid-4 alignment-grid">{FRAMEWORKS.slice(0,7).map((item)=><div className="card framework-card" key={item.name}><div className="framework-name"><strong>{item.name}</strong></div><span className="framework-type">{item.type}</span><div className="framework-scope">{item.scope}</div></div>)}</div>
     </section>
-    <section className="section card"><div className="section-title">Domain posture</div><div className="domain-alignment-grid">{DOMAINS.map((domain) => <div className="domain-alignment" key={domain.id}><span className="domain-number">SYSTEM {String(domain.id).padStart(2,"0")}</span><strong>{domain.name}</strong><span>{domain.privacy}</span><span className="micro">Human-reviewed decision support · no autonomous high-impact final decision</span></div>)}</div></section>
+    <section className="section">
+      <div className="section-header"><div><div className="eyebrow">Deployment + governance initiatives</div><div className="section-title">Four examples of translating governance into architecture</div><div className="section-note">Illustrative tooling only. Each implementation should follow the actual business outcome, data, risk, system boundaries, and existing technology.</div></div></div>
+      <div className="scenario-stack">{scenarios.map(([sector,title,rag,mcp,enforcement,sanitation,governance,frameworks],index)=><article className="card" key={sector}>
+        <div className="card-title-row"><div><div className="domain-number">SCENARIO {String(index+1).padStart(2,"0")} · {sector}</div><div className="section-title">{title}</div></div><span className="badge">Illustrative</span></div>
+        <div className="grid-2">
+          <div><div className="eyebrow">RAG / governed context</div><p className="body-copy">{rag}</p></div>
+          <div><div className="eyebrow">MCP / action surface</div><p className="body-copy">{mcp}</p></div>
+          <div><div className="eyebrow">OPA / runtime enforcement</div><p className="body-copy">{enforcement}</p></div>
+          <div><div className="eyebrow">Output sanitation + release</div><p className="body-copy">{sanitation}</p></div>
+          <div><div className="eyebrow">Governance method</div><p className="body-copy">{governance}</p></div>
+          <div><div className="eyebrow">Applicable governance / frameworks</div><p className="body-copy">{frameworks}</p></div>
+        </div>
+      </article>)}</div>
+    </section>
+    
   </>;
 }
-
 function Diagnostics({ models, functions, entities }) {
   const checks = [
-    ["Health", "/health"],
-    ["Readiness", "/ready"],
-    ["CV 1.1 status", "/api/v1/system/cv11"],
-    ["Audit integrity", "/api/v1/system/audit/integrity"],
+    ["Service health", "/health"],
+    ["Service readiness", "/ready"],
+    ["Runtime control status", "/api/v1/system/cv11"],
+    ["Evidence integrity", "/api/v1/system/audit/integrity"],
     ["Model registry", "/api/v1/models"],
-    ["Governed functions", "/api/v1/governed/functions"],
-    ["Ungoverned pairing", "/api/v1/ungoverned/functions"],
-    ["Governed MCP", "/api/v1/mcp/governed/entities"],
+    ["Governed capabilities", "/api/v1/governed/functions"],
+    ["Comparison-path availability", "/api/v1/ungoverned/functions"],
+    ["Governed integration surface", "/api/v1/mcp/governed/entities"],
   ];
   const [results, setResults] = useState({});
   const [running, setRunning] = useState(false);
@@ -2339,10 +2877,10 @@ function Diagnostics({ models, functions, entities }) {
   const passed = Object.values(results).filter((item) => item.ok).length;
 
   return <>
-    <div className="notice">Diagnostics are read-only frontend checks. They do not mutate Railway, Neon, ingestion state, policy, datasets, or the deadman switch.</div>
-    <section className="section grid-4"><Metric label="Checks" value={String(checks.length)} foot="Read-only API surfaces" /><Metric label="Passing" value={Object.keys(results).length ? String(passed) : ", "} foot="Current browser-to-backend reachability" /><Metric label="Models" value={String(models.length)} foot="Agent models visible to the UI" /><Metric label="MCP entities" value={String(entities.length || 4)} foot={`${functions.length} functional identities`} /></section>
-    <section className="section card"><div className="section-header"><div><div className="section-title">Endpoint checks</div><div className="section-note">Measured from this browser through the Vercel proxy.</div></div><button className="secondary small-button" onClick={runChecks} disabled={running}>{running ? "Checking…" : "Run diagnostics"}</button></div><div className="diagnostic-list">{checks.map(([name, path]) => { const item = results[path]; return <div className="diagnostic-row" key={path}><div><strong>{name}</strong><span className="mono-cell">{path}</span></div><div className="diagnostic-summary">{item?.summary || "Waiting"}</div><div className="diagnostic-latency">{item ? fmtMs(item.latency) : ", "}</div><StatusPill good={item ? item.ok : null} label={item ? (item.ok ? "Pass" : "Fail") : "Pending"} /></div>; })}</div></section>
-    <section className="section grid-2"><div className="card"><div className="section-title">Deployment boundary</div><p className="body-copy">The browser talks to a Vercel server-side proxy. Backend and provider credentials remain server-side. The proxy has an explicit path allowlist and returns no-store responses.</p></div><div className="card"><div className="section-title">Current intentional signal</div><p className="body-copy">Stepped deployments may deliberately surface a fail-closed signal when a protected precondition is no longer valid. A failed protected step is not automatically equivalent to loss of the last known-good application state.</p></div></section>
+    <div className="notice"><strong>Operational assurance view.</strong> These read-only checks provide a current view of platform availability, runtime-control status, evidence integrity, governed capabilities, and integration reachability. The assurance view does not change infrastructure, policy, data, configuration, or enforcement state.</div>
+    <section className="section grid-4"><Metric label="Assurance checks" value={String(checks.length)} foot="Read-only operational control points" /><Metric label="Available" value={Object.keys(results).length ? String(passed) : ", "} foot="Current service and control reachability" /><Metric label="Approved models" value={String(models.filter((model) => model.key !== "glm_5_3_prime").slice(0, 23).length)} foot="Models exposed through the current UI registry" /><Metric label="Governed interfaces" value={String(entities.length || 4)} foot={`${functions.length} configured functional identities`} /></section>
+    <section className="section card"><div className="section-header"><div><div className="section-title">Platform assurance checks</div><div className="section-note">Current reachability and response status across the published service and control interfaces.</div></div><button className="secondary small-button" onClick={runChecks} disabled={running}>{running ? "Assessing…" : "Refresh assurance status"}</button></div><div className="diagnostic-list">{checks.map(([name, path]) => { const item = results[path]; return <div className="diagnostic-row" key={path}><div><strong>{name}</strong><span className="mono-cell">{path}</span></div><div className="diagnostic-summary">{item?.summary || "Waiting"}</div><div className="diagnostic-latency">{item ? fmtMs(item.latency) : ", "}</div><StatusPill good={item ? item.ok : null} label={item ? (item.ok ? "Available" : "Exception") : "Pending"} /></div>; })}</div></section>
+    <section className="section grid-2"><div className="card"><div className="section-title">Service boundary</div><p className="body-copy">Client requests pass through a server-side gateway with an explicit path allowlist. Backend and provider credentials remain outside the client boundary, and assurance responses are not retained by the browser proxy.</p></div><div className="card"><div className="section-title">Control exception handling</div><p className="body-copy">A protected control may intentionally report an exception when a required precondition is no longer valid. Fail-closed behavior prevents the affected operation from proceeding while preserving the distinction between a control exception and the availability of the last known-good application state.</p></div></section>
   </>;
 }
 

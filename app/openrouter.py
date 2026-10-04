@@ -28,6 +28,51 @@ def openrouter_configured() -> bool:
     return bool(os.getenv(API_KEY_ENV))
 
 
+def openrouter_usage_totals() -> dict[str, object]:
+    management_key = os.getenv("OPENROUTER_MANAGEMENT_KEY") or _api_key()
+    headers = {
+        "Authorization": f"Bearer {management_key}",
+        "Content-Type": "application/json",
+        "X-Title": "Agentic Arena",
+    }
+    try:
+        with httpx.Client(timeout=15) as client:
+            response = client.get(f"{OPENROUTER_BASE_URL}/activity", headers=headers)
+    except httpx.RequestError as exc:
+        raise OpenRouterError(503, "OpenRouter activity is unreachable") from exc
+
+    if response.status_code >= 400:
+        raise OpenRouterError(
+            response.status_code,
+            f"OpenRouter activity request failed with status {response.status_code}",
+        )
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise OpenRouterError(502, "OpenRouter returned invalid activity JSON") from exc
+
+    rows = payload.get("data", []) if isinstance(payload, dict) else []
+    if not isinstance(rows, list):
+        rows = []
+    total_tokens = 0
+    total_cost_usd = 0.0
+    total_requests = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        total_tokens += int(row.get("prompt_tokens") or 0) + int(row.get("completion_tokens") or 0)
+        total_cost_usd += float(row.get("usage") or 0)
+        total_requests += int(row.get("requests") or 0)
+
+    return {
+        "source": "openrouter_activity",
+        "period": "last_30_completed_utc_days",
+        "runs": total_requests,
+        "total_tokens": total_tokens,
+        "total_cost_usd": total_cost_usd,
+    }
+
+
 def _api_key() -> str:
     value = os.getenv(API_KEY_ENV)
     if not value:
@@ -159,7 +204,7 @@ def _catalog_snapshot(model: ModelDefinition) -> dict[str, Any]:
 def chat_completion(
     model_key: str,
     messages: list[dict[str, str]],
-    max_tokens: int = 2048,
+    max_tokens: int = 4096,
 ) -> dict[str, Any]:
     model = _require_kind(model_key, {ModelKind.AGENT, ModelKind.SAFETY})
     capabilities = _catalog_snapshot(model)

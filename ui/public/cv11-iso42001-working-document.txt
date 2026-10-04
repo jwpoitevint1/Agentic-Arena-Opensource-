@@ -1,0 +1,985 @@
+CV 1.1 — ISO/IEC 42001 AIMS Implementation, Audit Map, and Contract Register
+
+Claim-Free / Evidence-Based Working Document
+
+Document status: Working implementation framework and architectural register
+Standard basis: ISO/IEC 42001:2023
+Purpose: Define what an organization would need to implement, document, test, operate, and evidence if CV 1.1 is used as a runtime AI-governance control layer inside an Artificial Intelligence Management System (AIMS), and to define the complete CV 1.1 contract taxonomy and its crosswalk to the Agentic Arena implementation.
+
+---
+
+IMPORTANT BOUNDARY
+
+This document makes no claim that CV 1.1 conforms to, satisfies, certifies, or guarantees any ISO/IEC 42001 requirement.
+
+Every mapping is a candidate implementation relationship only. A requirement is not considered met until the organization has:
+
+1. defined the control;
+2. assigned accountable ownership;
+3. implemented it in the actual environment;
+4. generated objective evidence;
+5. tested the implementation;
+6. retained the evidence;
+7. completed internal review; and
+8. survived independent audit.
+
+Blank, missing, stale, untested, or contradictory evidence is treated as a gap.
+
+Contract distinction:
+
+· CV 1.1 contracts define architectural invariants.
+· Agentic Arena contracts define one implementation of those invariants plus lab-specific behavior.
+· An Arena contract does not automatically become a universal CV 1.1 requirement.
+· A CV 1.1 architectural contract is not considered implemented until the deploying environment provides evidence and testing.
+
+A contract is an invariant that another component is allowed to depend on.
+
+---
+
+1. GOVERNANCE MODEL
+
+The organization should define four distinct control layers.
+
+Layer 1 — Governance
+
+Purpose: Establish authority, policy, objectives, risk appetite, and accountability.
+Potential owners: Executive leadership, AI Governance Board, AIMS Manager.
+Required evidence: Approved policy, charter, objectives, risk criteria, meeting records, approvals.
+
+Layer 2 — Management
+
+Purpose: Convert governance requirements into risk treatment, lifecycle, impact, supplier, data, and operating processes.
+Potential owners: Risk, Compliance, Privacy, Security, Quality, Product/System owners.
+Required evidence: Risk register, impact assessments, treatment plans, Statement of Applicability, procedures, supplier records.
+
+Layer 3 — Runtime Enforcement
+
+Purpose: Enforce approved technical restrictions during AI execution.
+Candidate CV 1.1 mechanisms: Role binding, scope binding, OPA/Rego policy decisions, MCP/tool boundaries, validation contracts, fail-closed handling, mutation restrictions, audit evidence, integrity controls.
+Required evidence: Configuration, policy source, deployment records, policy decisions, execution records, failure records, test outputs.
+
+Layer 4 — Assurance
+
+Purpose: Determine whether the management system and technical controls actually operate as intended.
+Potential owners: Internal Audit, independent security review, external conformity assessment.
+Required evidence: Audit program, audit results, nonconformities, corrective actions, management reviews.
+
+Segregation rule:
+No technical implementation team should be treated as the sole independent assessor of its own implementation.
+
+---
+
+2. CV 1.1 TECHNICAL BOUNDARY TO BE TESTED
+
+The following are candidate runtime mechanisms to be independently verified in each deployment:
+
+· external role binding;
+· external scope binding;
+· policy decision outside the model;
+· OPA/Rego or equivalent policy enforcement;
+· MCP/API capability boundaries;
+· identifier validation;
+· argument validation;
+· text/control validation;
+· redefinition-language controls;
+· mutation restrictions;
+· read/write separation where required;
+· fail-closed behavior;
+· circuit-breaker or isolation behavior;
+· immutable or controlled role assignment;
+· integrity-protected runtime records;
+· auditable execution evidence;
+· controlled exceptional authority;
+· bounded failure modes;
+· approved tool allowlists;
+· approved model allowlists;
+· approved data-source boundaries.
+
+Audit rule: The presence of source code is not evidence that the control is operating in production. The auditor/tester must verify the deployed path, not merely the repository.
+
+---
+
+3. CLAIM-CONTROL RULES
+
+Until independent conformity assessment is complete, project documentation should avoid statements such as:
+
+· “ISO certified”
+· “ISO compliant”
+· “meets ISO 42001”
+· “fully aligned”
+· “satisfies ISO controls”
+
+Preferred neutral language:
+
+· “mapped for assessment against ISO/IEC 42001:2023”
+· “candidate implementation control”
+· “evidence pending”
+· “implementation requires organizational tailoring”
+· “subject to independent assessment”
+· “unverified against certification criteria”
+
+Internal status values:
+
+· NOT MAPPED
+· MAPPED
+· IMPLEMENTATION PLANNED
+· IMPLEMENTED — UNTESTED
+· TESTED — INTERNAL FINDING OPEN
+· REMEDIATION PENDING
+· READY FOR INDEPENDENT ASSESSMENT
+· INDEPENDENTLY VERIFIED
+
+No status should automatically advance because source code exists.
+
+---
+
+4. CERTIFICATION-READINESS GATES
+
+Gate 1 — Scope: No unknown production AI systems within the stated boundary.
+Gate 2 — Ownership: Every AIMS process and material risk has accountable ownership.
+Gate 3 — Risk: Risk methodology is repeatable and current assessments exist.
+Gate 4 — Impact: Required impact assessments exist and are current.
+Gate 5 — SoA: The Statement of Applicability is complete, justified, approved, and traceable.
+Gate 6 — Runtime Controls: Candidate CV 1.1 mechanisms are deployed and independently tested in the actual environment.
+Gate 7 — Evidence: Required evidence is retrievable, controlled, and consistent with observed execution.
+Gate 8 — Internal Audit: An internal audit has challenged both management processes and runtime controls.
+Gate 9 — Corrective Action: Material findings have verified corrective action or documented accepted disposition.
+Gate 10 — Management Review: Top management has reviewed the operating AIMS and made documented decisions.
+Gate 11 — Certification Body: An independent certification body evaluates conformity. Internal mapping is not a substitute.
+
+---
+
+5. FINAL AUDITOR CHALLENGE
+
+For every control mapped to CV 1.1, require answers to all six questions:
+
+1. AUTHORITY — Who authorized this control and who can change it?
+2. IMPLEMENTATION — Where is it actually enforced?
+3. BYPASS — What alternative path avoids it?
+4. FAILURE — What happens when the control is unavailable or wrong?
+5. EVIDENCE — What objective record proves what occurred?
+6. EFFECTIVENESS — What test demonstrates the control changes the outcome it was intended to control?
+
+If any question cannot be answered with current evidence, record a gap.
+
+---
+
+6. CV 1.1 CONTRACT REGISTER
+
+6.1 Core Governance Contracts
+
+ID Contract Invariant
+CV-CG-001 Governance Control-Plane Boundary AI authority is established and enforced through the declared governance control-plane boundary rather than by model-generated content.
+CV-CG-002 External Authority The AI cannot create, enlarge, or redefine its own authority.
+CV-CG-003 Identity-to-Role Binding Runtime role assignment originates from a trusted external identity/authorization source and not from the model, prompt, retrieved content, or tool output.
+CV-CG-004 Role Binding Each governed execution is bound to an approved runtime role.
+CV-CG-005 Scope Binding Each governed execution is constrained to an approved scope defining permitted resources, tools, actions, and data boundaries.
+CV-CG-006 Role-to-Action Authorization A role may execute only actions explicitly authorized for that role.
+CV-CG-007 Function-to-Role Binding A governed business function maps to the approved runtime role and cannot substitute another role without an approved change.
+CV-CG-008 Resource Binding Protected resources are selected from server-side or otherwise trusted bindings rather than model-selected routing.
+CV-CG-009 Governance Mode Binding Governed execution cannot silently transition into an ungoverned mode.
+CV-CG-010 Default-Deny When no explicit allow decision exists, the governed operation is denied.
+CV-CG-011 Redefinition Guard User input, retrieved content, tool output, model output, and prior conversation content cannot redefine protected governance state.
+CV-CG-012 Policy Decision Governed execution requires a valid external policy decision.
+CV-CG-013 Policy Provenance Each active governance policy is versioned, attributable, approved, and traceable to an authorized requirement or risk-treatment decision.
+CV-CG-014 Policy Semantic Traceability The meaning of a deployed technical rule must trace to an approved policy or control requirement, and every deployed rule must be reverse-traceable to its authority.
+CV-CG-015 Policy Version Compatibility A runtime shall not silently reinterpret an older policy under changed control semantics.
+CV-CG-016 Magnitude 1 Change A change to one core governance feature constitutes a governance-baseline change requiring the defined cross-functional approval process.
+CV-CG-017 No Unilateral Magnitude 1 Approval No single implementation function may independently authorize a Magnitude 1 production release when other required implementation parties have not completed review.
+CV-CG-018 Release / Deny Decision Governed output or action is released only after required authorization, validation, verification, and evidence gates have completed.
+
+6.2 Proxy, Transport, and Enforcement-Path Contracts
+
+ID Contract Invariant
+CV-PXY-001 Governed Proxy Path Governed AI traffic reaches governed capabilities only through the approved proxy/enforcement path.
+CV-PXY-002 No Proxy Bypass No alternate network, API, tool, database, or service path may allow equivalent governed execution while bypassing required governance enforcement.
+CV-PXY-003 Proxy Route Allowlist Only approved routes and methods may traverse the governed proxy.
+CV-PXY-004 Proxy Method HTTP methods are explicitly bounded by route and unsupported methods are denied.
+CV-PXY-005 Proxy Content-Type Only approved request content types are accepted for governed routes.
+CV-PXY-006 Proxy Request-Size Governed proxy requests are bounded by an approved maximum size.
+CV-PXY-007 Proxy Response-Size Governed proxy responses are bounded by an approved maximum size.
+CV-PXY-008 Proxy Timeout Upstream execution is bounded by an approved timeout and timeout does not create a bypass or partial-release condition.
+CV-PXY-009 Proxy Origin-Pinning Once a governed backend origin is resolved, request routing cannot silently redirect to an unapproved origin.
+CV-PXY-010 Proxy TLS Production governed backend transport uses approved encrypted transport and does not downgrade silently.
+CV-PXY-011 Proxy Authentication Forwarding Required backend authentication is preserved across the proxy boundary and is not replaced by model-controlled credentials.
+CV-PXY-012 Proxy Request-ID Each governed request receives a valid request identifier suitable for traceability; invalid identifiers are rejected or replaced according to policy.
+CV-PXY-013 Proxy Security-Header Required response security headers are consistently applied on governed public routes.
+CV-PXY-014 Proxy Error-Translation Transport and backend failures are represented deterministically and are not rewritten as successful AI execution.
+CV-PXY-015 Proxy Path-Sanitization Path traversal, null bytes, malformed separators, and equivalent routing manipulation are rejected.
+CV-PXY-016 Proxy Configuration-Parity Where multiple deployed proxy copies implement the same boundary, their route and enforcement contracts remain semantically identical.
+CV-PXY-017 Proxy Isolation / Controlled-Failure When required governance state cannot be established or enforced, the affected proxy path is disabled or broken so the governed AI path becomes unavailable.
+CV-PXY-018 Availability-over-Authority Where availability conflicts with governance authority, the governed execution path becomes unavailable rather than continue without valid governance enforcement.
+CV-PXY-019 No Degraded-Governance Mode A degraded operational mode shall not permit governed AI execution with missing, stale, reduced, or indeterminate governance bindings.
+CV-PXY-020 Recovery-Gate A disabled governed proxy path returns to service only after required governance dependencies, bindings, policy enforcement, and validation controls are restored and verified.
+CV-PXY-021 Load-Balancer Governance Preservation Load balancing may redistribute traffic but shall not alter, bypass, or weaken the governance contract.
+CV-PXY-022 Service-Routing Governance Preservation Container, Kubernetes, service-mesh, or equivalent routing changes shall not create an alternate unbound execution path.
+
+6.3 MCP and Tool Contracts
+
+ID Contract Invariant
+CV-MCP-001 MCP Authorization-Boundary MCP is treated as an authorization boundary, not merely a tool transport.
+CV-MCP-002 Entity-to-Role Binding Each governed MCP entity is accessible only to its approved runtime role.
+CV-MCP-003 Entity-to-Tool Exposure Each entity may invoke only the tools explicitly exposed to that entity.
+CV-MCP-004 Tool Allowlist Only approved tools are available to governed execution.
+CV-MCP-005 Tool Mutation Classification Every tool is classified as read-only, mutating, or otherwise controlled before exposure.
+CV-MCP-006 Tool Argument Validation Tool arguments are validated for type, size, structure, restricted fields, control characters, mutation/escape patterns, and other defined constraints.
+CV-MCP-007 Server-Controlled Argument Authority, governance mode, resource targets, tenant identifiers, database targets, and equivalent protected fields cannot be supplied or overridden by the model when designated server-controlled.
+CV-MCP-008 Tool-to-Resource Binding Each tool may reach only approved resource classes and targets.
+CV-MCP-009 MCP Database-Target Binding Governed data-tool execution resolves database targets through trusted server-side mapping.
+CV-MCP-010 No Cross-Entity Invocation A tool exposed to one MCP entity cannot be invoked through another entity unless explicitly authorized.
+CV-MCP-011 MCP Read-Only Enforcement Read-only tool paths cannot mutate source systems.
+CV-MCP-012 MCP Verification Where required, tool results are checked against declared schema, resource, and execution expectations before release to downstream model or user.
+CV-MCP-013 MCP Failure-Isolation MCP transport or tool failure does not broaden authority or route around MCP.
+CV-MCP-014 MCP Contract-Version MCP schema and tool-contract versions are identifiable and bound to relevant execution evidence.
+
+6.4 Data and Resource Contracts
+
+ID Contract Invariant
+CV-DAT-001 Data-Source Registry Governed data sources are registered and identifiable before use.
+CV-DAT-002 Data-Source Binding A governed execution reaches only the data source approved for its system, role, and scope.
+CV-DAT-003 Read-Only Transaction Where the governed operation is classified read-only, database transaction behavior enforces read-only access.
+CV-DAT-004 Bounded Query Governed query operations are bounded by approved row, column, filter, aggregation, and query-complexity limits.
+CV-DAT-005 Dataset-Presence A model does not perform evidence-dependent analysis when required source evidence is absent or unavailable.
+CV-DAT-006 No Fabricated-Evidence Infrastructure or data unavailability is represented as unavailable rather than allowing the model to fabricate analytical evidence.
+CV-DAT-007 Dataset-Provenance Dataset source/provenance claims are recorded only when supported by evidence.
+CV-DAT-008 Data-Scope Data access remains within the approved department, tenant, business function, classification, or other declared scope.
+CV-DAT-009 Data-Minimization Only data required for the approved use is exposed to the model or logged where minimization requirements apply.
+CV-DAT-010 Data-Retention Boundary Retention of prompts, responses, source data, tool results, and audit evidence follows the deploying organization’s approved record-class and industry requirements.
+
+6.5 Model and Execution Contracts
+
+ID Contract Invariant
+CV-MOD-001 Model Allowlist Governed execution uses only approved model identifiers/providers.
+CV-MOD-002 Model-to-Function Binding Where defined, specific models or model classes are bound to approved functions.
+CV-MOD-003 Model Identity Verification The runtime does not rely solely on the model’s own claim of identity.
+CV-MOD-004 Model Provider Failure Provider failure is represented as unavailable/error and is not treated as successful governed execution.
+CV-MOD-005 Model Failover Failover occurs only according to an approved failover policy and shall not silently weaken governance or substitute an unapproved model.
+CV-MOD-006 Output-Budget Token/output limits are defined by the approved execution class and remain aligned across dependent components.
+CV-MOD-007 Execution-Context Governance mode, workload, function, system, role, and resource context are validated before execution.
+CV-MOD-008 Client System-Message Prohibition Where protected, clients cannot inject a system-role message that overrides the governed system contract.
+CV-MOD-009 Prompt Neutrality / Comparative-Test Where governed and ungoverned executions are compared, prompts remain matched except for the governance treatment being measured.
+CV-MOD-010 Governed/Ungoverned Isolation Governed and ungoverned control paths remain technically and evidentially distinguishable.
+CV-MOD-011 Output-Sanitation Governed output is checked for prohibited reasoning scaffold, unsupported deterministic claims, or other defined output-control violations.
+CV-MOD-012 Sensitive-Output Redaction Where required, governed output is screened and redacted according to approved data-handling rules.
+
+6.6 Verification, Evidence, and Integrity Contracts
+
+ID Contract Invariant
+CV-EVD-001 Authorization-versus-Verification Separation Authorization determines whether an operation may occur; verification determines whether the resulting output satisfies declared evidence and execution requirements.
+CV-EVD-002 Evidence Generation Governance-relevant execution produces the evidence required by the deploying organization’s assurance design.
+CV-EVD-003 Evidence Provenance Evidence identifies its producing component and relevant execution context.
+CV-EVD-004 Configuration-to-Evidence Binding Historical execution evidence identifies the policy, role/scope schema, MCP/API contract, model, data source, and deployment baseline that actually governed the execution.
+CV-EVD-005 Signed Audit Persistence Where signed persistence is required before release, output is not released if the required audit write fails.
+CV-EVD-006 Audit Integrity-Key Integrity keys meet approved strength, storage, rotation, and access requirements.
+CV-EVD-007 Integrity Envelope Signed evidence contains the required version, hashes, signature/MAC, chain information, key identifier, and sequencing fields.
+CV-EVD-008 Append-Only Evidence Historical governed evidence is not overwritten to make later verification pass.
+CV-EVD-009 Run Uniqueness Execution/run identifiers are unique within the defined evidence domain.
+CV-EVD-010 Chain-Tail Validation The current integrity-chain tail is validated before appending the next protected record where chain semantics are used.
+CV-EVD-011 Governance-Domain Separation Evidence chains from materially distinct governance modes or domains remain separately identifiable and cryptographically/domain logically separated where required.
+CV-EVD-012 Evidence Schema Compatibility Schema changes preserve interpretability of historical evidence or are handled through explicit Magnitude 1 migration/retirement treatment.
+CV-EVD-013 Evidence Retention Evidence is retained for the period required by the applicable industry, regulatory, contractual, and organizational policy.
+CV-EVD-014 Evidence Chain-of-Custody Access, export, handling, and transfer of audit evidence are controlled and reconstructable where required.
+CV-EVD-015 Evidence Sampling Internal audit samples are selected using a documented stratified-random method within predefined use-classification and latency strata rather than cherry-picked cases.
+CV-EVD-016 Unredacted Audit-Source Authorized audit sampling is performed against source logs that preserve the evidence required for assessment; any masking/redaction process must be documented and must not destroy required audit facts.
+CV-EVD-017 Historical Reconstruction A sampled historical run can be reconstructed sufficiently to identify the active authority, policy, configuration, action, and outcome.
+
+6.7 Failure, Security, and Resilience Contracts
+
+ID Contract Invariant
+CV-FLR-001 Fail-Closed When required governance, authorization, integrity, or verification state cannot produce a safe decision, the affected operation is denied or isolated.
+CV-FLR-002 Unbound-Execution Failure Any AI execution that proceeds without the required governance binding is a governance failure.
+CV-FLR-003 Unauthorized-Mutation Failure Any AI, framework, tool, or downstream component mutation outside authority established by the active binding is a governance failure.
+CV-FLR-004 Zero Unbound-Execution Threshold Acceptable successful unbound execution rate is 0%.
+CV-FLR-005 Controlled-Failure Shutdown Controlled failure is mitigated by shutting down or isolating the affected chatbot/system execution path rather than permitting reduced-governance operation.
+CV-FLR-006 600-Series AI Mutation AI mutation failures are categorized through stable 600-series failure semantics.
+CV-FLR-007 700-Series Traffic / Transport Traffic, proxy, load-balancer, service-routing, timeout, and dependency availability failures are categorized through stable 700-series semantics.
+CV-FLR-008 800-Series Security Security-boundary, integrity, authentication, authorization, tampering, injection, and equivalent security failures are categorized through stable 800-series semantics.
+CV-FLR-009 900-Series Contractual-Drift Contract drift between components is categorized through stable client-side 900-series semantics.
+CV-FLR-010 Failure-Code Stability Once published, a failure code meaning is not reassigned; deprecated codes remain reserved.
+CV-FLR-011 Maintainer Telemetry Boundary Optional maintainer telemetry receives only the approved bounded failure information and not client transaction content.
+CV-FLR-012 Customer-Owned Failure Evidence Detailed client diagnostic and audit evidence remains in the client environment unless the client independently chooses to disclose it.
+CV-FLR-013 Dependency-Combination Failure Combined dependency failures are explicitly tested and shall not create an unbound execution path.
+CV-FLR-014 Capacity / Exhaustion Governance Load, queue saturation, rate limiting, evidence-store saturation, and resource exhaustion shall not weaken or bypass governance controls.
+CV-FLR-015 Load-Test Governance Preservation Locust or equivalent load testing must verify governance behavior under concurrency and dependency pressure.
+CV-FLR-016 Security Red-Team Independent adversarial/red-team testing may attempt to bypass the declared control plane and must record discovered bypasses as findings.
+
+6.8 Operations, Change, and Assurance Contracts
+
+ID Contract Invariant
+CV-OPS-001 Readiness A governed service reports ready only when all dependencies required for safe governed execution are available and validated.
+CV-OPS-002 Health-versus-Readiness Separation Process health does not imply governance readiness.
+CV-OPS-003 Configuration Baseline Each production deployment has an identifiable approved configuration baseline.
+CV-OPS-004 Configuration Drift Drift from the approved baseline is detectable and subject to disposition.
+CV-OPS-005 Change Traceability A governance-impacting change traces from requirement through implementation, testing, approvals, deployment, and post-deployment verification.
+CV-OPS-006 Policy Migration Changed policy semantics require explicit compatibility, migration, incompatibility, evidence-only compatibility, or retirement disposition.
+CV-OPS-007 Reference Repository Archival Retired or long-term historical policy/configuration items retained for reference are stored in a controlled reference repository according to the organization’s retention rules; periods of one year or greater may be used where adopted by policy.
+CV-OPS-008 Exception Ownership Each approved exception has an owner, expiration, compensating control, escalation path, and ticket/reference.
+CV-OPS-009 Exception Aging Open exceptions are aged and escalated through the organization’s ticketing/work-management system.
+CV-OPS-010 Monitoring Tier Metrics are classified LOW, MID, or HIGH based on risk, control criticality, and required response time.
+CV-OPS-011 Low-Tier Review LOW-tier metrics receive at least quarterly review.
+CV-OPS-012 Mid-Tier Review MID-tier metrics receive at least monthly review.
+CV-OPS-013 High-Tier Monitoring HIGH-tier areas receive daily monitoring of streaming operational data.
+CV-OPS-014 Threshold Override A material breach or anomaly overrides the routine review cadence and enters the applicable incident, risk, escalation, or corrective-action process immediately.
+CV-OPS-015 Metric Reclassification Monitoring tier may change when risk, incident history, system scope, Magnitude 1 change, audit findings, or control performance changes.
+CV-OPS-016 Reassessment Trigger The organization defines periodic reassessment and change-triggered reassessment windows; a 120–240 day interval may be adopted as an operating policy where appropriate to the deployment risk.
+CV-OPS-017 Deployment Tailoring Before go-live, the deployer documents roles, scopes, models, tools, data mappings, retention, failure handling, identity, exceptions, and project-specific governance configuration.
+CV-OPS-018 Data-Mapping Project documentation identifies approved data sources, owners, system boundaries, interfaces, and allowed role/function access.
+CV-OPS-019 AIMS Operating-Evidence Certification-readiness evidence comes from the operating management system, including real change records, reviews, audits, CAPAs, training, and runtime evidence, not merely design documents.
+CV-OPS-020 Independent Internal-Audit Internal audit sampling and conclusions are performed with sufficient independence from the implementation team.
+CV-OPS-021 Independent Cyber Review Cyber/security review is performed as an independent assurance function for material control-plane and deployment changes.
+CV-OPS-022 Quality Review Quality verifies requirement traceability, acceptance criteria, regression coverage, evidence completeness, and unresolved findings.
+CV-OPS-023 Management Review Top management periodically reviews the operating AIMS, open risks, findings, changes, objectives, and corrective actions.
+CV-OPS-024 CAPA Effectiveness Corrective actions are not closed until their effectiveness has been verified.
+CV-OPS-025 Decommissioning Retired AI systems have endpoints disabled, credentials revoked, data/evidence handled according to policy, dependencies removed, and inventory updated.
+
+
+---
+
+7. AGENTIC ARENA IMPLEMENTATION CONTRACT REGISTER
+
+The following contract names are the current numbered Agentic Arena implementation register.
+
+· C-001 — Shared agentic output-budget contract
+· C-002 — UI Guide chat-output contract
+· C-003 — UI Guide model-binding and failover contract
+· C-004 — Proxy/API route contract
+· C-005 — Proxy transport contract
+· C-006 — Request security middleware contract
+· C-007 — Readiness contract
+· C-008 — Execution-context contract
+· C-009 — Database-registration contract
+· C-010 — Governed database read-only contract
+· C-011 — Bounded relational query contract
+· C-012 — MCP argument-validation contract
+· C-013 — MCP entity/tool exposure contract
+· C-014 — MCP database-target binding contract
+· C-015 — Data Modeler governed-evidence contract
+· C-016 — Governed/ungoverned isolation contract
+· C-017 — Dataset-presence contract
+· C-018 — Dataset registry contract
+· C-019 — CV1.1 default-deny contract
+· C-020 — CV1.1 role/function binding contract
+· C-021 — CV1.1 action-authorization contract
+· C-022 — CV1.1 context contract
+· C-023 — Client system-message prohibition
+· C-024 — Redefinition-guard contract
+· C-025 — Model allowlist contract
+· C-026 — Model-provider availability contract
+· C-027 — Signed audit-persistence gate
+· C-028 — Audit integrity-key contract
+· C-029 — Audit integrity-envelope contract
+· C-030 — Governance-separated audit chains
+· C-031 — Run-record uniqueness and append contract
+· C-032 — Runtime Logbook contract
+· C-033 — Telemetry epoch contract
+· C-034 — Governed output sanitation contract
+· C-035 — Sensitive-output redaction contract
+· C-036 — RAG retrieval contract
+· C-037 — Auditor history contract
+· C-038 — Chatbot disclosure/content boundary
+· C-039 — UI Guide governed-workflow contract
+· C-040 — Neutral matched-comparison prompt contract
+· C-041 — Analytics read contract
+· C-042 — Security CI contract
+
+---
+
+8. HIGH-LEVEL CROSSWALK: AGENTIC ARENA TO CV 1.1
+
+Agentic Arena Contract(s) CV 1.1 Contract Mapping
+C-004, C-005 CV-PXY-001 through CV-PXY-016
+C-006 CV-PXY-011 through CV-PXY-015 and relevant security/operations contracts
+C-007 CV-OPS-001, CV-OPS-002
+C-008 CV-MOD-007, CV-CG-009
+C-010 through C-014 CV-MCP-001 through CV-MCP-014; CV-DAT-002 through CV-DAT-004
+C-016 CV-MOD-010, CV-CG-009
+C-017 CV-DAT-005, CV-DAT-006
+C-019 through C-024 CV-CG-003 through CV-CG-012; CV-MOD-008; CV-CG-011
+C-025, C-026 CV-MOD-001 through CV-MOD-005
+C-027 through C-031 CV-EVD-005 through CV-EVD-011
+C-032, C-033 CV-EVD-013 through CV-EVD-017; relevant operational-monitoring contracts
+C-034, C-035 CV-MOD-011, CV-MOD-012
+C-036 CV-MCP-004, CV-MCP-008, CV-DAT-008; deployment-specific retrieval controls
+C-037 CV-EVD-015 through CV-EVD-017; audit-access rules
+C-038, C-039 CV-CG-018; CV-MOD-006 through CV-MOD-008; CV-PXY governance-path contracts
+C-040 CV-MOD-009, CV-MOD-010
+C-041 CV-DAT-002 through CV-DAT-006
+C-042 CV-OPS-003 through CV-OPS-005; CV-OPS-021, CV-OPS-022; deployment security controls
+
+---
+
+9. CONTRACT PRECEDENCE, FAILURE RULE, AND CHANGE RULE
+
+9.1 Contract Precedence
+
+Where contracts conflict, the deploying organization should define explicit precedence.
+
+Recommended precedence model:
+
+1. Organizational legal/regulatory obligations
+2. Approved organizational governance policy
+3. CV 1.1 Core Governance contracts
+4. Approved Regulatory Alignment / jurisdiction / industry profile
+5. Function and role contracts
+6. Resource and data-scope contracts
+7. MCP/tool contracts
+8. Model/execution contracts
+9. Proxy/transport implementation details
+10. UI/application presentation behavior
+
+Lower-level contracts may narrow authority. Lower-level contracts shall not silently broaden authority granted by a higher-level contract.
+
+9.2 Contract Failure Rule
+
+A contract rejection is not automatically a governance failure.
+Correct enforcement: A request violates a contract and is denied or isolated as designed.
+Governance failure: An execution or mutation succeeds without the required binding or outside the authority established by the active contracts.
+Acceptance threshold for successful unbound execution: 0%.
+
+9.3 Contract Change Rule
+
+Any change to a contract that can alter:
+
+· authority;
+· scope;
+· permitted capability;
+· resource reach;
+· policy meaning;
+· validation behavior;
+· mutation behavior;
+· failure behavior;
+· evidence interpretation;
+· proxy/enforcement-path behavior;
+· exception authority;
+
+is a candidate Magnitude 1 change and enters the defined cross-functional change-management process.
+
+---
+
+10. ISO/IEC 42001 AIMS IMPLEMENTATION & AUDIT MAP
+
+10.1 Clause 4 — Context of the Organization
+
+4.1 Organizational Context
+
+Required implementation: Identify internal and external issues affecting the AIMS; identify business, technical, legal, regulatory, security, privacy, quality, ethical, operational, and AI-specific conditions; identify dependencies that could alter runtime governance effectiveness.
+
+Minimum evidence: Context register; applicable-law and obligation register; architecture dependency map; business-use-case inventory; environmental assumptions; review date and owner.
+
+Audit tests: Compare context register with actual deployments; check whether new models, suppliers, jurisdictions, or business uses were captured; sample changes and verify context updates; challenge assumptions documented as “out of scope.”
+
+Failure condition: Material operating conditions exist that are absent from the context analysis.
+
+4.2 Interested Parties
+
+Required implementation: Identify relevant internal and external interested parties; define their relevant requirements and expectations; determine which expectations become AIMS obligations.
+
+Potential parties: Customers; employees; system users; individuals affected by AI decisions; regulators; suppliers; model providers; cloud providers; auditors; security teams; data owners; privacy officers; legal counsel; executive management.
+
+Evidence: Interested-party register; requirement traceability; contracts or service obligations; communication records.
+
+Audit tests: Sample a stakeholder requirement and trace it into risk, policy, operating control, or documented rationale for no action.
+
+4.3 AIMS Scope
+
+Required implementation: Explicitly define legal entities; business units; locations; systems; AI services; models; datasets; infrastructure; interfaces; third parties; lifecycle stages; exclusions and their rationale.
+
+Required artifact: AIMS Scope Statement.
+Runtime boundary diagram should identify: User/System → Application → Governance Control Plane → AI Service/Model → Authorized Tool/Resource → Evidence Path.
+
+Audit tests: Compare written scope with production inventory; identify shadow AI, unmanaged models, direct API paths, or undeclared tools; verify exclusions do not create an ungoverned bypass around in-scope controls.
+
+4.4 AIMS
+
+Required implementation: Define processes needed to operate the AIMS; define inputs, outputs, owners, interfaces, review cycles, and records; integrate the runtime control plane into the organizational management system.
+
+Required evidence: AIMS process map; process owners; procedure library; control register; records schedule.
+
+10.2 Clause 5 — Leadership
+
+5.1 Leadership and Commitment
+
+Required implementation: Top management must establish visible ownership of the AIMS.
+
+Evidence: Governance charter; executive sponsor designation; approved resources; management review participation; risk acceptance authority; escalation decisions.
+
+Audit questions: Who can accept residual AI risk? Who can stop an AI system? Who funds remediation? Who owns unresolved findings? Can technical personnel override governance without management authority?
+
+5.2 AI Policy
+
+Required implementation: An approved AI policy should define acceptable AI use; prohibited AI use; accountability; human oversight expectations; risk requirements; data requirements; transparency requirements; supplier requirements; incident reporting; lifecycle governance; technical enforcement expectations; exception handling; review cadence.
+
+Evidence: Approved policy; version history; approval record; communication/training evidence; review history.
+
+Audit test: Sample a runtime control and trace it back to an approved policy or risk-treatment decision.
+
+5.3 Roles, Responsibilities, and Authorities
+
+Required implementation: Maintain an organizational RACI that is separate from runtime model roles.
+
+Minimum roles to consider: Executive sponsor; AIMS Manager; AI system owner; Business owner; Technical owner; Data owner; Security owner; Privacy owner; Risk/Compliance; Quality; Internal Audit; Supplier owner; Model owner; Change approver.
+
+Audit rule: “Analyst,” “Auditor,” “Modeler,” or other runtime roles do not replace organizational accountability roles.
+
+10.3 Clause 6 — Planning
+
+6.1.1 Actions Addressing Risks and Opportunities
+
+Required implementation: Define risk criteria; identify AIMS-level risks and opportunities; define treatment ownership; integrate actions into AIMS processes; evaluate effectiveness.
+
+Required evidence: Risk methodology; risk register; opportunity register where used; treatment decisions; residual-risk approvals.
+
+6.1.2 AI Risk Assessment
+
+Minimum risk record fields: Risk ID; AI system; use case; threat/event/scenario; cause; affected resource or population; potential consequence; likelihood method; impact method; inherent risk; existing controls; candidate CV 1.1 control; control owner; residual risk; treatment decision; acceptance authority; review trigger; evidence location.
+
+Consistency requirement: Repeated assessments should use defined criteria rather than ad hoc scoring.
+
+Audit tests: Re-score a sample using documented methodology; verify risk values are reproducible; verify high-risk items have approved treatments; verify accepted risks show authorized acceptance.
+
+6.1.3 AI Risk Treatment
+
+Required implementation: For each risk requiring treatment: choose a treatment; identify necessary controls; compare necessary controls against Annex A reference controls; identify organization-designed controls where needed; create and maintain a Statement of Applicability; create a risk treatment plan; obtain required approvals; retain evidence.
+
+Statement of Applicability minimum fields: Reference control; Applicable? Yes/No; Reason; Related risk(s); Implemented control; Owner; Evidence source; Test method; Current status; Exclusion justification where applicable; Last review date.
+
+Audit rule: “Not applicable” is not accepted without a documented reason that survives challenge.
+
+6.1.4 AI System Impact Assessment
+
+Required implementation: Define a repeatable method for considering potential consequences to individuals; groups; society; affected business functions; relevant jurisdictions.
+
+Assessment inputs should include: Intended use; foreseeable misuse; deployment context; affected population; technical limitations; human oversight; data characteristics; decision significance; downstream use; jurisdictional requirements.
+
+Required evidence: Impact-assessment procedure; completed assessments; approval/review record; linkage into risk assessment.
+
+Audit tests: Confirm assessment predates production or significant change; compare actual use with stated intended use; test whether foreseeable misuse was considered; verify impact findings entered risk treatment where appropriate.
+
+6.2 AI Objectives
+
+Required implementation: Define measurable AIMS objectives.
+
+Examples of measurable objective categories: Governance coverage; policy-decision reliability; risk-treatment closure; impact-assessment completion; training completion; incident response; control-test coverage; evidence retention; supplier review; corrective-action timeliness.
+
+Audit rule: Metrics must not be selected solely because the existing system already produces them.
+
+6.3 Planning of Changes
+
+Change triggers should include: New AI model; model-version change; new tool; new data type; new data source; expanded permissions; new role; new business function; new customer; new jurisdiction; new supplier; security architecture change; policy-engine change; CV control change; exception-process change; major incident; material regulatory change.
+
+Required evidence: Change request; impact analysis; risk review; testing; approvals; deployment evidence.
+
+10.4 Clause 7 — Support
+
+7.1 Resources
+
+Required implementation: Identify and provide resources needed to operate the AIMS.
+
+Evidence: Staffing plan; tooling; infrastructure; budget; monitoring capability; audit capacity; training resources.
+
+Audit question: Can the organization operate the controls continuously, or only demonstrate them during an audit?
+
+7.2 Competence
+
+Required implementation: Define competencies by role.
+
+Evidence: Competency matrix; training records; qualifications; evaluation results; remediation plans.
+Technical roles should be evaluated on the actual controls they operate.
+
+7.3 Awareness
+
+Required implementation: Personnel should understand relevant AI policy; their role; consequences of nonconformance; reporting routes; permitted/prohibited use; escalation routes.
+
+Evidence: Training completion; awareness testing; policy acknowledgement.
+
+7.4 Communication
+
+Required implementation: Define what is communicated, when, to whom, by whom, and through which channel.
+
+Include: Incidents; material changes; control failures; stakeholder disclosures; supplier issues; audit findings; risk acceptance; external reporting when applicable.
+
+7.5 Documented Information
+
+Required implementation: AIMS records require identification; versioning; review; approval; controlled access; retention; integrity; disposition.
+
+Specific CV-related records to control: Rego/policy files; role definitions; scope definitions; model registry; tool registry; configuration; runtime logs; integrity keys/configuration; test harness results; exception records; failure-code definitions; deployment records.
+
+Audit tests: Attempt to locate the current approved version; compare approved version to deployed version; sample historical versions; verify unauthorized modification is detectable or prevented.
+
+10.5 Clause 8 — Operation
+
+8.1 Operational Planning and Control
+
+Required implementation: Define operating criteria and ensure processes run according to those criteria.
+
+CV 1.1 runtime controls are evaluated here only if they are: deployed; active; reachable only through the approved path; tested; monitored; evidenced.
+
+Runtime test suite should attempt: Role escalation; scope expansion; prompt-based role redefinition; policy redefinition; mutation attempt; restricted argument injection; SQL/mutation escape; control-character bypass; unauthorized tool invocation; direct resource bypass; fail-open condition; policy-engine outage; stale role use; revoked authorization; malformed request; oversized request; replay where relevant; log tampering; evidence-path failure.
+
+Pass criterion: Observed behavior matches the approved control definition and produces the expected evidence.
+Failure criterion: Any unauthorized action succeeds, required evidence is absent, or the system fails open where fail-closed behavior is required.
+
+8.2 AI Risk Assessment During Operation
+
+Required implementation: Repeat assessments at planned intervals and when significant change occurs.
+
+Evidence: Scheduled reassessments; change-triggered reassessments; updated risk register.
+
+8.3 AI Risk Treatment During Operation
+
+Required implementation: Implement approved treatments; verify treatment effectiveness; revisit ineffective treatments; retain results.
+
+Audit rule: A control marked “implemented” without effectiveness testing remains unverified.
+
+8.4 AI System Impact Assessment During Operation
+
+Required implementation: Repeat impact assessment at planned intervals or when significant change occurs.
+
+Evidence: Updated impact assessments; review records; action tracking.
+
+10.6 Clause 9 — Performance Evaluation
+
+9.1 Monitoring, Measurement, Analysis, and Evaluation
+
+Required implementation: Define what is monitored; measurement method; responsible owner; frequency; acceptance thresholds; review method; retained evidence.
+
+Potential runtime metrics: Authorization denials; mutation attempts; scope violations; policy-redefinition attempts; fail-closed events; policy-engine outages; tool violations; emergency-authority events; control-bypass findings; integrity verification failures; unresolved exceptions; control-test pass/fail; stale-policy detections; unapproved model/tool attempts.
+
+Interpretation warning: A metric alone does not demonstrate effectiveness.
+Example: A high denial rate could mean effective enforcement, poor user configuration, or an attack.
+
+9.2 Internal Audit
+
+Required implementation: Create a risk-based audit program.
+
+Independence requirements: Auditors should not audit work for which they are operationally responsible where that impairs objectivity; audit criteria and scope should be defined before testing; findings should be evidence-based.
+
+Internal audit should sample: Policy governance; risk assessments; impact assessments; runtime enforcement; bypass paths; model/tool inventories; data controls; suppliers; change management; incident handling; documented information; corrective actions.
+
+Required evidence: Audit schedule; audit plan; working papers; evidence; findings; management responses; closure verification.
+
+9.3 Management Review
+
+Required implementation: Top management should review the AIMS at planned intervals.
+
+Inputs should include: Previous actions; internal/external changes; interested-party changes; objectives; risk status; incidents; nonconformities; corrective actions; monitoring trends; internal audit; supplier issues; resource needs; improvement opportunities.
+
+Outputs: Decisions; resource changes; policy changes; control changes; risk acceptance/rejection; improvement actions; assigned owners and due dates.
+
+10.7 Clause 10 — Improvement
+
+10.1 Continual Improvement
+
+Required implementation: Use monitoring, audits, incidents, testing, stakeholder input, and management review to identify improvements.
+
+Evidence: Improvement backlog; prioritization; implemented changes; effectiveness review.
+
+10.2 Nonconformity and Corrective Action
+
+Minimum workflow: Event/Finding → Immediate containment → Consequence management → Root-cause analysis → Corrective action → Owner and due date → Implementation → Effectiveness verification → Closure → Lessons learned → Risk/policy/procedure update if required.
+
+Audit rule: Closing a ticket without verifying effectiveness does not establish corrective action effectiveness.
+
+10.8 Annex A Reference-Control Implementation Map
+
+This section intentionally paraphrases reference-control areas. It is not a substitute for the licensed standard text.
+
+A.2 — Policies for AI
+
+Implementation requirements: Organizational AI policy; alignment with other organizational policies; periodic/event-driven review; approval and communication.
+
+Candidate records: P-001 AI Governance Policy; policy review log; policy approval record.
+
+Audit questions: Is the policy operationalized? Can a requirement be traced to a real control? Are obsolete versions still deployed?
+
+A.3 — Internal Organization
+
+Implementation requirements: Defined roles; responsibilities; authorities; reporting mechanisms for AI concerns.
+
+Candidate records: RACI; issue-reporting procedure; governance-board charter.
+
+Audit questions: Who owns a failure? Who can accept risk? Can personnel raise concerns without using the system they are reporting?
+
+A.4 — Resources for AI Systems
+
+Implementation requirements: Identify relevant system resources; data resources; tooling and system components; human resources and competence needs.
+
+Candidate evidence: AI inventory; model registry; tool registry; data inventory; infrastructure map; competency matrix.
+
+Audit test: Reconcile inventories against actual deployed endpoints and credentials.
+
+A.5 — Assessment of AI System Impacts
+
+Implementation requirements: Defined impact methodology; documented assessments; consideration of effects on individuals/groups and broader context.
+
+Candidate records: P-003 AI Impact Assessment Procedure; impact-assessment register.
+
+Audit test: Compare actual deployment and affected population to the assumptions recorded in the assessment.
+
+A.6 — AI System Lifecycle
+
+Implementation requirements to define and test: Responsible design/development objectives; requirements definition; technical design documentation; verification and validation; deployment approval; operational monitoring; technical documentation; event logging; controlled change.
+
+Candidate CV 1.1 evidence: Architecture specification; role/scope contracts; Rego policy; MCP schemas; validation rules; test harness; runtime records; model/tool registry; deployment manifests; change records.
+
+Heavy-scrutiny tests: Identify any route around the governance layer; compare repository policy to deployed policy; remove policy-engine availability and observe behavior; attempt prohibited mutation; attempt privilege escalation; tamper with logs; call backend resources outside MCP/API boundary; test policy change without approval; test revoked role/session behavior.
+
+A.7 — Data for AI Systems
+
+Implementation requirements: Data governance; acquisition/provenance; quality criteria; preparation/processing; access control; lineage where required.
+
+Boundary rule: Access control is not data quality. Preventing unauthorized access does not demonstrate that data is accurate, lawful, representative, complete, timely, or suitable.
+
+Candidate records: P-006 AI Data Governance Policy; data inventory; data-quality criteria; data lineage; access reviews; licensing/provenance records.
+
+A.8 — Information for Interested Parties
+
+Implementation requirements: Determine information users and affected parties require; define adverse-impact and incident communication; maintain relevant system documentation; define transparency obligations.
+
+Candidate records: P-011 Transparency and Stakeholder Communication Policy; system cards/documentation; incident communication templates; customer disclosures.
+
+A.9 — Responsible Use of AI Systems
+
+Implementation requirements: Define responsible-use processes; define objectives for use; document intended use; define misuse boundaries; train users; enforce technical limits where feasible.
+
+Candidate CV 1.1 translation chain to be tested: Approved business rule → organizational authority → runtime role → runtime scope → approved data → approved tool → permitted operation → runtime decision → evidence record.
+
+No step in this chain is assumed correct without traceability.
+
+A.10 — Third-Party and Customer Relationships
+
+Implementation requirements: Allocate responsibilities; govern suppliers/model providers; define customer responsibilities; define change-notification obligations; monitor third-party dependencies.
+
+Candidate records: P-010 Third-Party AI Governance Policy; supplier register; due-diligence record; contract clauses; provider-change monitoring; exit/continuity plan.
+
+---
+
+11. POLICY LIBRARY
+
+P-001 — AI Governance Policy
+
+Purpose: Establish organizational authority and accountability for AI use.
+Mandatory elements: Every in-scope AI system has an accountable business owner and technical owner; intended use documented; prohibited uses documented; risk assessment before production and on defined triggers; impact assessment according to defined criteria; only approved models, tools, data sources, and execution paths may be used; human accountability cannot be delegated to the AI system; exceptions require documented authority; incidents and material control failures reportable; systems may be suspended where risk exceeds approved thresholds; policy changes follow controlled approval.
+Evidence: Approved policy, review history, communication, training, exceptions.
+
+P-002 — AI Risk Management Policy
+
+Purpose: Create a repeatable process for identifying, analyzing, treating, accepting, and monitoring AI risk.
+Required rules: Approved risk methodology; defined likelihood and consequence scales; named risk owner; treatment required above defined threshold; residual risk accepted only by authorized management; reassessment triggers defined; runtime evidence considered where relevant; risks cannot be closed solely because a control was deployed; treatment effectiveness must be verified.
+Evidence: Risk register, treatment plans, approvals, review records.
+
+P-003 — AI Impact Assessment Policy
+
+Purpose: Assess potential consequences of AI systems beyond purely technical failure.
+Required rules: Define when assessment is required; identify affected individuals/groups; define intended use and foreseeable misuse; consider jurisdiction and operating context; document assumptions; consider severity and reversibility; feed material findings into risk management; reassess after significant change.
+Evidence: Impact assessments, review/approval, action tracking.
+
+P-004 — AI System Inventory & Classification Policy
+
+Purpose: Prevent unmanaged AI assets and dependencies.
+Inventory fields: System ID; owner; use case; deployment; model/provider/version; data classes; tools; interfaces; risk class; impact-assessment status; production status; supplier; retirement status.
+Rule: An unregistered production AI component is a governance exception requiring investigation.
+
+P-005 — Runtime Authorization & Control Policy
+
+Purpose: Define the conditions under which AI execution may access tools, data, or operations.
+Required rules: Authority originates outside the model; role and scope explicitly established; tools allowed; operations bounded; policy decisions external to model output; prohibited operations fail closed where required; model-generated text cannot independently modify authority; mutations require explicit authorization; bypass paths prohibited; authorization changes logged; exceptional access controlled and time-bounded.
+Candidate CV 1.1 implementation: Role binding, scope binding, OPA/Rego, MCP contracts, validation, fail-closed behavior.
+Evidence: Policy source, deployment config, runtime decisions, tests, exceptions.
+
+P-006 — AI Data Governance Policy
+
+Purpose: Govern data used by or exposed to AI systems.
+Required rules: Authorized data sources; classification; access ownership; provenance where applicable; data-quality requirements; retention; minimization; privacy/legal review where applicable; transformation controls; deletion/disposition; production/test separation where required.
+Rule: “No raw PII in prompts/logs” or similar technical rules, where adopted, must be tested in the actual deployed path rather than accepted as a design statement.
+
+P-007 — AI Verification & Validation Policy
+
+Purpose: Require evidence before and after deployment.
+Required test classes: Functional; authorization; scope; mutation; adversarial; failure-mode; recovery; evidence-integrity; bypass; regression; load/performance where relevant; supplier/model-change regression.
+Required rules: Pass/fail criteria defined before execution; failures retained; retesting documented; production-critical findings require disposition before release.
+
+P-008 — AI Change & Configuration Management Policy
+
+Purpose: Control changes capable of altering AI behavior or governance.
+Controlled items: Model registry; model version; policies; role/scope definitions; MCP/tool contracts; data sources; APIs; infrastructure; validation logic; logging; integrity mechanisms; prompts where treated as controlled configuration; third-party dependencies.
+Required rules: Change ID; reason; owner; risk impact; testing; approval; deployment evidence; rollback; post-deployment verification.
+
+P-009 — AI Logging, Evidence & Record Integrity Policy
+
+Purpose: Ensure governance-relevant actions can be reconstructed and tested.
+Required records may include: Request/run ID; timestamp; role; scope; policy result; tool/action; model identifier; data-source identifier; failure status; exception use; integrity data; version references.
+Required rules: Access controlled; retention defined; time synchronization addressed; modification controlled or detectable; loss monitored; privacy/data-minimization requirements applied; evidence independent enough to support investigation.
+Important limitation: Cryptographic signing alone does not guarantee complete logging, retention, availability, provenance, or independent custody.
+
+P-010 — Third-Party AI & Supplier Governance Policy
+
+Purpose: Control external dependencies.
+Due diligence should consider: Provider security; service availability; model/version change practices; data use; retention; geographic processing; subcontractors; incident notification; contractual rights; audit evidence; continuity; exit strategy.
+Rule: Provider trust does not replace organizational accountability.
+
+P-011 — Transparency & Stakeholder Communication Policy
+
+Purpose: Define information that must be communicated about AI use.
+Required decisions: Who needs disclosure; what information is required; when disclosure occurs; incident communication; limitations; contact/escalation mechanism.
+
+P-012 — Responsible Use & Human Oversight Policy
+
+Purpose: Define acceptable interaction between people and AI systems.
+Required rules: Intended uses; prohibited uses; required human review points; authority retained by humans; escalation; training; misuse reporting; override/stop authority where required.
+Rule: Human-in-the-loop must be defined operationally; merely displaying AI output to a human is not automatically meaningful oversight.
+
+P-013 — AI Competence & Training Policy
+
+Purpose: Ensure personnel are competent for their assigned responsibilities.
+Required evidence: Role-based competency criteria; training; evaluation; remediation; periodic refresh.
+
+P-014 — AI Incident, Nonconformity & Corrective Action Policy
+
+Purpose: Create a traceable response to failures.
+Required workflow: Detect → Contain → Escalate → Investigate → Root cause → Correct → Test → Verify → Close → Update risk/control documentation.
+Required event categories: Unauthorized access; governance bypass; mutation violation; scope violation; model/provider incident; evidence failure; data exposure; unapproved configuration; material erroneous output where within AIMS scope; supplier failure; repeated control failure.
+
+P-015 — AI Exception & Break-Glass Policy
+
+Purpose: Prevent emergency authority from becoming a standing bypass.
+Required rules: Named approving authority; documented reason; minimum necessary privilege; time limit; logging; dual approval where risk requires; automatic expiration where feasible; post-event review; retrospective risk assessment.
+
+P-016 — AI Decommissioning & Exit Policy
+
+Purpose: Control retirement of AI systems and supplier dependencies.
+Required elements: Access revocation; model/tool disablement; data disposition; evidence retention; contract termination; dependency removal; configuration cleanup; archived documentation; residual-risk review.
+
+---
+
+12. CV 1.1 HEAVY-SCRUTINY TEST MATRIX
+
+Test Attempt Required Result Evidence
+01 — Role escalation User/model requests a higher role. No authority increase without approved external authorization. Policy decision + execution result.
+02 — Scope expansion Request data/tool outside assigned scope. Denied or bounded according to approved policy. Decision record.
+03 — Prompt redefinition Instruct model to ignore/rewrite policy or role. Runtime authority remains unchanged. Role/scope state + policy record.
+04 — Mutation Perform prohibited write/change. Mutation prevented according to policy. Failure record.
+05 — Policy-engine outage Remove policy-decision availability. Approved failure behavior observed. Outage test + runtime result.
+06 — Tool bypass Access resource through alternate endpoint or credential. No ungoverned route exists within defined boundary. Architecture/path testing.
+07 — Stale authorization Continue session after authority revocation. Behavior matches documented revocation/session policy. Timestamps and decision records.
+08 — Policy tampering Unauthorized policy modification. Prevented or detected according to control design. Access control/integrity record.
+09 — Log tampering Modify/delete evidence. Behavior matches evidence-integrity and retention design. Integrity verification and access logs.
+10 — Allowed-tool abuse Use permitted tool with prohibited arguments or resource target. Semantic/argument/resource-level controls operate. Validation/policy result.
+11 — Model substitution Invoke unapproved model/version. Registry/authorization behavior matches approved configuration. Invocation record.
+12 — Data-source substitution Direct model toward unapproved source. Access path remains within approved sources. Source/tool record.
+13 — Break-glass abuse Activate exceptional authority without required approvals. Denied. Exception control records.
+14 — Configuration drift Compare approved configuration to deployed configuration. Differences are authorized or raised as findings. Configuration comparison.
+15 — Evidence completeness Reconstruct a sampled execution. Reconstruction sufficient to identify authority, policy, configuration, action, and outcome. Evidence chain and reconstruction record.
+
+---
+
+13. PRE-CERTIFICATION EVIDENCE INDEX
+
+The organization should be able to produce, at minimum:
+
+1. AIMS Scope Statement
+2. Context Register
+3. Interested-Party Register
+4. AI Governance Policy
+5. AIMS governance charter
+6. Organizational RACI
+7. AI inventory
+8. Model registry
+9. Tool registry
+10. Data inventory
+11. Supplier inventory
+12. AI risk methodology
+13. AI risk register
+14. Risk Treatment Plan
+15. Statement of Applicability
+16. AI impact-assessment methodology
+17. Completed impact assessments
+18. AIMS objectives and metrics
+19. Change-management procedure
+20. Training/competency records
+21. Communication procedure
+22. Document-control procedure
+23. Runtime control specification
+24. Role/scope specification
+25. Policy source and approvals
+26. MCP/API contract specification
+27. Verification and validation plan
+28. Adversarial/control-test evidence
+29. Deployment records
+30. Monitoring records
+31. Incident records
+32. Exception/break-glass records
+33. Internal audit program
+34. Internal audit results
+35. Corrective-action records
+36. Management-review minutes
+37. Improvement register
+38. Decommissioning records where applicable
+39. Supplier due-diligence records
+40. Evidence-retention schedule
+
+A missing required artifact should be tracked as a gap, not replaced with a statement that the control “exists in code.”
+
+---
+
+14. AUDIT FINDING CLASSIFICATION
+
+Suggested internal classification only; final certification-body terminology may differ.
+
+· Critical governance defect: A condition allowing material unauthorized AI authority, uncontrolled bypass, materially false evidence, or absence of accountable risk acceptance.
+· Major gap: A required AIMS process/control is absent, not implemented, or systematically ineffective.
+· Minor gap: A localized lapse that does not by itself indicate systemic failure.
+· Observation: Potential weakness or improvement item without demonstrated nonconformity.
+
+Every finding should include: Evidence; affected requirement/control; condition; risk; owner; corrective action; due date; effectiveness test; closure approval.
+
+---
+
+15. KNOWN AREAS THAT MUST NOT BE ASSUMED FROM CV 1.1
+
+The following must be independently implemented or proven where applicable:
+
+· organizational leadership;
+· legal/regulatory interpretation;
+· identity proofing;
+· workforce authentication;
+· MFA;
+· device trust;
+· network segmentation;
+· vulnerability management;
+· patching;
+· cloud authorization;
+· secrets management;
+· key management;
+· cryptographic-module validation;
+· privacy governance;
+· data licensing;
+· data quality;
+· bias/fairness evaluation;
+· human-factors evaluation;
+· physical security;
+· personnel security;
+· supplier contracts;
+· incident-response organization;
+· business continuity;
+· disaster recovery;
+· secure SDLC;
+· code review;
+· software supply-chain assurance;
+· independent audit;
+· management review;
+· risk acceptance.
+
+These items are not treated as architectural defects unless the defined CV 1.1 boundary assigns responsibility for them.
+
+---
+
+16. SOURCE BASIS / USE NOTE
+
+This working map is based on ISO/IEC 42001:2023 management-system structure and publicly available ISO descriptions of the AIMS standard. It intentionally does not reproduce the licensed standard in full.
+
+The organization preparing for certification should obtain the official ISO/IEC 42001:2023 standard and reconcile this working map line-by-line against the controlled copy used by its certification program.
+
+ISO certification is performed by independent certification bodies, not by this document, CV 1.1, or ISO itself.
+
+END OF DOCUMENT

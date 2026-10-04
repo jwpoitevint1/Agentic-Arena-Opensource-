@@ -8,7 +8,7 @@ const UI_GUIDE_FAILOVER_MODEL = Object.freeze({
   key: "mistral_small_4",
   name: "Mistral Small 4",
 });
-const UI_GUIDE_CHAT_TOKENS = 512;
+const UI_GUIDE_CHAT_TOKENS = 4096;
 const UI_GUIDE_DOMAINS = [
   [1, "Finance"],
   [2, "Environmental Operations"],

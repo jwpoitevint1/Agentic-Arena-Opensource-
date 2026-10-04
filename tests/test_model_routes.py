@@ -11,8 +11,8 @@ def test_model_catalog_lists_allowlisted_models() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["count"] == 25
-    assert len(payload["models"]) == 25
+    assert payload["count"] == 24
+    assert len(payload["models"]) == 24
     assert "openrouter_configured" in payload
 
 

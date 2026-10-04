@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Agentic Arena mark</title>
+  <desc id="desc">Arena with balanced judiciary scales and paired governed execution paths.</desc>
+  <defs>
+    <linearGradient id="n" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071b3f"/><stop offset="1" stop-color="#0f4e8a"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#074b9b"/><stop offset="1" stop-color="#1596e8"/></linearGradient>
+    <linearGradient id="t" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#057b89"/><stop offset="1" stop-color="#20d4c1"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="72" fill="#ffffff"/>
+  <ellipse cx="256" cy="224" rx="170" ry="82" fill="none" stroke="url(#n)" stroke-width="34"/>
+  <path d="M102 238 C132 300 191 330 256 330 C321 330 380 300 410 238" fill="none" stroke="#0a376d" stroke-width="28" stroke-linecap="round"/>
+  <path d="M248 75 L203 98 L203 145 Q203 187 248 211 Z" fill="url(#b)"/>
+  <path d="M264 75 L309 98 L309 145 Q309 187 264 211 Z" fill="url(#t)"/>
+  <path d="M250 245 L173 316 L102 361 L248 388 Z" fill="url(#b)"/>
+  <path d="M262 245 L339 316 L410 361 L264 388 Z" fill="url(#t)"/>
+  <path d="M256 238 L256 388" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+  <g stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <circle cx="256" cy="176" r="13"/>
+    <path d="M256 190 L256 278 M205 200 Q256 214 307 200"/>
+    <path d="M214 203 L191 255 M298 203 L321 255"/>
+    <path d="M170 255 H212 Q191 282 170 255 Z" fill="#0f68b3"/>
+    <path d="M300 255 H342 Q321 282 300 255 Z" fill="#0ea59c"/>
+    <path d="M232 280 H280"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-width="6">
+    <path d="M176 347 L207 319 L232 289" stroke="#7dd3fc"/>
+    <circle cx="176" cy="347" r="9" fill="#7dd3fc"/><circle cx="207" cy="319" r="7" fill="#7dd3fc"/>
+    <path d="M336 347 L305 319 L280 289" stroke="#5eead4"/>
+    <circle cx="336" cy="347" r="9" fill="#5eead4"/><circle cx="305" cy="319" r="7" fill="#5eead4"/>
+  </g>
+</svg>

@@ -5,7 +5,7 @@ def test_project_overview_documents_matched_comparison_contract() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert "matched models, tasks, domains, and source data" in source
-    assert "the governance layer is the intended experimental variable" in source
+    assert "the runtime-enforcement layer is the intended experimental variable" in source
     assert "Governed and ungoverned paths are run against matched tasks and source data" in source
     assert "without intentionally changing the business problem" in source
 
@@ -13,7 +13,7 @@ def test_project_overview_documents_matched_comparison_contract() -> None:
 def test_testing_observations_tab_is_registered_and_rendered() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
-    assert '["observations", "Observations", "04"]' in source
+    assert '["observations", "Systems Stress Indicators", "06"]' in source
     assert 'view === "observations" && <TestingObservations />' in source
     assert "function TestingObservations()" in source
     assert "Development observations, not formal research conclusions." in source
@@ -29,19 +29,19 @@ def test_observations_document_three_contamination_surfaces() -> None:
     assert "Three contamination surfaces stay under active review" in source
 
 
-def test_numbered_sidebar_navigation_matches_requested_order() -> None:
+def test_numbered_sidebar_navigation_matches_current_order() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     expected = [
-        '["lab", "Arena Lab", "01"]',
-        '["evidence", "Evidence", "02"]',
-        '["logbook", "Runtime Logbook", "03"]',
-        '["observations", "Observations", "04"]',
-        '["models", "Models", "05"]',
-        '["enterprise", "Enterprise", "06"]',
-        '["governance", "Governance + MCP", "07"]',
+        '["lab", "Runtime Testbed", "01"]',
+        '["enterprise", "Enterprise", "02"]',
+        '["models", "Model Registry", "03"]',
+        '["evidence", "KPIs + Performance Metrics", "04"]',
+        '["logbook", "Runtime Logbook", "05"]',
+        '["observations", "Systems Stress Indicators", "06"]',
+        '["governance", "Governance Plan Implementation", "07"]',
         '["alignment", "Alignment", "08"]',
-        '["diagnostics", "Diagnostics", "09"]',
+        '["diagnostics", "Operational Assurance", "09"]',
     ]
     for item in expected:
         assert item in source
@@ -88,7 +88,6 @@ def test_same_family_fallback_observation_is_documented() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert "Fallback routing should preserve model family where possible" in source
-    assert "cross-family contingency should be explicit" in source
     assert "cross-family contingency should be explicit" in source
 
 

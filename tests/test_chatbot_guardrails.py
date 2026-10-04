@@ -80,7 +80,7 @@ def test_chatbot_history_is_bounded() -> None:
 
 def test_chatbot_output_default_matches_contract() -> None:
     request = ChatbotRequest(system_id=1, model_key="test-model", message="hello")
-    assert request.max_tokens == CHATBOT_MAX_OUTPUT_TOKENS == 2048
+    assert request.max_tokens == CHATBOT_MAX_OUTPUT_TOKENS == 4096
     assert settings.chatbot.defaults.max_output_tokens == CHATBOT_MAX_OUTPUT_TOKENS
 
 

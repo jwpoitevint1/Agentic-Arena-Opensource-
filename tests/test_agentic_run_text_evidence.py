@@ -24,8 +24,8 @@ def test_governed_and_ungoverned_routes_pass_raw_user_task() -> None:
     ungoverned = Path("app/ungoverned_routes.py").read_text(encoding="utf-8")
     chatbot = Path("app/chatbot_routes.py").read_text(encoding="utf-8")
 
-    assert governed.count("prompt_text=request.task") == 2
-    assert ungoverned.count("prompt_text=request.task") == 2
+    assert governed.count("prompt_text=request.task") == 3
+    assert ungoverned.count("prompt_text=request.task") == 3
     assert chatbot.count("prompt_text=request.message") == 2
 
 
