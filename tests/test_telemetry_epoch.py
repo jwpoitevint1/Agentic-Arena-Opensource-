@@ -25,4 +25,4 @@ def test_browser_evidence_starts_new_epoch_history() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
     assert 'agentic-arena-experiment-evidence-v2' in source
     assert '2026-09-21T03:23:31Z' in source
-    assert "archived for audit/integrity" in source
+    assert "const ARCHIVED_TELEMETRY_RUNS = 265;" in source
