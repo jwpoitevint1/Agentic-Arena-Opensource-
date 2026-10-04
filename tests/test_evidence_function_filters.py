@@ -43,5 +43,5 @@ def test_mixed_capability_evidence_compares_latest_governed_and_ungoverned_runs(
     assert 'run.governance === "governed"' in source
     assert 'run.governance === "ungoverned"' in source
     assert "slice(0, 4)" in source
-    assert "Latest governed and ungoverned Mixed Capability run" in source
+    assert "Latest governed and ungoverned run for four models" in source
     assert "MixedCapabilityLatestComparison runs={comparisonRuns}" in source
