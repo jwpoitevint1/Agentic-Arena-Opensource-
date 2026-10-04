@@ -198,7 +198,7 @@ def test_ungoverned_execute_uses_matched_neon_rows_without_manual_context(monkey
         lambda target: (neon_context, {"row_count": 2000}),
     )
     monkeypatch.setattr(
-        "app.ungoverned_routes.query_table",
+        "app.ungoverned_routes.read_source_rows",
         lambda target, **kwargs: [{"Shipment_ID": "S-001", "Status": "Delivered"}],
     )
     monkeypatch.setattr("app.ungoverned_routes.record_agentic_run", lambda **kwargs: True)
