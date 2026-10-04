@@ -1,152 +1,50 @@
 from pathlib import Path
 
 
-def test_project_overview_documents_matched_comparison_contract() -> None:
+def test_project_overview_states_the_matched_comparison_boundary() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     assert "matched models, tasks, domains, and source data" in source
-    assert "the runtime-enforcement layer is the intended experimental variable" in source
-    assert "Governed and ungoverned paths are run against matched tasks and source data" in source
-    assert "without intentionally changing the business problem" in source
+    assert "the effect of runtime controls can be inspected" in source
+    assert "without presenting the results as generalized research conclusions" in source
 
 
-def test_testing_observations_tab_is_registered_and_rendered() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert '["observations", "Systems Stress Indicators", "06"]' in source
-    assert 'view === "observations" && <TestingObservations />' in source
-    assert "function TestingObservations()" in source
-    assert "Development observations, not formal research conclusions." in source
-    assert "Pre-neutrality runs are development evidence, not clean treatment evidence" in source
-
-
-def test_observations_document_three_contamination_surfaces() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Prompt contamination" in source
-    assert "Execution-path contamination" in source
-    assert "Presentation / UI contamination" in source
-    assert "Three contamination surfaces stay under active review" in source
-
-
-def test_numbered_sidebar_navigation_matches_current_order() -> None:
+def test_current_navigation_registers_all_five_t2_surfaces() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     expected = [
-        '["lab", "Runtime Testbed", "01"]',
-        '["enterprise", "Enterprise", "02"]',
-        '["models", "Model Registry", "03"]',
-        '["evidence", "KPIs + Performance Metrics", "04"]',
-        '["logbook", "Runtime Logbook", "05"]',
-        '["observations", "Systems Stress Indicators", "06"]',
-        '["governance", "Governance Plan Implementation", "07"]',
-        '["alignment", "Alignment", "08"]',
-        '["diagnostics", "Operational Assurance", "09"]',
+        '["t2_coding", "Coding Assistant", "10"]',
+        '["t2_medical", "Medical Analyst / Assistant", "11"]',
+        '["t2_financial", "Financial Risk Analyst", "12"]',
+        '["t2_logistics", "Logistics Management Analyst / Assistant", "13"]',
+        '["t2_aviation", "Aviation Travel Assistant", "14"]',
     ]
     for item in expected:
         assert item in source
-    assert '["overview", "Project"' not in source
+    assert 'view === "t2_coding"' in source
+    assert "<T2BotChat botKey={view}" in source
 
 
-def test_finance_arithmetic_observation_and_mcp_update_are_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+def test_t2_agents_declare_separate_roles_and_capabilities() -> None:
+    source = Path("ui/src/t2-bot-chat.jsx").read_text(encoding="utf-8")
 
-    assert "Finance remains a repeatable arithmetic and interpretation stress case" in source
-    assert "models produced useful schemas and careful caveats yet still miscounted" in source
-    assert "Evidence principle:" in source
-    assert "exact arithmetic and bounded aggregates belong in deterministic computation" in source
-
-
-def test_gpt55_post_mcp_finance_replication_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Post-MCP GPT-5.5 Finance runs are highly repeatable under governance" in source
-    assert "Governed pairwise output similarity averaged 0.888" in source
-    assert "24.48 seconds latency" in source
-    assert "2,713 reasoning tokens" in source
-    assert "two of four controls reached the 5,000-token ceiling" in source
-    assert "not a general causal claim" in source
+    for key in ("t2_coding", "t2_medical", "t2_financial", "t2_logistics", "t2_aviation"):
+        assert f'{key}: {{ key: "{key}"' in source
+    assert 'role: "coding_assistant"' in source
+    assert 'role: "medical_analyst_assistant"' in source
+    assert 'role: "financial_risk_analyst"' in source
+    assert 'role: "logistics_management_analyst_assistant"' in source
+    assert 'role: "aviation_travel_assistant"' in source
+    assert 'capabilities: ["state.read"]' in source
+    assert '"dataset.read"' in source
+    assert '"data.validate"' in source
+    assert '"arithmetic.verify"' in source
 
 
-def test_model_family_compatibility_method_note_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
+def test_t2_ui_preserves_execution_and_evaluator_boundaries() -> None:
+    source = Path("ui/src/t2-bot-chat.jsx").read_text(encoding="utf-8")
 
-    assert "Potential model-family compatibility effect" in source
-    assert "not evidence that CV1.1 is optimized for OpenAI or any other vendor" in source
-    assert "Controlled prompt-representation testing" in source
-
-
-def test_model_aware_governance_tuning_observation_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Governance tuning should account for model capacity, capability, and function" in source
-    assert "Model capacity, native capabilities, tool use, assigned function, domain, and evidence requirements should inform tuning" in source
-    assert "deterministic enforcement boundaries remain consistent" in source
-
-
-def test_same_family_fallback_observation_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Fallback routing should preserve model family where possible" in source
-    assert "cross-family contingency should be explicit" in source
-
-
-def test_observations_translate_same_evidence_for_three_audiences() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "One evidence stack, three views" in source
-    assert "Research / methodology" in source
-    assert "Engineering / deployment" in source
-    assert "Executive / business impact" in source
-    assert "Fallback routing should preserve model family where possible" in source
-    assert "model-function-governance combination acceptable for this workload" in source
-
-
-def test_enterprise_governance_cell_and_requirements_package_are_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Cross-functional governance cell" in source
-    assert "Blended matrix governance" in source
-    assert "Configuration specialist" in source
-    assert "Business analyst / process owner" in source
-    assert "Legal / compliance officer" in source
-    assert "From business need to governed deployment" in source
-    assert "approved same-family fallback model when one exists" in source
-    assert "Cross-family contingency is explicit and separately governed" in source
-
-
-def test_failure_mode_first_governance_tuning_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Tune governance to the observed failure mode, not only the model name" in source
-    assert "failure type → risk level → verification method → output contract → escalation requirement" in source
-    assert "Numerical or factual fabrication" in source
-    assert "summarization drift" in source
-
-
-def test_observations_follow_empirical_governance_flow() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Practical empirical method" in source
-    assert "Observe, isolate, compare, verify, repeat, tune, retest" in source
-    assert "01 · Method and experimental integrity" in source
-    assert "02 · Evidence and verification" in source
-    assert "03 · Model and function fit" in source
-    assert "04 · Runtime and deployment implications" in source
-    assert "controlled variables, explicit uncertainty, reproducible evidence, falsifiable assumptions, repeat trials, and documented changes" in source
-
-
-def test_private_observation_notes_model_capacity_by_function() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Model capacity appears to matter differently by function" in source
-    assert "heavier reasoning-capable models are better suited to Analyst work" in source
-    assert "model the data only, do not perform analytics" in source
-
-
-def test_chatbot_model_substitution_observation_is_documented() -> None:
-    source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
-
-    assert "Model substitution can leave the governance architecture unchanged" in source
-    assert "Observed · September 21, 2026" in source
-    assert "Different model, same box, same rules, same authorized paths." in source
+    assert "Coding agent · no local execution or deployment" in source
+    assert "Governance functions only · evaluator cannot modify the benchmark" in source
+    assert 'aria-label="Governance benchmark evaluator"' in source
+    assert "Approved AI model" in source
