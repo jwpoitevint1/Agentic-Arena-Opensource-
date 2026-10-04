@@ -21,7 +21,7 @@ def test_current_navigation_registers_all_five_t2_surfaces() -> None:
     ]
     for item in expected:
         assert item in source
-    assert 'view === "t2_coding"' in source
+    assert "T2_BOT_KEYS.includes(view)" in source
     assert "<T2BotChat botKey={view}" in source
 
 
@@ -34,7 +34,7 @@ def test_t2_agents_declare_separate_roles_and_capabilities() -> None:
     assert 'role: "medical_analyst_assistant"' in source
     assert 'role: "financial_risk_analyst"' in source
     assert 'role: "logistics_management_analyst_assistant"' in source
-    assert 'role: "aviation_travel_assistant"' in source
+    assert 'role: "airline_travel_assistant"' in source
     assert 'capabilities: ["state.read"]' in source
     assert '"dataset.read"' in source
     assert '"data.validate"' in source
