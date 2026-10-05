@@ -276,6 +276,22 @@ From an audit perspective, UAT observations should be correlated with the corres
 
 UAT does not replace automated security, policy, or integrity testing. It provides the human-facing verification layer needed to assess whether implemented controls are understandable, repeatable, recoverable, and auditable in actual use.
 
+## Standards alignment documentation
+
+The public repository includes ISO alignment and assessment material for CV 1.1 and Agentic Arena:
+
+| Standard / framework | Documentation and scope |
+| --- | --- |
+| ISO/IEC 42001:2023 | [AIMS implementation and audit map](ui/public/docs/cv11-iso-iec-42001-aims-implementation-audit-map-claim-free.txt) and [CV 1.1 working document](ui/public/cv11-iso42001-working-document.txt), documenting management-system assessment mapping, runtime controls, evidence and audit considerations. |
+| ISO/IEC 27001:2022 | Referenced in the [alignment registry](app/regulatory_alignment.py) for information-security management covering confidentiality, integrity and availability. |
+| ISO/IEC 23894:2023 | Referenced in the [alignment registry](app/regulatory_alignment.py) for AI risk management. |
+| ISO/IEC 27701:2025 | Referenced in the [alignment registry](app/regulatory_alignment.py) for privacy information management. |
+| SOC 2 | A dedicated Trust Services Criteria alignment crosswalk is not currently included in this public repository. |
+
+The [CV 1.1 contract register and Agentic Arena crosswalk](ui/public/docs/cv11-full-contract-register-agentic-arena-crosswalk.txt) describes the runtime contracts and their relationship to the application.
+
+These materials document alignment, implementation context and assessment mapping. They do not claim ISO certification, verified conformity, a SOC 2 examination or a SOC 2 attestation report. The ISO 27001, 23894 and 27701 registry references are scope descriptions rather than complete clause-by-clause control mappings.
+
 ## Deployment and testing
 
 The FastAPI backend is deployed on Railway and the UI is deployed through Vercel.
