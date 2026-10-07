@@ -6,8 +6,6 @@ const ROUTE_CONTRACTS = [
   { pattern: /^\/health$/, methods: new Set(["GET"]) },
   { pattern: /^\/ready$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/models(?:\/[A-Za-z0-9_.:-]+)?$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/evaluator\/contract$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/evaluator\/evaluate$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/governed\/functions(?:\/[1-6])?$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/governed\/(?:execute|auditor\/execute)$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/ungoverned\/functions(?:\/[1-6])?$/, methods: new Set(["GET"]) },
@@ -15,20 +13,15 @@ const ROUTE_CONTRACTS = [
   { pattern: /^\/api\/v1\/chatbot\/capabilities\/[1-6]$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/chatbot\/message$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/mcp\/governed\/entities$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/mcp\/capabilities$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/mcp\/governed\/(?:analyst|data_modeler|mixed_capability|evaluator|auditor|advisor)$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/analytics\/(?:profile|schema|query|aggregate)$/, methods: new Set(["POST"]) },
-  { pattern: /^\/api\/v1\/functions$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/execution\/resolve$/, methods: new Set(["POST"]) },
-  { pattern: /^\/api\/v1\/execution\/targets$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/system\/(?:cv11|audit\/integrity|telemetry\/tokens-by-model|telemetry\/totals|telemetry\/comparison-runs|runtime-logbook|databases|datasets(?:\/[1-6])?)$/, methods: new Set(["GET"]) },
-  { pattern: /^\/api\/v1\/telemetry\/latest(?:\/(?:medical|financial|avia|logistics))?$/, methods: new Set(["GET"]) },
+  { pattern: /^\/api\/v1\/telemetry\/latest(?:\/medical)?$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/(?:config|roles|domains)$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/sessions$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/sessions\/[A-Za-z0-9-]+\/(?:turns|mcp|reset|evaluation|coding\/stream|chat\/stream)$/, methods: new Set(["POST"]) },
   { pattern: /^\/api\/v1\/sessions\/[A-Za-z0-9-]+\/telemetry$/, methods: new Set(["GET"]) },
   { pattern: /^\/api\/v1\/system\/database\/(?:resolve|probe)$/, methods: new Set(["POST"]) },
-  { pattern: /^\/api\/v1\/erp\/(?:source-schema|status)$/, methods: new Set(["GET"]) },
 ];
 const ALLOWED_METHODS = new Set(["GET", "POST", "HEAD", "OPTIONS"]);
 const MAX_REQUEST_BYTES = Math.min(
@@ -106,7 +99,7 @@ function safeError(error) {
 }
 
 function backendTarget(path) {
-  const isT2Route = /^\/api\/v1\/(?:config|roles|domains|functions|execution(?:\/|$)|evaluator(?:\/|$)|mcp\/capabilities$|sessions(?:\/|$)|telemetry(?:\/|$)|erp\/(?:source-schema|status)$)/.test(path);
+  const isT2Route = /^\/api\/v1\/(?:config|roles|domains|sessions(?:\/|$)|telemetry(?:\/|$))/.test(path);
   const backend = isT2Route
     ? (process.env.T2_BACKEND_URL || DEFAULT_T2_BACKEND)
     : (process.env.BACKEND_URL || DEFAULT_BACKEND);
