@@ -545,7 +545,8 @@ function App() {
       {view === "models" && <ModelRegistry models={models} />}
       {view === "enterprise" && <Performance evidence={evidence} onClear={clearEvidence} models={models} />}
       {view === "holding" && !UNDER_DEVELOPMENT_VIEWS.has(view) && <Holding />}
-      {view === "t2_execution" && <RegulatoryFramework />}\n      {T2_BOT_KEYS.includes(view) && view !== "t2_execution" && !UNDER_DEVELOPMENT_VIEWS.has(view) && <T2BotChat botKey={view} />}
+      {view === "t2_execution" && <RegulatoryFramework />}
+      {T2_BOT_KEYS.includes(view) && view !== "t2_execution" && !UNDER_DEVELOPMENT_VIEWS.has(view) && <T2BotChat botKey={view} />}
       {view === "chat" && <Chatbot models={models} />}
       {view === "governance" && <div className="governance-mcp-view"><Governance ready={ready} cv11={cv11} functions={functions} entities={mcpEntities} /><MCPConsole models={models} entities={mcpEntities} /></div>}
       {view === "alignment" && <Alignment />}
