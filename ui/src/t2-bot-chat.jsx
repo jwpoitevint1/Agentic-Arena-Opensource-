@@ -775,7 +775,7 @@ export default function T2BotChat({ botKey }) {
         <div className="result-head">
           <div><strong>{bot.label}</strong>{botKey !== "t2_medical" && <div className="micro">Agent Benchmark backend · MCP-routed · coding agent</div>}</div>
           <div className="button-row">
-            {(botKey === "t2_financial" || botKey === "t2_medical") && <label className="code-editor-language">Approved AI model
+            {(botKey === "t2_financial" || botKey === "t2_medical" || botKey === "t2_logistics") && <label className="code-editor-language">Approved AI model
               <select value={modelKey} onChange={(event) => changeModel(event.target.value)} aria-label={bot.label + " model"} disabled={!modelOptions.length}>
                 {modelOptions.map((item) => <option key={item} value={item}>{approvedModelLabel(item)}</option>)}
               </select>
