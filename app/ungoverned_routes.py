@@ -37,6 +37,10 @@ from app.openrouter import OpenRouterError, chat_completion
 from app.telemetry import build_test_record, emit_test_record
 
 
+# Compatibility name retained for existing audit-persistence test seams.
+neon_dataset_context = ungoverned_dataset_context
+
+
 router = APIRouter(prefix="/ungoverned", tags=["ungoverned-functions"])
 
 
@@ -335,7 +339,7 @@ def _mixed_json(text: str) -> dict[str, object] | None:
 def _execute_ungoverned_mixed_capability(*, request: UngovernedExecuteRequest, function: object, domain: object, dataset: object, model: object) -> dict[str, object]:
     target = resolve_database_target(_ungoverned_context(request.system_id))
     try:
-        dataset_context, _ = ungoverned_dataset_context(target)
+        dataset_context, _ = neon_dataset_context(target)
         rows = _relational_rows(target=target, function_key=function.key.value)
     except (UngovernedDataUnavailable, UngovernedDataError) as exc:
         raise HTTPException(status_code=503, detail={"code": "MIXED_CAPABILITY_DATA_UNAVAILABLE", "message": str(exc)}) from exc
@@ -491,7 +495,7 @@ def execute_ungoverned_function(request: UngovernedExecuteRequest) -> dict[str, 
     tool_calls = 0
 
     try:
-        dataset_context, dataset_profile = ungoverned_dataset_context(target)
+        dataset_context, dataset_profile = neon_dataset_context(target)
     except UngovernedDataUnavailable as exc:
         result = _unavailable_result(
             model.key,
