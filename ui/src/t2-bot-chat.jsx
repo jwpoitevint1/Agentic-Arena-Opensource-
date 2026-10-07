@@ -796,21 +796,7 @@ export default function T2BotChat({ botKey }) {
         {botKey === "t2_medical" && <MedicalAnalysisCharts charts={medicalCharts} />}
         <ModelTelemetry modelKey={modelKey} latest={telemetry} history={telemetryHistory} latestByModel={latestByModel} error={telemetryError} />
       </div>
-      {botKey !== "t2_coding" && botKey !== "t2_medical" && <div className="form-panel side-config">
-        <div className="field config-gap"><label>Bound role</label><input value={bot.role} readOnly /></div>
-        <div className="field config-gap"><label>Domain</label><input value={bot.domain} readOnly /></div>
-        {botKey !== "t2_financial" && <div className="field config-gap"><label>Model</label><select value={modelKey} onChange={(event) => changeModel(event.target.value)}>{modelOptions.map((item) => <option key={item} value={item}>{approvedModelLabel(item)}</option>)}</select></div>}
-        <div className="field config-gap"><label>Execution path</label><input value="Gov" readOnly /></div>
-        <div className="section-title config-title">Runtime boundary</div>
-        <div className="control-list">
-          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">MCP routing</div><div className="control-desc">All tool and state requests route through the Agent Benchmark MCP server.</div></div><div className="control-state">Fixed</div></div>
-          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">Source data</div><div className="control-desc">Agentic source targets remain read-only.</div></div><div className="control-state">Read-only</div></div>
-          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">Adversarial input</div><div className="control-desc">Prompt manipulation and capability-boundary attempts are recorded or redirected.</div></div><div className="control-state">Enabled</div></div>
-          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">State write-back</div><div className="control-desc">Only the bounded execution write-back capability can persist state.</div></div><div className="control-state">Bounded</div></div>
-        </div>
-        {bot.note && <div className="notice warn-notice t2-bot-note">{bot.note}</div>}
-        {session?.execution && <div className="notice good-notice t2-session-meta">Session {session.session_id}<br />Target: {session.execution.database_target || "server-resolved"}</div>}
-      </div>}
+
 
     </div>
   </>;
