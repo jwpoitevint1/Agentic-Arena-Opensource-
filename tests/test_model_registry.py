@@ -15,6 +15,7 @@ EXPECTED_MODEL_KEYS = {
     "gpt_5_6_terra",
     "gpt_5_6_sol",
     "gpt_5_5",
+    "granite_4_2_8b",
     "mistral_medium_3_5",
     "mistral_small_4",
     "ministral_3_8b_2512",
@@ -35,14 +36,14 @@ EXPECTED_MODEL_KEYS = {
 def test_model_allowlist_is_complete_and_unique() -> None:
     items = models()
 
-    assert len(items) == 24
+    assert len(items) == 25
     assert {item.key for item in items} == EXPECTED_MODEL_KEYS
-    assert len({item.model_id for item in items}) == 24
+    assert len({item.model_id for item in items}) == 25
     assert {item.key for item in items if item.free} == set()
 
 
 def test_model_kinds_are_separated() -> None:
-    assert len(models_by_kind(ModelKind.AGENT)) == 24
+    assert len(models_by_kind(ModelKind.AGENT)) == 25
     assert len(models_by_kind(ModelKind.EMBEDDING)) == 0
     assert len(models_by_kind(ModelKind.RERANK)) == 0
     assert len(models_by_kind(ModelKind.SAFETY)) == 0
@@ -56,7 +57,7 @@ def test_model_curation_metadata_is_present() -> None:
 
     open_models = [item for item in items if item.access_class == "open_weights"]
     frontier_models = [item for item in items if item.access_class == "frontier"]
-    assert len(open_models) == 9
+    assert len(open_models) == 10
     assert len(frontier_models) == 15
 
 

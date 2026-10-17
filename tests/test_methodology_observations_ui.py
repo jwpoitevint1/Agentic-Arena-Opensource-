@@ -13,11 +13,11 @@ def test_current_navigation_registers_all_five_t2_surfaces() -> None:
     source = Path("ui/src/main.jsx").read_text(encoding="utf-8")
 
     expected = [
-        '["t2_coding", "Coding Assistant", "10"]',
-        '["t2_medical", "Medical Analyst / Assistant", "11"]',
-        '["t2_financial", "Financial Risk Analyst", "12"]',
-        '["t2_logistics", "Logistics Management Analyst / Assistant", "13"]',
-        '["t2_aviation", "Aviation Travel Assistant", "14"]',
+        '["t2_coding", "Coding Assistant", "04"]',
+        '["t2_medical", "Medical Analyst", "05"]',
+        '["t2_financial", "Financial Risk", "06"]',
+        '["t2_logistics", "Logistics Analyst", "07"]',
+        '["t2_aviation", "Aviation Travel", "08"]',
     ]
     for item in expected:
         assert item in source
@@ -45,6 +45,6 @@ def test_t2_ui_preserves_execution_and_evaluator_boundaries() -> None:
     source = Path("ui/src/t2-bot-chat.jsx").read_text(encoding="utf-8")
 
     assert "Coding agent · no local execution or deployment" in source
-    assert "Governance functions only · evaluator cannot modify the benchmark" in source
+    assert "Governance + read-only dataset verification · evaluator cannot modify the benchmark" in source
     assert 'aria-label="Governance benchmark evaluator"' in source
     assert "Approved AI model" in source
