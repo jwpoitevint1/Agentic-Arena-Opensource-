@@ -173,7 +173,7 @@ const NAV_SECTIONS = [
     label: "Governance",
     items: [
       ["governance", "Governance Plan", "14"],
-      ["t2_execution", "AIIMS Execution Pass", "15"],
+      ["t2_execution", "AIIMS", "15"],
       ["diagnostics", "Operational Assurance", "16"],
       ["alignment", "Regulatory Alignment", "17"],
     ],
