@@ -138,6 +138,18 @@ _MODELS: tuple[ModelDefinition, ...] = (
         tool_capable=True,
     ),
     ModelDefinition(
+        key="granite_4_2_8b",
+        display_name="Granite 4.2 8B",
+        vendor="IBM",
+        model_id="ibm-granite/granite-4.2-8b",
+        kind=ModelKind.AGENT,
+        tool_capable=True,
+        access_class="open_weights",
+        parameter_size="8B dense",
+        parameter_total_b=8,
+        parameter_active_b=8,
+    ),
+    ModelDefinition(
         key="mistral_medium_3_5",
         display_name="Mistral Medium 3.5",
         vendor="Mistral AI",

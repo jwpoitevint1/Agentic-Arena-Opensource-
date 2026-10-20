@@ -11,46 +11,55 @@ const ACTIVE_SURFACES = [
   { key: "t2_medical", label: "Medical Analyst / Assistant", icon: "07", href: "/medical-analyst-assistant/" },
   { key: "t2_financial", label: "Financial Risk Analyst", icon: "08", href: "/financial-risk-analyst/" },
   { key: "t2_logistics", label: "Logistics Management Analyst / Assistant", icon: "09", href: "/logistics-management-assistant/" },
-  { key: "t2_aviation", label: "Aviation Travel Assistant", icon: "10", href: "/aviation-travel-assistant/" },
+  { key: "t2_aviation", label: "Avia — Aviation Customer Service", icon: "10", href: "/aviation-travel-assistant/" },
   { key: "t2_execution", label: "Execution Pass", icon: "11", href: "/execution-pass/" },
 ];
 
-const LOCKED_SURFACES = new Set(["t2_financial", "t2_logistics", "t2_aviation", "t2_execution"]);
+const LOCKED_SURFACES = new Set([]);
 
 const PROJECT_PAGE_HTML = `
-  <div class="notice page-notice" role="status">Agentic Arena is functional. Financial Analyst, Logistics Analyst, Aviation Assistant, and Execution Pass are under development and locked.</div>
   <header class="topbar">
-    <div><div class="eyebrow">Personal applied AI project</div><h1>Project Page</h1></div>
+    <div><div class="eyebrow">AI agent showcase · Runtime enforcement</div><h1>Project Page</h1></div>
   </header>
   <section class="hero project-hero">
     <div class="project-logo-panel"><img src="/agentic-arena-logo.svg" alt="Agentic Arena" /></div>
     <div class="eyebrow">Joshua Poitevint · Agentic Arena</div>
-    <p>I'm <strong>Joshua Poitevint</strong>. I spent most of my career around aircraft maintenance and Air Force operations. I led 31 people across six work groups, then moved into operational analysis and automation. That shift was not as sharp as it might sound. Both kinds of work start with finding where a system is breaking, tracing the cause, and building something people can actually use. I later completed an MBA in Project Management.</p>
-    <p>Agentic Arena came out of that way of working. I wanted a place to see what AI models do after they leave a clean demonstration and have to operate with actual constraints. In the Arena, a model gets a job, access to specific data, limited tools, and rules it cannot change. Some of the data is intentionally imperfect because real operating data often is.</p>
-    <p>This is not a scientific benchmark, and I did not build it to declare a winning model. It is a working engineering project where I can test failures, change the surrounding system, and measure what happens next. The model can generate the response. It does not get to decide its own authority.</p>
-    <p><strong>Build disclosure:</strong> I designed Agentic Arena and used Codex as my primary coding tool to implement the application and its supporting architecture.</p>
+    <h2>AI agents with defined jobs and runtime enforcement</h2>
+    <p><strong>Agentic Arena</strong> showcases AI agents across coding, healthcare, financial risk, logistics, and aviation customer service. Each agent has a defined job, a specific scope of work, and controlled access to the data and capabilities available to it.</p>
+    <p>Runtime enforcement combines role-specific instructions with application controls over access, tool execution, validation, and response release. The showcase examines whether agents remain within their assigned roles, respond usefully to legitimate requests, and handle attempts to cross those boundaries.</p>
+    <p>The Runtime Testbed also compares governed and ungoverned execution across operational datasets. Run records make model behavior, enforcement outcomes, latency, token usage, and reported cost available for inspection.</p>
+    <p><strong>Project creator:</strong> Joshua Poitevint. <strong>Build disclosure:</strong> Codex is the primary coding tool used to implement the application and supporting architecture.</p>
     <div class="hero-actions">
-      <a class="primary" href="/arena/">Open Runtime Testbed</a>
-      <a class="secondary" href="/runtime-logbook/">Inspect Runtime Logbook</a>
+      <a class="secondary" href="/arena/">Open Runtime Testbed</a>
     </div>
   </section>
 
+  <section class="section card">
+    <div class="eyebrow">Runtime enforcement</div>
+    <div class="section-title">Methods and purpose</div>
+    <p class="body-copy">The controls operate at different points in a request. System prompts guide behavior; server-side checks enforce the configured access and execution contracts. Each agent's boundaries are assessed against its assigned job.</p>
+  </section>
+
   <section class="section grid-3">
-    <div class="card"><div class="eyebrow">01 · Assign the work</div><div class="section-title">Give the model a defined job</div><p class="body-copy">Set the function, domain, task, data, tools, and limits before execution.</p></div>
-    <div class="card"><div class="eyebrow">02 · Run it</div><div class="section-title">Use real operating conditions</div><p class="body-copy">The model works with fixed permissions and data that may be incomplete, inconsistent, or dirty.</p></div>
-    <div class="card"><div class="eyebrow">03 · Inspect the result</div><div class="section-title">Keep the evidence</div><p class="body-copy">Record the output, tool use, latency, tokens, cost, policy decisions, and failures.</p></div>
+    <div class="card"><div class="eyebrow">01 · Role and scope</div><div class="section-title">Define the agent's job</div><p class="body-copy">Role-specific system prompts describe the work, conversational behavior, authority limits, and redirection rules. Session bindings associate requests with a domain, role, and function.</p><p class="body-copy"><strong>Purpose:</strong> Keep the agent focused on its assigned work and identify attempts to redefine its role.</p></div>
+    <div class="card"><div class="eyebrow">02 · Data and capabilities</div><div class="section-title">Limit access and actions</div><p class="body-copy">Bounded MCP capabilities route permitted operations through the server. Analytics agents use authorized read-only evidence; Avia uses its configured travel capabilities.</p><p class="body-copy"><strong>Purpose:</strong> Restrict source access and tool execution to the capabilities configured for the task.</p></div>
+    <div class="card"><div class="eyebrow">03 · Policy and contracts</div><div class="section-title">Check execution requests</div><p class="body-copy">OPA/Rego policies and application contracts check governed requests against configured permissions, argument requirements, and execution limits.</p><p class="body-copy"><strong>Purpose:</strong> Reject operations that fall outside the permitted execution contract.</p></div>
+    <div class="card"><div class="eyebrow">04 · Evidence verification</div><div class="section-title">Validate analytical inputs</div><p class="body-copy">Deterministic arithmetic and data-quality checks verify supported aggregates before analytical responses are produced. Output sanitization applies domain-specific identifier controls.</p><p class="body-copy"><strong>Purpose:</strong> Detect inconsistent evidence and restrict sensitive identifiers in released output.</p></div>
+    <div class="card"><div class="eyebrow">05 · Failure handling</div><div class="section-title">Redirect, reset, or stop</div><p class="body-copy">Configured boundary handling includes conversational redirection, session resets, circuit breakers, and fail-closed responses when required checks or capabilities are unavailable.</p><p class="body-copy"><strong>Purpose:</strong> Handle violations at the appropriate boundary while preserving supported work where possible.</p></div>
+    <div class="card"><div class="eyebrow">06 · Records and evaluation</div><div class="section-title">Inspect observed behavior</div><p class="body-copy">Run records, available traces, telemetry, integrity checks, and governance evaluations support inspection of responses and enforcement outcomes.</p><p class="body-copy"><strong>Purpose:</strong> Make failures traceable and compare behavior and performance across recorded runs.</p></div>
   </section>
 
   <section class="section card">
-    <div class="eyebrow">Why it exists</div>
-    <div class="section-title">AI as a working system, not just a conversation</div>
-    <p class="body-copy">Agentic Arena gives models concrete work in analytics, modeling, auditing, verification, and operational assistance. The surrounding system controls what each model can see and do, then records what happened. I use the results to change the system and run it again.</p>
+    <div class="eyebrow">Testing approach</div>
+    <div class="section-title">Role adherence, useful responses, and boundary handling</div>
+    <p class="body-copy">Testing includes ordinary job-related requests, role-redefinition attempts, instructions embedded in data, multilingual prompts, and repeated conversational pressure. Synthetic datasets include imperfect records to exercise reconciliation and data-quality checks.</p>
+    <p class="body-copy">Role slip is a behavioral contract failure even when unauthorized tool execution is blocked. Results are assessed for both adherence to the assigned job and continued usefulness within that job. Recorded outcomes describe the tested conditions and observed behavior.</p>
   </section>
 
   <section class="section grid-3">
-    <div class="card"><div class="eyebrow">Runtime Testbed</div><div class="section-title">Run the workload</div><p class="body-copy">Choose the domain, function, model, and task.</p><div class="hero-actions"><a class="primary" href="/arena/">Open Testbed</a></div></div>
-    <div class="card"><div class="eyebrow">Runtime Logbook</div><div class="section-title">Inspect the record</div><p class="body-copy">Review recent runs and their operational evidence.</p><div class="hero-actions"><a class="secondary" href="/runtime-logbook/">Open Logbook</a></div></div>
-    <div class="card"><div class="eyebrow">Performance</div><div class="section-title">Compare execution</div><p class="body-copy">Review token use, latency, cost, and model behavior.</p><div class="hero-actions"><a class="secondary" href="/enterprise/">Open Performance</a></div></div>
+    <div class="card"><div class="eyebrow">Runtime Testbed</div><div class="section-title">Compare execution paths</div><p class="body-copy">Choose a domain, function, model, and task to inspect governed and ungoverned execution.</p><div class="hero-actions"><a class="primary" href="/arena/">Open Testbed</a></div></div>
+    <div class="card"><div class="eyebrow">Runtime Logbook</div><div class="section-title">Review recorded runs</div><p class="body-copy">Inspect available responses, enforcement outcomes, and operational evidence.</p><div class="hero-actions"><a class="secondary" href="/runtime-logbook/">Open Logbook</a></div></div>
+    <div class="card"><div class="eyebrow">Performance</div><div class="section-title">Inspect measured performance</div><p class="body-copy">Review recorded latency, token usage, and reported cost across models.</p><div class="hero-actions"><a class="secondary" href="/enterprise/">Open Performance</a></div></div>
   </section>
 
 `;

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.agentic_run_store import audit_integrity_ready, comparison_runs, runtime_logbook_runs, telemetry_totals, token_usage_by_model, verify_agentic_run_chain
 from app.analytics_routes import router as analytics_router
+from app.aims import AIMSUnavailable, aims_snapshot
 from app.chatbot_routes import router as chatbot_router
 from app.config import settings
 from app.cv11 import opa_healthy
@@ -74,6 +75,14 @@ def root() -> dict[str, str]:
 @app.get("/health", tags=["system"])
 def health() -> dict[str, str]:
     return {"status": "ok", "service": settings.app.name, "environment": settings.app.environment}
+
+
+@app.get("/api/v1/aims/arena", tags=["aims"])
+def aims_arena():
+    try:
+        return aims_snapshot()
+    except AIMSUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.get("/ready", tags=["system"], response_model=None)

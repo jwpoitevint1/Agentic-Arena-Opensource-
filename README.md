@@ -2,8 +2,6 @@
 
 **Version: v1.0**
 
-**Live site:** https://agenticarena.space/
-
 Agentic Arena is a controlled AI research lab for comparing governed and ungoverned agentic workflows against the same tasks and source data. The governed path is constrained by CV 1.1, OPA/Rego policy, fixed runtime roles, bounded MCP capabilities, server-selected database targets, domain-aware output controls, and tamper-evident telemetry. The ungoverned path is retained as the experimental control.
 
 > Project status: launch hardening and analytical presentation. The core execution paths, six paired datasets, telemetry, integrity chain, Railway backend, Vercel UI and deterministic comparative analytics are operational. Remaining work is primarily database-level hardening, final production verification, a post-metadata smoke run, additional data views, cleanup and public-repository synchronization.
@@ -17,18 +15,6 @@ Coding, programming, data propagation, automation, orchestration and other opera
 Analytics and auditing were selected because they are pivotal business functions across the chosen domains and provide repeatable conditions for evaluating runtime behavior. These workflows require models to interpret structured data, operate within defined roles, access bounded resources, use evidence, comply with policy and produce controlled outputs.
 
 For this phase of the platform, that narrower task surface provides a more viable way to observe and compare role binding, scoped data access, policy enforcement, egress controls, telemetry and integrity under governed and ungoverned execution. The Arena therefore demonstrates runtime-governance capabilities **within the tested analytics and auditing scope**. It does not claim to represent every enterprise AI workload.
-
-## T2 governed agent surfaces
-
-The current interface also exposes a separate T2 test harness through the Arena proxy. It contains bounded agent surfaces for:
-
-- coding assistance with editor-only revision output and no local execution or deployment;
-- medical operations analysis with authorized dataset access, deterministic validation and bounded charts;
-- financial risk analysis without approval or transaction authority;
-- logistics management analysis without end-to-end ERP/CRM authority;
-- aviation/travel analysis within its declared data scope.
-
-Each surface has a fixed role, declared capabilities, a server-controlled model allowlist, scoped session state and telemetry. The evaluator reports governance-function results; it does not certify the system or replace independent assessment. Some surfaces remain active development/test interfaces rather than production claims.
 
 ## Experimental methodology
 
@@ -275,22 +261,6 @@ From a governance-reliability perspective, UAT should exercise visible state and
 From an audit perspective, UAT observations should be correlated with the corresponding runtime evidence where available, including request or event identifiers, policy outcomes, telemetry, integrity status, and timestamps. This connects what the user observed at the interface to what the governed runtime recorded. A successful UAT result therefore supports both usability and control effectiveness, while any mismatch between visible behavior and recorded evidence is treated as a governance defect requiring investigation.
 
 UAT does not replace automated security, policy, or integrity testing. It provides the human-facing verification layer needed to assess whether implemented controls are understandable, repeatable, recoverable, and auditable in actual use.
-
-## Standards alignment documentation
-
-The public repository includes ISO alignment and assessment material for CV 1.1 and Agentic Arena:
-
-| Standard / framework | Documentation and scope |
-| --- | --- |
-| ISO/IEC 42001:2023 | [AIMS implementation and audit map](ui/public/docs/cv11-iso-iec-42001-aims-implementation-audit-map-claim-free.txt) and [CV 1.1 working document](ui/public/cv11-iso42001-working-document.txt), documenting management-system assessment mapping, runtime controls, evidence and audit considerations. |
-| ISO/IEC 27001:2022 | Referenced in the [alignment registry](app/regulatory_alignment.py) for information-security management covering confidentiality, integrity and availability. |
-| ISO/IEC 23894:2023 | Referenced in the [alignment registry](app/regulatory_alignment.py) for AI risk management. |
-| ISO/IEC 27701:2025 | Referenced in the [alignment registry](app/regulatory_alignment.py) for privacy information management. |
-| SOC 2 | A dedicated Trust Services Criteria alignment crosswalk is not currently included in this public repository. |
-
-The [CV 1.1 contract register and Agentic Arena crosswalk](ui/public/docs/cv11-full-contract-register-agentic-arena-crosswalk.txt) describes the runtime contracts and their relationship to the application.
-
-These materials document alignment, implementation context and assessment mapping. They do not claim ISO certification, verified conformity, a SOC 2 examination or a SOC 2 attestation report. The ISO 27001, 23894 and 27701 registry references are scope descriptions rather than complete clause-by-clause control mappings.
 
 ## Deployment and testing
 

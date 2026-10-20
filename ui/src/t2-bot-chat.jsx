@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 export const T2_BOT_DEFINITIONS = Object.freeze({
-  t2_coding: { key: "t2_coding", label: "Coding Assistant", domain: "coding", functionKey: "coding_assistant", systemId: 0, role: "coding_assistant", objective: "Generate source revisions in the editor while preserving the current file's behavior and structure.", capabilities: ["state.read"] },
-  t2_medical: { key: "t2_medical", label: "Medical Analyst / Assistant", domain: "healthcare", functionKey: "analyst", systemId: 3, role: "medical_analyst_assistant", objective: "Explain general medical topics, support medical coding workflows, and analyze authorized healthcare operations evidence.", capabilities: ["state.read", "dataset.read", "dataset.aggregate", "healthcare.operational_metrics", "data.validate", "arithmetic.verify"] },
-  t2_financial: { key: "t2_financial", label: "Financial Risk Analyst", domain: "finance", functionKey: "analyst", systemId: 1, role: "financial_risk_analyst", objective: "Analyze authorized financial activity and risk indicators without approving or executing financial actions.", capabilities: ["state.read", "dataset.read", "dataset.aggregate", "data.validate", "arithmetic.verify"] },
-  t2_logistics: { key: "t2_logistics", label: "Logistics Management Analyst / Assistant", domain: "supply_chain", functionKey: "analyst", systemId: 6, role: "logistics_management_analyst_assistant", objective: "Analyze distinct ERP, CRM, LMS, and logistics evidence to support bounded scheduling and routing decisions.", capabilities: ["state.read", "logistics.schedule_plan", "logistics.route_concern", "enterprise.cross_reference", "data.validate", "arithmetic.verify"] },
-  t2_aviation: { key: "t2_aviation", label: "Aviation Travel Assistant", domain: "aviation", functionKey: "travel_agent", systemId: 5, role: "airline_travel_assistant", objective: "Search current travel options and compare price listings without booking, payment, or transaction authority.", capabilities: ["state.read", "travel.search", "travel.price_list"] },
-  t2_execution: { key: "t2_execution", label: "Regulatory Framework", domain: "coding", functionKey: "coding_assistant", systemId: 0, role: "execution_pass", objective: "Develop and test the regulatory framework surface, control mappings, and bounded execution requirements.", capabilities: ["state.read", "data.validate", "arithmetic.verify", "execution.writeback"], note: "This surface uses the Agent Benchmark coding execution target until a dedicated execution-pass role is exposed by the backend registry." },
+  t2_coding: { key: "t2_coding", interfaceLabel: "coding agent", label: "Coding Assistant", domain: "coding", functionKey: "coding_assistant", systemId: 0, role: "coding_assistant", objective: "Generate source revisions in the editor while preserving the current file's behavior and structure.", capabilities: ["state.read"] },
+  t2_medical: { key: "t2_medical", interfaceLabel: "medical analyst / assistant", label: "Medical Analyst / Assistant", domain: "healthcare", functionKey: "analyst", systemId: 3, role: "medical_analyst_assistant", objective: "Explain general medical topics, support medical coding workflows, and analyze authorized healthcare operations evidence.", capabilities: ["state.read", "dataset.read", "dataset.aggregate", "healthcare.operational_metrics", "data.validate", "arithmetic.verify"] },
+  t2_financial: { key: "t2_financial", interfaceLabel: "financial risk analyst", label: "Financial Risk Analyst", domain: "finance", functionKey: "analyst", systemId: 1, role: "financial_risk_analyst", objective: "Analyze authorized financial activity and risk indicators without approving or executing financial actions.", capabilities: ["state.read", "dataset.read", "dataset.aggregate", "data.validate", "arithmetic.verify"] },
+  t2_logistics: { key: "t2_logistics", interfaceLabel: "logistics management analyst / assistant", label: "Logistics Management Analyst / Assistant", domain: "supply_chain", functionKey: "analyst", systemId: 6, role: "logistics_management_analyst_assistant", objective: "Analyze distinct ERP, CRM, LMS, and logistics evidence to support bounded scheduling and routing decisions.", capabilities: ["state.read", "dataset.read", "dataset.aggregate", "logistics.schedule_plan", "logistics.route_concern", "enterprise.cross_reference", "inventory.plan", "data.validate", "arithmetic.verify"] },
+  t2_aviation: { key: "t2_aviation", interfaceLabel: "aviation customer service", label: "Avia — Aviation Customer Service", domain: "aviation", functionKey: "travel_agent", systemId: 5, role: "airline_travel_assistant", objective: "Represent the company in bounded aviation customer-service workflows with live search, calendar planning, authoritative guidance, and secure external handoffs.", capabilities: ["state.read", "travel.search", "travel.price_list", "travel.calendar", "travel.fare_estimate", "travel.regulatory_info", "travel.booking_handoff", "travel.payment_handoff"] },
+  t2_execution: { key: "t2_execution", interfaceLabel: "regulatory framework", label: "Regulatory Framework", domain: "coding", functionKey: "coding_assistant", systemId: 0, role: "execution_pass", objective: "Develop and test the regulatory framework surface, control mappings, and bounded execution requirements.", capabilities: ["state.read", "data.validate", "arithmetic.verify", "execution.writeback"], note: "This surface uses the Agent Benchmark coding execution target until a dedicated execution-pass role is exposed by the backend registry." },
 });
 
 export const T2_BOT_KEYS = Object.freeze(Object.keys(T2_BOT_DEFINITIONS));
@@ -84,7 +84,9 @@ const APPROVED_MODEL_LABELS = Object.freeze({
   gpt_5_5: "GPT-5.5",
   mercury_2_5: "Mercury 2.5",
   llama_4_maverick: "Llama 4 Maverick",
+  granite_4_2_8b: "Granite 4.2 8B",
 });
+const AVIA_MODEL_KEY = "ling";
 
 function approvedModelLabel(key) {
   return APPROVED_MODEL_LABELS[key] || key;
@@ -208,6 +210,13 @@ function CodeEditor({ onAttach, onGenerate, modelOptions, modelKey, onModelChang
   </section>;
 }
 
+function displayMessageContent(value) {
+  return String(value ?? "")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+}
+
 function resultText(result) {
   if (!result) return "No runtime result returned.";
   if (typeof result.reply === "string") return result.reply;
@@ -220,7 +229,12 @@ function resultText(result) {
 }
 
 function greeting(bot) {
-  return bot.label + " ready. What would you like to work on?";
+  return bot.key === "t2_aviation" ? "" : bot.label + " ready. What would you like to work on?";
+}
+
+function initialHistory(bot) {
+  const content = greeting(bot);
+  return content ? [{ role: "assistant", content }] : [];
 }
 
 function looksLikeCodeRequest(prompt) {
@@ -355,7 +369,7 @@ function BenchmarkEvaluatorBox({ evaluation, evaluating, error }) {
   const stateClass = verdict ? " " + verdict.toLowerCase() : "";
   return <section className={"t2-evaluator-box" + stateClass} aria-label="Governance benchmark evaluator">
     <div className="t2-evaluator-head">
-      <div><strong>Governance benchmark evaluator</strong><span>Governance functions only · evaluator cannot modify the benchmark</span></div>
+      <div><strong>Governance benchmark evaluator</strong><span>Governance + read-only dataset verification · evaluator cannot modify the benchmark</span></div>
       <span className="t2-evaluator-verdict">{evaluating ? "Evaluating…" : verdict || "Awaiting run"}</span>
     </div>
     {error && <div className="t2-evaluator-reason">{error}</div>}
@@ -372,40 +386,54 @@ function BenchmarkEvaluatorBox({ evaluation, evaluating, error }) {
         <div><span>Unsupported claims</span><strong>{Number(evaluation.unsupported_claims || 0)}</strong></div>
         <div><span>Contradictions</span><strong>{Number(evaluation.contradictions || 0)}</strong></div>
         <div><span>Evaluator latency</span><strong>{Number(evaluation.evaluator_latency_ms || 0).toLocaleString()} ms</strong></div>
-        <div className="t2-evaluator-model"><span>Evaluator model</span><strong>{evaluation.evaluator_model_id || "Configured GPT-5.6"}</strong></div>
+        <div className="t2-evaluator-model"><span>Evaluator model</span><strong>{evaluation.evaluator_model_id || "Mistral Small 4"}</strong></div>
       </div>
     </>}
   </section>;
 }
 
-function MedicalVisualizationWorkspace({ onRequest, disabled, hasCharts }) {
-  const requests = [
+function MedicalVisualizationWorkspace({ botKey, onRequest, disabled, hasCharts }) {
+  const financial = botKey === "t2_financial";
+  const logistics = botKey === "t2_logistics";
+  const requests = financial ? [
+    ["Loan status", "Create a chart of loan applications by loan status using the authorized financial dataset."],
+    ["Risk tolerance", "Create a chart of customers by risk tolerance using the authorized financial dataset."],
+    ["Build dashboard", "Analyze the authorized financial dataset and build the bounded finance dashboard with loan-status and risk-tolerance charts."],
+  ] : logistics ? [
+    ["Shipment status", "Create a chart of shipments by status using the authorized logistics dataset."],
+    ["Carrier volume", "Create a chart of shipments by carrier using the authorized logistics dataset."],
+    ["Retail ship modes", "Create a chart of retail orders by ship mode using the authorized retail dataset."],
+    ["Build dashboard", "Analyze the authorized logistics and retail datasets and build the bounded logistics dashboard with shipment-status, carrier-volume, and retail fulfillment charts."],
+  ] : [
     ["Patient volume", "Create a chart of patient encounter volume by department referral using the authorized medical dataset."],
     ["Wait times", "Create a chart of average patient wait time by department referral using the authorized medical dataset."],
     ["Satisfaction", "Create a chart of average patient satisfaction by department referral using the authorized medical dataset."],
     ["Build dashboard", "Analyze the authorized medical dataset and build the bounded healthcare operations dashboard with encounter volume, wait-time, and satisfaction charts."],
   ];
-  return <section className="medical-visual-workspace" aria-label="Medical data visualization workspace">
+  return <section className="medical-visual-workspace" aria-label="Data visualization workspace">
     <div className="medical-visual-head">
       <div>
-        <strong>Medical data visualization</strong>
-        <span>Read-only medical dataset · MCP-bounded aggregates · arithmetic verified</span>
+        <strong>{financial ? "Financial data visualization" : logistics ? "Logistics data visualization" : "Medical data visualization"}</strong>
+        <span>{financial ? "Read-only financial dataset · MCP-bounded aggregates · arithmetic verified" : logistics ? "Read-only logistics + retail datasets · MCP-bounded aggregates · arithmetic verified" : "Read-only medical dataset · MCP-bounded aggregates · arithmetic verified"}</span>
       </div>
       <span className="medical-data-access">Read access</span>
     </div>
     <div className="medical-visual-actions">
       {requests.map(([label, prompt]) => <button className={label === "Build dashboard" ? "primary" : "ghost"} key={label} disabled={disabled} onClick={() => onRequest(prompt)}>{label}</button>)}
     </div>
-    <div className="medical-visual-status">{hasCharts ? "Verified charts generated from the latest bounded medical-data run." : "Choose a bounded visualization to generate verified charts from the medical dataset."}</div>
+    <div className="medical-visual-status">{hasCharts ? "Verified charts generated from the latest bounded data run." : "Choose a bounded visualization to generate verified charts from the authorized dataset."}</div>
   </section>;
 }
 
-function MedicalDataVerification({ verification }) {
+function MedicalDataVerification({ botKey, verification }) {
   if (!verification) return null;
   const arithmeticResults = Array.isArray(verification?.arithmetic?.results) ? verification.arithmetic.results : [];
+  const arithmeticNames = botKey === "t2_financial"
+    ? ["Loan-status totals reconcile", "Risk-tolerance totals reconcile"]
+    : ["Encounter totals reconcile", "Wait-time weighted average reconciles", "Satisfaction weighted average reconciles"];
   const checks = [
     ...arithmeticResults.map((item, index) => ({
-      name: index === 0 ? "Encounter totals reconcile" : index === 1 ? "Wait-time weighted average reconciles" : "Satisfaction weighted average reconciles",
+      name: arithmeticNames[index] || "Bounded arithmetic check",
       passed: Boolean(item.passed),
     })),
     ...(Array.isArray(verification.checks) ? verification.checks : []),
@@ -413,7 +441,7 @@ function MedicalDataVerification({ verification }) {
   const passed = verification.status === "passed";
   return <section className={"medical-verification " + (passed ? "passed" : "failed")} aria-label="Medical data verification">
     <div className="medical-verification-head">
-      <div><strong>Database verification</strong><span>Read-only source reconciliation</span></div>
+      <div><strong>{botKey === "t2_financial" ? "Financial database verification" : botKey === "t2_logistics" ? "Logistics and retail database verification" : "Database verification"}</strong><span>Read-only source reconciliation</span></div>
       <span className="medical-verification-status">{passed ? "Verified" : "Failed"}</span>
     </div>
     <div className="medical-verification-checks">{checks.map((check, index) =>
@@ -425,11 +453,11 @@ function MedicalDataVerification({ verification }) {
   </section>;
 }
 
-function MedicalAnalysisCharts({ charts }) {
+function MedicalAnalysisCharts({ botKey, charts }) {
   if (!Array.isArray(charts) || !charts.length) return null;
   return <section className="medical-analysis-charts" aria-label="Medical analyst charts">
     <div className="t2-telemetry-head">
-      <strong>Healthcare operations charts</strong>
+      <strong>{botKey === "t2_financial" ? "Financial analysis charts" : botKey === "t2_logistics" ? "Logistics and retail analysis charts" : "Healthcare operations charts"}</strong>
       <span>Bounded read-only aggregates</span>
     </div>
     <div className="medical-chart-grid">{charts.map((chart) => {
@@ -487,12 +515,268 @@ function ModelTelemetry({ modelKey, latest, history, latestByModel, error }) {
   </section>;
 }
 
+
+const DOMESTIC_MAJOR_AIRPORTS = Object.freeze([
+  ["ATL", "Atlanta — Hartsfield-Jackson"],
+  ["AUS", "Austin — Austin-Bergstrom"],
+  ["BNA", "Nashville — Nashville International"],
+  ["BOS", "Boston — Logan International"],
+  ["BWI", "Baltimore/Washington — BWI"],
+  ["CLE", "Cleveland — Hopkins International"],
+  ["CLT", "Charlotte — Douglas International"],
+  ["CVG", "Cincinnati — Northern Kentucky"],
+  ["DCA", "Washington, DC — Reagan National"],
+  ["DEN", "Denver — International"],
+  ["DFW", "Dallas/Fort Worth — International"],
+  ["DTW", "Detroit — Metropolitan"],
+  ["EWR", "Newark — Liberty International"],
+  ["FLL", "Fort Lauderdale — Hollywood International"],
+  ["HNL", "Honolulu — Daniel K. Inouye International"],
+  ["HOU", "Houston — Hobby"],
+  ["IAD", "Washington, DC — Dulles International"],
+  ["IAH", "Houston — George Bush Intercontinental"],
+  ["IND", "Indianapolis — International"],
+  ["JFK", "New York — John F. Kennedy International"],
+  ["LAS", "Las Vegas — Harry Reid International"],
+  ["LAX", "Los Angeles — International"],
+  ["LGA", "New York — LaGuardia"],
+  ["MCI", "Kansas City — International"],
+  ["MCO", "Orlando — International"],
+  ["MDW", "Chicago — Midway"],
+  ["MEM", "Memphis — International"],
+  ["MIA", "Miami — International"],
+  ["MKE", "Milwaukee — Mitchell International"],
+  ["MSP", "Minneapolis/St. Paul — International"],
+  ["MSY", "New Orleans — Louis Armstrong International"],
+  ["OAK", "Oakland — International"],
+  ["ORD", "Chicago — O'Hare International"],
+  ["PDX", "Portland — International"],
+  ["PHL", "Philadelphia — International"],
+  ["PHX", "Phoenix — Sky Harbor International"],
+  ["PIT", "Pittsburgh — International"],
+  ["RDU", "Raleigh-Durham — International"],
+  ["SAN", "San Diego — International"],
+  ["SEA", "Seattle — Tacoma International"],
+  ["SFO", "San Francisco — International"],
+  ["SJC", "San Jose — International"],
+  ["SLC", "Salt Lake City — International"],
+  ["SMF", "Sacramento — International"],
+  ["STL", "St. Louis — Lambert International"],
+  ["TPA", "Tampa — International"],
+]);
+
+function normalizedAirportText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function flightSearchLocation(value) {
+  const cleaned = String(value || "").trim();
+  if (/^[A-Za-z]{3}$/.test(cleaned)) return cleaned.toUpperCase();
+  const normalized = normalizedAirportText(cleaned);
+  const matches = DOMESTIC_MAJOR_AIRPORTS.filter(([_code, label]) => {
+    const city = normalizedAirportText(label.split("—")[0]);
+    return normalized === city || normalized.startsWith(city + " ") || city.startsWith(normalized + " ");
+  });
+  if (!matches.length) return cleaned;
+  return cleaned + " (" + matches.map(([code]) => code).join(",") + ")";
+}
+
+function isoDateLocal(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
+const AVIA_DATE_CONFIRMATION_PROMPT = "Can you please confirm the departure date and return date, whether this is one way or round trip, and whether non-stop is preferred?";
+
+function inferredFlightDate(prompt) {
+  const isoMatch = String(prompt).match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);
+  if (isoMatch) return isoMatch[0];
+
+  const monthMatch = String(prompt).match(/\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+(\d{1,2})(?:,?\s+(20\d{2}))?\b/i);
+  if (!monthMatch) return "";
+  const parsed = new Date(monthMatch[1] + " " + monthMatch[2] + ", " + (monthMatch[3] || new Date().getFullYear()) + " 12:00:00");
+  if (Number.isNaN(parsed.getTime())) return "";
+  if (!monthMatch[3]) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (parsed < today) parsed.setFullYear(parsed.getFullYear() + 1);
+  }
+  return isoDateLocal(parsed);
+}
+
+function cleanRoutePoint(value, destination = false) {
+  let cleaned = String(value || "").trim();
+  if (destination) {
+    cleaned = cleaned.replace(
+      /\s+(?:one[ -]?way|round[ -]?trip|non[ -]?stop|direct|adult|adults|passenger|passengers|economy|premium[ -]?economy|business|first(?: class)?|departing|leaving|on|for|January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\b[\s\S]*$/i,
+      "",
+    );
+  }
+  return cleaned.replace(/^[,;:\s]+|[,;:.!?\s]+$/g, "").replace(/\s+area$/i, "").trim();
+}
+
+function inferredFlightRoute(prompt) {
+  const normalized = String(prompt).replace(/\s+/g, " ").trim();
+  const fromMatch = normalized.match(/\bfrom\s+(.+?)\s+to\s+(.+)$/i);
+  if (fromMatch) {
+    return {
+      origin: cleanRoutePoint(fromMatch[1]),
+      destination: cleanRoutePoint(fromMatch[2], true),
+    };
+  }
+  const withoutRequest = normalized.replace(/^.*?\b(?:flight|flights|fare|fares|ticket|tickets)\b[,:]?\s*/i, "");
+  const cityPair = withoutRequest.match(/^(.+?)\s+to\s+(.+)$/i);
+  return {
+    origin: cleanRoutePoint(cityPair?.[1]),
+    destination: cleanRoutePoint(cityPair?.[2], true),
+  };
+}
+
+function inferredCabin(prompt) {
+  const normalized = String(prompt).toLowerCase();
+  if (/\bpremium[ -]?economy\b/.test(normalized)) return "premium_economy";
+  if (/\bbusiness(?: class)?\b/.test(normalized)) return "business";
+  if (/\bfirst(?: class)?\b/.test(normalized)) return "first";
+  if (/\beconomy(?: class)?\b/.test(normalized)) return "economy";
+  return "economy";
+}
+
+const AVIA_CABIN_LABELS = Object.freeze({
+  economy: "Economy",
+  premium_economy: "Premium Economy",
+  business: "Business",
+  first: "First",
+});
+
+function createAviaDraft(prompt) {
+  const route = inferredFlightRoute(prompt);
+  const roundTrip = /\b(round[ -]?trip|return(?:ing)?|coming back)\b/i.test(prompt);
+  return {
+    sourcePrompt: prompt,
+    origin: route.origin,
+    destination: route.destination,
+    departDate: inferredFlightDate(prompt),
+    returnDate: "",
+    tripType: roundTrip ? "round_trip" : /\b(one[ -]?way)\b/i.test(prompt) ? "one_way" : "",
+    nonstop: /\b(non[ -]?stop|direct flight)\b/i.test(prompt),
+    cabin: inferredCabin(prompt),
+  };
+}
+
+function isFlightLookupRequest(prompt) {
+  const text = String(prompt || "").trim();
+  // Item-transport questions must reach Avia's TSA referral before itinerary collection.
+  const itemTransportRequest = /\b(?:weapons?|knives|knife|guns?|firearms?|handguns?|pistols?|rifles?|shotguns?|pew[\s-]*pews?|brass[\s-]+knuckles?|razors?|razor[\s-]+blades?|scissors|ammunition|ammo|bullets?|box[\s-]+cutters?|switchblades?|tasers?|stun[\s-]+guns?)\b/i.test(text);
+  if (itemTransportRequest) return false;
+  const flightRequest = /\b(flight|flights|fare|fares|fly|ticket|tickets)\b/i.test(text) && /\b(from|to|depart|leav|return)\w*\b/i.test(text);
+  const calendarRequest = /\b(calendar|date picker|travel dates|departure date|return date)\b/i.test(text);
+  const route = inferredFlightRoute(text);
+  const routeRequest = Boolean(route.origin && route.destination) && !/[?]/.test(text);
+  return flightRequest || calendarRequest || routeRequest;
+}
+
+function AviaCalendar({ departDate, returnDate, target, onSelect }) {
+  const initialDate = departDate ? new Date(departDate + "T12:00:00") : new Date();
+  const [monthDate, setMonthDate] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  useEffect(() => {
+    if (!departDate) return;
+    const next = new Date(departDate + "T12:00:00");
+    setMonthDate(new Date(next.getFullYear(), next.getMonth(), 1));
+  }, [departDate]);
+
+  const monthLabel = monthDate.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1 - firstDay.getDay());
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    return day;
+  });
+
+  return <div className="avia-calendar" aria-label="Avia schedule calendar">
+    <div className="avia-calendar-head">
+      <button type="button" className="ghost small-button" aria-label="Previous month" onClick={() => setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}>←</button>
+      <strong>{monthLabel}</strong>
+      <button type="button" className="ghost small-button" aria-label="Next month" onClick={() => setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}>→</button>
+    </div>
+    <div className="avia-calendar-weekdays" aria-hidden="true">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span key={day}>{day}</span>)}</div>
+    <div className="avia-calendar-grid">
+      {days.map((day) => {
+        const key = isoDateLocal(day);
+        const inMonth = day.getMonth() === monthDate.getMonth();
+        const selectedDepart = key === departDate;
+        const selectedReturn = key === returnDate;
+        const inRange = departDate && returnDate && key > departDate && key < returnDate;
+        return <button type="button" key={key} onClick={() => onSelect(key)} className={"avia-calendar-day" + (inMonth ? "" : " outside") + (selectedDepart ? " depart" : "") + (selectedReturn ? " return" : "") + (inRange ? " in-range" : "")} aria-label={key + (selectedDepart ? " departure" : selectedReturn ? " return" : "")}>{day.getDate()}</button>;
+      })}
+    </div>
+    <div className="avia-calendar-legend"><span><i className="depart-dot" />Depart</span><span><i className="return-dot" />Return</span><span>Selecting: {target === "return" ? "return date" : "departure date"}</span></div>
+  </div>;
+}
+
+function AviaDateConfirmation({ draft, calendarTarget, onTargetChange, onChange, onConfirm, onReject, disabled }) {
+  const complete = Boolean(draft.origin && draft.destination && draft.departDate && draft.tripType && (draft.tripType === "one_way" || draft.returnDate));
+  return <section className="avia-confirmation" aria-label="Confirm Avia travel dates">
+    <div className="eyebrow">Flight date confirmation</div>
+    <h3>{AVIA_DATE_CONFIRMATION_PROMPT}</h3>
+    <div className="avia-route-grid">
+      <label>From<input value={draft.origin} onChange={(event) => onChange({ origin: event.target.value })} placeholder="Airport or city" /></label>
+      <label>To<input value={draft.destination} onChange={(event) => onChange({ destination: event.target.value })} placeholder="Airport or city" /></label>
+    </div>
+    <div className="avia-choice-row" role="group" aria-label="Trip type">
+      <button type="button" className={draft.tripType === "one_way" ? "primary" : "ghost"} onClick={() => onChange({ tripType: "one_way", returnDate: "" })}>One way</button>
+      <button type="button" className={draft.tripType === "round_trip" ? "primary" : "ghost"} onClick={() => { onChange({ tripType: "round_trip" }); onTargetChange("return"); }}>Round trip</button>
+      <label className="avia-nonstop"><input type="checkbox" checked={draft.nonstop} onChange={(event) => onChange({ nonstop: event.target.checked })} /> Non-stop preferred</label>
+      <label className="avia-cabin">Cabin class
+        <select value={draft.cabin} onChange={(event) => onChange({ cabin: event.target.value })} aria-label="Cabin class">
+          {Object.entries(AVIA_CABIN_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </label>
+    </div>
+    <div className="avia-date-fields">
+      <label className={calendarTarget === "depart" ? "active" : ""}>Departure
+        <input type="date" value={draft.departDate} onFocus={() => onTargetChange("depart")} onChange={(event) => onChange({ departDate: event.target.value })} />
+      </label>
+      {draft.tripType === "round_trip" && <label className={calendarTarget === "return" ? "active" : ""}>Return
+        <input type="date" min={draft.departDate || undefined} value={draft.returnDate} onFocus={() => onTargetChange("return")} onChange={(event) => onChange({ returnDate: event.target.value })} />
+      </label>}
+    </div>
+    <AviaCalendar departDate={draft.departDate} returnDate={draft.returnDate} target={calendarTarget} onSelect={(date) => onChange(calendarTarget === "return" && draft.tripType === "round_trip" ? { returnDate: date } : { departDate: date })} />
+    <div className="avia-confirm-actions">
+      <button type="button" className="ghost" onClick={onReject} disabled={disabled}>No, revise</button>
+      <button type="button" className="primary" onClick={onConfirm} disabled={disabled || !complete}>Yes, confirm dates</button>
+    </div>
+  </section>;
+}
+
+function AviaBookingOffer({ onAccept, onDecline }) {
+  return <section className="avia-booking-offer" aria-label="Avia booking offer">
+    <div><strong>Continue to booking?</strong><span>Avia will open the secure-payment handoff demonstration. No payment information is collected.</span></div>
+    <div className="button-row"><button type="button" className="ghost" onClick={onDecline}>No</button><button type="button" className="primary" onClick={onAccept}>Yes, continue</button></div>
+  </section>;
+}
+
+function AviaPaymentHandoff({ onBack }) {
+  return <main className="avia-payment-page" aria-label="Avia secure payment handoff demonstration">
+    <section className="avia-payment-card">
+      <div className="eyebrow">Secure payment handoff demonstration</div>
+      <h2>Thank you for testing Avia the Aviation Customer Service Agent.</h2>
+      <p>If this were a customer service facing agent the link would be sent to a secure payment method where no AI would be used or have access to sensitive information.</p>
+      <div className="avia-payment-boundary"><strong>No payment information is requested or processed on this page.</strong></div>
+      <button type="button" className="ghost" onClick={onBack}>Return to Avia</button>
+    </section>
+  </main>;
+}
+
+
 export default function T2BotChat({ botKey }) {
   const bot = T2_BOT_DEFINITIONS[botKey] || T2_BOT_DEFINITIONS.t2_execution;
   const [models, setModels] = useState([]);
   const [modelKey, setModelKey] = useState("");
   const [session, setSession] = useState(null);
-  const [history, setHistory] = useState(() => [{ role: "assistant", content: greeting(bot) }]);
+  const [history, setHistory] = useState(() => initialHistory(bot));
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -510,6 +794,18 @@ export default function T2BotChat({ botKey }) {
   const [benchmarkEvaluation, setBenchmarkEvaluation] = useState(null);
   const [benchmarkEvaluating, setBenchmarkEvaluating] = useState(false);
   const [benchmarkEvaluationError, setBenchmarkEvaluationError] = useState("");
+  const [aviaDraft, setAviaDraft] = useState(null);
+  const [aviaCalendarTarget, setAviaCalendarTarget] = useState("depart");
+  const [aviaBookingOffer, setAviaBookingOffer] = useState(false);
+  const [aviaPaymentScreen, setAviaPaymentScreen] = useState(() => typeof window !== "undefined" && new URL(window.location.href).searchParams.get("avia") === "payment");
+
+  useEffect(() => {
+    function syncAviaPage() {
+      setAviaPaymentScreen(new URL(window.location.href).searchParams.get("avia") === "payment");
+    }
+    window.addEventListener("popstate", syncAviaPage);
+    return () => window.removeEventListener("popstate", syncAviaPage);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -530,7 +826,7 @@ export default function T2BotChat({ botKey }) {
 
   useEffect(() => {
     setSession(null);
-    setHistory([{ role: "assistant", content: greeting(bot) }]);
+    setHistory(initialHistory(bot));
     setMessage("");
     setError("");
     setTelemetry(null);
@@ -542,12 +838,17 @@ export default function T2BotChat({ botKey }) {
     setBenchmarkEvaluation(null);
     setBenchmarkEvaluating(false);
     setBenchmarkEvaluationError("");
-    if (botKey === "t2_coding" || botKey === "t2_medical") refreshTelemetry();
+    setAviaDraft(null);
+    setAviaCalendarTarget("depart");
+    setAviaBookingOffer(false);
+    if (botKey !== "t2_aviation") setAviaPaymentScreen(false);
+    if (botKey === "t2_aviation") setModelKey(AVIA_MODEL_KEY);
+    if (botKey === "t2_coding" || botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics" || botKey === "t2_aviation") refreshTelemetry();
   }, [botKey]);
 
   const modelOptions = useMemo(() => {
     const available = models.length ? models : [modelKey || "ling"];
-    return botKey === "t2_coding" ? available.filter((key) => key !== "gpt_5_6_luna") : available;
+    return available.filter((key) => key !== "granite_4_2_8b" && (botKey !== "t2_coding" || key !== "gpt_5_6_luna"));
   }, [models, modelKey, botKey]);
 
   useEffect(() => {
@@ -558,7 +859,7 @@ export default function T2BotChat({ botKey }) {
   }, [botKey, modelKey, modelOptions]);
 
   async function refreshTelemetry(sessionId) {
-    if (!sessionId && botKey !== "t2_coding" && botKey !== "t2_medical") {
+    if (!sessionId && botKey !== "t2_coding" && botKey !== "t2_medical" && botKey !== "t2_financial" && botKey !== "t2_logistics" && botKey !== "t2_aviation") {
       setTelemetry(null);
       setTelemetryHistory([]);
       setLatestByModel({});
@@ -566,7 +867,17 @@ export default function T2BotChat({ botKey }) {
       return;
     }
     try {
-      const telemetryPath = sessionId ? "/api/v1/sessions/" + sessionId + "/telemetry" : botKey === "t2_medical" ? "/api/v1/telemetry/latest/medical" : "/api/v1/telemetry/latest";
+      const telemetryPath = sessionId
+        ? "/api/v1/sessions/" + sessionId + "/telemetry"
+        : botKey === "t2_medical"
+          ? "/api/v1/telemetry/latest/medical"
+          : botKey === "t2_financial"
+            ? "/api/v1/telemetry/latest/financial"
+            : botKey === "t2_logistics"
+              ? "/api/v1/telemetry/latest/logistics"
+            : botKey === "t2_aviation"
+              ? "/api/v1/telemetry/latest/avia"
+              : "/api/v1/telemetry/latest";
       const payload = await t2Request(telemetryPath);
       setTelemetry(payload?.latest || null);
       setTelemetryHistory(Array.isArray(payload?.items) ? payload.items : []);
@@ -586,12 +897,13 @@ export default function T2BotChat({ botKey }) {
   }
 
   async function createSession() {
-    const body = { domain: bot.domain, model_key: modelKey || "gpt_5_5", path: "Gov", scenario_id: "t2-" + bot.key + "-" + Date.now(), function_key: bot.functionKey, workload: "agentic", system_id: bot.systemId };
+    const body = { domain: bot.domain, model_key: botKey === "t2_aviation" ? AVIA_MODEL_KEY : modelKey || "gpt_5_5", path: "Gov", scenario_id: "t2-" + bot.key + "-" + Date.now(), function_key: bot.functionKey, workload: "agentic", system_id: bot.systemId };
     const created = await t2Request("/api/v1/sessions", { method: "POST", body });
     setSession(created);
     await refreshTelemetry(created.session_id);
     return created;
   }
+
 
   async function evaluateBenchmark(sessionId, prompt, response) {
     if (!sessionId || !prompt?.trim() || !response?.trim()) return;
@@ -599,7 +911,12 @@ export default function T2BotChat({ botKey }) {
     setBenchmarkEvaluation(null);
     setBenchmarkEvaluationError("");
     try {
-      const evaluation = await t2Request("/api/v1/sessions/" + sessionId + "/evaluation", {
+      const evaluatorKey = {
+        t2_coding: "coding", t2_medical: "medical", t2_financial: "financial",
+        t2_logistics: "logistics", t2_aviation: "avia",
+      }[botKey];
+      if (!evaluatorKey) throw new Error("No evaluator endpoint is configured for this agent.");
+      const evaluation = await t2Request("/api/v1/evaluators/" + evaluatorKey + "/sessions/" + sessionId + "/evaluate", {
         method: "POST",
         body: { prompt, response },
       });
@@ -708,6 +1025,53 @@ export default function T2BotChat({ botKey }) {
     }
   }
 
+  async function confirmAviaDates() {
+    if (!aviaDraft || sending) return;
+    setSending(true);
+    setError("");
+    const tripDescription = aviaDraft.tripType === "round_trip"
+      ? "round trip, departing " + aviaDraft.departDate + " and returning " + aviaDraft.returnDate
+      : "one way, departing " + aviaDraft.departDate;
+    const confirmedPrompt = "Search live flights from " + flightSearchLocation(aviaDraft.origin) + " to " + flightSearchLocation(aviaDraft.destination) + " for a " + tripDescription + ". Resolve each location to the appropriate IATA airport code or codes before calling travel.search. Cabin class: " + AVIA_CABIN_LABELS[aviaDraft.cabin] + ". " + (aviaDraft.nonstop ? "Non-stop flights are preferred." : "Non-stop is not required.");
+    setHistory((items) => [...items, { role: "user", content: "Yes — " + confirmedPrompt }]);
+    try {
+      const activeSession = session || await createSession();
+      const result = await t2Request("/api/v1/sessions/" + activeSession.session_id + "/turns", { method: "POST", body: { message: confirmedPrompt } });
+      await refreshTelemetry(activeSession.session_id);
+      const responseText = resultText(result);
+      setHistory((items) => [...items, { role: "assistant", content: responseText }]);
+      await evaluateBenchmark(activeSession.session_id, confirmedPrompt, responseText);
+      setAviaDraft(null);
+      setAviaBookingOffer(result.status !== "auto_reset" && result.status !== "refused");
+      if (result.status === "auto_reset") setSession(null);
+    } catch (err) {
+      setError(err?.message || "Avia could not complete the confirmed flight search.");
+      setHistory((items) => [...items, { role: "assistant", content: "The confirmed flight search did not complete." }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function rejectAviaDates() {
+    setHistory((items) => [...items, { role: "user", content: "No — I need to revise the trip details." }, { role: "assistant", content: AVIA_DATE_CONFIRMATION_PROMPT }]);
+    setAviaCalendarTarget("depart");
+  }
+
+  function openAviaPaymentScreen() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("avia", "payment");
+    window.history.pushState({ avia: "payment" }, "", url);
+    setAviaBookingOffer(false);
+    setAviaPaymentScreen(true);
+  }
+
+  function closeAviaPaymentScreen() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("avia");
+    window.history.pushState({}, "", url);
+    setAviaPaymentScreen(false);
+  }
+
   async function send(inputOverride) {
     const current = (typeof inputOverride === "string" ? inputOverride : message).trim();
     if (!current || sending) return;
@@ -715,6 +1079,14 @@ export default function T2BotChat({ botKey }) {
     setError("");
     setMessage("");
     try {
+      if (botKey === "t2_aviation" && isFlightLookupRequest(current)) {
+        const draft = createAviaDraft(current);
+        setHistory((items) => [...items, { role: "user", content: current }, { role: "assistant", content: AVIA_DATE_CONFIRMATION_PROMPT }]);
+        setAviaDraft(draft);
+        setAviaCalendarTarget("depart");
+        setAviaBookingOffer(false);
+        return;
+      }
       if (botKey === "t2_coding") {
         resetEditorTrace();
         if (looksLikeCodeRequest(current)) {
@@ -732,7 +1104,7 @@ export default function T2BotChat({ botKey }) {
       const responseText = resultText(result);
       setHistory((items) => [...items, { role: "assistant", content: responseText }]);
       await evaluateBenchmark(activeSession.session_id, current, responseText);
-      if (botKey === "t2_medical") {
+      if (botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics") {
         setMedicalCharts(Array.isArray(result?.charts) ? result.charts : []);
         setMedicalVerification(result?.verification || null);
       }
@@ -761,19 +1133,27 @@ export default function T2BotChat({ botKey }) {
     setBenchmarkEvaluation(null);
     setBenchmarkEvaluating(false);
     setBenchmarkEvaluationError("");
+    setAviaDraft(null);
+    setAviaCalendarTarget("depart");
+    setAviaBookingOffer(false);
+    setAviaPaymentScreen(false);
+  }
+
+  if (botKey === "t2_aviation" && aviaPaymentScreen) {
+    return <AviaPaymentHandoff onBack={closeAviaPaymentScreen} />;
   }
 
   return <>
     <section className="hero">
-      <div className="eyebrow">Agent Benchmark · coding agent interface</div>
+      <div className="eyebrow">{botKey === "t2_aviation" ? "Agent Benchmark · aviation customer service interface" : "Agent Benchmark · " + bot.interfaceLabel + " interface"}</div>
       <h2>{bot.label}</h2>
       <p>{bot.objective}</p>
-      <p className="section-note">Use ordinary prompts or adversarial inputs to test the assistant. The backend owns model routing, safety decisions, and session state.</p>
+      <p className="section-note">{botKey === "t2_aviation" ? "Ask Avia to search for flights, confirm travel dates in the calendar, review live fare options, or explain authoritative travel requirements. Booking and payment remain outside the AI boundary." : "Use ordinary prompts or adversarial inputs to test the assistant. The backend owns model routing, safety decisions, and session state."}</p>
     </section>
-    <div className="chat-layout t2-chat-layout" style={botKey === "t2_medical" ? { gridTemplateColumns: "minmax(0, 1fr)" } : undefined}>
+    <div className="chat-layout t2-chat-layout" style={(botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics") ? { gridTemplateColumns: "minmax(0, 1fr)" } : undefined}>
       <div className="card chat-card">
         <div className="result-head">
-          <div><strong>{bot.label}</strong>{botKey !== "t2_medical" && <div className="micro">Agent Benchmark backend · MCP-routed · coding agent</div>}</div>
+          <div><strong>{bot.label}</strong>{botKey !== "t2_medical" && botKey !== "t2_financial" && <div className="micro">{botKey === "t2_aviation" ? "Agent Benchmark backend · MCP-routed · aviation customer service" : "Agent Benchmark backend · MCP-routed · " + bot.interfaceLabel}</div>}</div>
           <div className="button-row">
             {(botKey === "t2_financial" || botKey === "t2_medical" || botKey === "t2_logistics") && <label className="code-editor-language">Approved AI model
               <select value={modelKey} onChange={(event) => changeModel(event.target.value)} aria-label={bot.label + " model"} disabled={!modelOptions.length}>
@@ -784,20 +1164,36 @@ export default function T2BotChat({ botKey }) {
           </div>
         </div>
         {botKey === "t2_coding" && <CodeEditor modelOptions={modelOptions} modelKey={modelKey} prompt={message} revision={editorRevision} trace={editorTrace} onTraceReset={resetEditorTrace} onTraceAppend={appendEditorTrace} onCodeChange={setEditorCode} onLanguageChange={(nextLanguage, nextCode) => { setEditorLanguage(nextLanguage); setEditorCode(nextCode); }} onModelChange={changeModel} onAttach={(codeBlock) => setMessage((current) => current ? current + "\n\n" + codeBlock : codeBlock)} onGenerate={generateCode} />}
-        <div className="chat-log" aria-live="polite">{history.map((item, index) => <div key={item.role + "-" + index} className={"chat-message " + item.role}><span className="chat-role">{item.role === "assistant" ? bot.label : "You"}</span>{item.content}</div>)}</div>
+        <div className="chat-log" aria-live="polite">{history.map((item, index) => <div key={item.role + "-" + index} className={"chat-message " + item.role}><span className="chat-role">{item.role === "assistant" ? bot.label : "You"}</span>{displayMessageContent(item.content)}</div>)}</div>
+        {botKey === "t2_aviation" && aviaDraft && <AviaDateConfirmation draft={aviaDraft} calendarTarget={aviaCalendarTarget} onTargetChange={setAviaCalendarTarget} onChange={(change) => setAviaDraft((current) => ({ ...current, ...change }))} onConfirm={confirmAviaDates} onReject={rejectAviaDates} disabled={sending} />}
+        {botKey === "t2_aviation" && aviaBookingOffer && <AviaBookingOffer onAccept={openAviaPaymentScreen} onDecline={() => { setAviaBookingOffer(false); setHistory((items) => [...items, { role: "user", content: "No, do not continue to booking." }, { role: "assistant", content: "No booking handoff was opened." }]); }} />}
         {error && <div className="notice error-notice chat-error">{error}</div>}
         <div className="chat-composer">
           <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder={botKey === "t2_coding" ? "Ask the Coding Assistant anything…" : "Enter a prompt for the " + bot.label + "…"} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} />
           <button className="primary" onClick={send} disabled={sending || !message.trim()}>{sending ? "Working…" : "Send"}</button>
         </div>
-        {(botKey === "t2_coding" || botKey === "t2_medical") && <BenchmarkEvaluatorBox evaluation={benchmarkEvaluation} evaluating={benchmarkEvaluating} error={benchmarkEvaluationError} />}
-        {botKey === "t2_medical" && <MedicalVisualizationWorkspace onRequest={send} disabled={sending} hasCharts={medicalCharts.length > 0} />}
-        {botKey === "t2_medical" && <MedicalDataVerification verification={medicalVerification} />}
-        {botKey === "t2_medical" && <MedicalAnalysisCharts charts={medicalCharts} />}
+        {(botKey === "t2_coding" || botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics" || botKey === "t2_aviation") && <BenchmarkEvaluatorBox evaluation={benchmarkEvaluation} evaluating={benchmarkEvaluating} error={benchmarkEvaluationError} />}
+        {(botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics") && <MedicalVisualizationWorkspace botKey={botKey} onRequest={send} disabled={sending} hasCharts={medicalCharts.length > 0} />}
+        {(botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics") && <MedicalDataVerification botKey={botKey} verification={medicalVerification} />}
+        {(botKey === "t2_medical" || botKey === "t2_financial" || botKey === "t2_logistics") && <MedicalAnalysisCharts botKey={botKey} charts={medicalCharts} />}
         <ModelTelemetry modelKey={modelKey} latest={telemetry} history={telemetryHistory} latestByModel={latestByModel} error={telemetryError} />
       </div>
-
+      {botKey === "t2_logistics" && <div className="form-panel side-config">
+        <div className="field config-gap"><label>Bound role</label><input value={bot.role} readOnly /></div>
+        <div className="field config-gap"><label>Domain</label><input value={bot.domain} readOnly /></div>
+        <div className="field config-gap"><label>Execution path</label><input value="Gov" readOnly /></div>
+        <div className="section-title config-title">Runtime boundary</div>
+        <div className="control-list">
+          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">MCP routing</div><div className="control-desc">All tool and state requests route through the Agent Benchmark MCP server.</div></div><div className="control-state">Fixed</div></div>
+          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">Source data</div><div className="control-desc">Agentic source targets remain read-only.</div></div><div className="control-state">Read-only</div></div>
+          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">Adversarial input</div><div className="control-desc">Prompt manipulation and capability-boundary attempts are recorded or redirected.</div></div><div className="control-state">Enabled</div></div>
+          <div className="control-row"><div className="control-icon">✓</div><div><div className="control-name">State write-back</div><div className="control-desc">Only the bounded execution write-back capability can persist state.</div></div><div className="control-state">Bounded</div></div>
+        </div>
+        {bot.note && <div className="notice warn-notice t2-bot-note">{bot.note}</div>}
+        {session?.execution && <div className="notice good-notice t2-session-meta">Session {session.session_id}<br />Target: {session.execution.database_target || "server-resolved"}</div>}
+      </div>}
 
     </div>
   </>;
 }
+

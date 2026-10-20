@@ -26,8 +26,8 @@ const FALLBACK_MODELS = [
   { key: "gpt_5_6_terra", display_name: "GPT-5.6 Terra", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "gpt_5_6_sol", display_name: "GPT-5.6 Sol", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
   { key: "gpt_5_5", display_name: "GPT-5.5", vendor: "OpenAI", kind: "agent", access_class: "frontier", parameter_size: "Undisclosed", parameter_total_b: null },
+  { key: "granite_4_2_8b", display_name: "Granite 4.2 8B", vendor: "IBM", kind: "agent", access_class: "open_weights", parameter_size: "8B dense", parameter_total_b: 8 },
   { key: "mistral_medium_3_5", display_name: "Mistral Medium 3.5", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "128B dense", parameter_total_b: 128 },
-  { key: "mistral_small_4", display_name: "Mistral Small 4", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "Published open weights", parameter_total_b: null },
   { key: "ministral_3_8b_2512", display_name: "Ministral 3 8B 2512", vendor: "Mistral AI", kind: "agent", access_class: "open_weights", parameter_size: "8B dense", parameter_total_b: 8 },
   { key: "llama_4_scout", display_name: "Llama 4 Scout", vendor: "Meta", kind: "agent", access_class: "open_weights", parameter_size: "109B total / 17B active", parameter_total_b: 109 },
   { key: "llama_4_maverick", display_name: "Llama 4 Maverick", vendor: "Meta", kind: "agent", access_class: "open_weights", parameter_size: "400B total / 17B active", parameter_total_b: 400 },
@@ -140,24 +140,47 @@ const FRAMEWORKS = [
   { name: "Domain overlays", type: "Conditional", scope: "Healthcare, finance, aviation, environmental, retail, and freight controls are applied according to intended use and the data actually processed.", tags: ["sector", "context", "human review"] },
 ];
 
-const NAV = [
-  ["lab", "Runtime Testbed", "01"],
-  ["enterprise", "Performance", "02"],
-  ["holding", "Agent Benchmark Testing Suite", "03"],
-  ["models", "Model Registry", "04"],
-  ["evidence", "KPIs + Performance Metrics", "04"],
-  ["logbook", "Runtime Logbook", "05"],
-  ["observations", "Systems Stress Indicators", "06"],
-  ["governance", "Governance Plan Implementation", "07"],
-  ["alignment", "Alignment", "08"],
-  ["diagnostics", "Operational Assurance", "09"],
-  ["t2_coding", "Coding Assistant", "10"],
-  ["t2_medical", "Medical Analyst / Assistant", "11"],
-  ["t2_financial", "Financial Risk Analyst", "12"],
-  ["t2_logistics", "Logistics Management Analyst / Assistant", "13"],
-  ["t2_aviation", "Aviation Travel Assistant", "14"],
-  ["t2_execution", "Regulatory Framework", "15"],
+const NAV_SECTIONS = [
+  {
+    label: "Overview",
+    items: [
+      ["overview", "Project", "01"],
+      ["lab", "Runtime Testbed", "02"],
+      ["holding", "Agent Benchmark", "03"],
+    ],
+  },
+  {
+    label: "Benchmark agents",
+    items: [
+      ["t2_coding", "Coding Assistant", "04"],
+      ["t2_medical", "Medical Analyst", "05"],
+      ["t2_financial", "Financial Risk", "06"],
+      ["t2_logistics", "Logistics Analyst", "07"],
+      ["t2_aviation", "Aviation Travel", "08"],
+    ],
+  },
+  {
+    label: "Evidence",
+    items: [
+      ["enterprise", "Performance", "09"],
+      ["evidence", "KPIs + Metrics", "10"],
+      ["logbook", "Runtime Logbook", "11"],
+      ["observations", "Stress Indicators", "12"],
+      ["models", "Model Registry", "13"],
+    ],
+  },
+  {
+    label: "Governance",
+    items: [
+      ["governance", "Governance Plan", "14"],
+      ["t2_execution", "AIIMS", "15"],
+      ["diagnostics", "Operational Assurance", "16"],
+      ["alignment", "Regulatory Alignment", "17"],
+    ],
+  },
 ];
+
+const NAV = NAV_SECTIONS.flatMap((section) => section.items);
 
 const VIEW_ROUTES = {
   home: "/",
@@ -183,9 +206,9 @@ const VIEW_ROUTES = {
 const ROUTE_VIEWS = { ...Object.fromEntries(Object.entries(VIEW_ROUTES).map(([viewKey, route]) => [route, viewKey])), "/execution-pass/": "t2_execution" };
 
 const VIEW_META = {
-  home: { title: "Joshua Poitevint | AI Systems Engineering Portfolio · Agentic Arena", description: "Working AI systems engineering portfolio featuring Agentic Arena, CV 1.1 runtime enforcement, governed agent systems, analytics, operational evidence, and deployment architecture." },
+  home: { title: "Agentic Arena | AI Agent Showcase · Joshua Poitevint", description: "Explore AI agents with defined jobs and runtime enforcement across coding, healthcare, finance, logistics, and aviation, with recorded behavior and performance." },
   lab: { title: "Runtime Testbed | Governed vs. Ungoverned AI Runtime Comparison", description: "Run matched governed and ungoverned AI tasks across business domains and compare model output, latency, token usage, cost telemetry, policy decisions, and evidence." },
-  overview: { title: "CV 1.1 Project | Agentic Arena Runtime Governance Architecture", description: "Technical overview of CV 1.1: deterministic AI runtime governance, bounded authority, fail-closed controls, scoped MCP tools, evidence, and enterprise adaptation." },
+  overview: { title: "Project Guide | Agentic Arena, T-2, and AIIMS", description: "Understand the complete Agentic Arena website: governed runtime testing, T-2 benchmark agents, operational evidence, and the live AIIMS governance control plane." },
   evidence: { title: "KPIs + Performance Metrics | Agentic Arena", description: "Inspect governed and ungoverned AI execution KPIs and performance metrics, including latency, token usage, cost telemetry, policy outcomes, and captured comparison records." },
   logbook: { title: "Runtime Logbook | Agentic Arena", description: "Inspect recent Agentic Arena execution records and runtime evidence from governed and ungoverned AI paths." },
   observations: { title: "Systems Stress Indicators | Agentic Arena", description: "Review documented systems stress indicators from governed and ungoverned AI testing across models, functions, and business-domain datasets." },
@@ -200,7 +223,7 @@ const VIEW_META = {
   t2_financial: { title: "Financial Risk Analyst | Agent Benchmark", description: "Agent Benchmark chat interface for the Financial Risk Analyst." },
   t2_logistics: { title: "Logistics Management Analyst / Assistant | Agent Benchmark", description: "Agent Benchmark chat interface for logistics management and assistant workflows." },
   t2_aviation: { title: "Aviation Travel Assistant | Agent Benchmark", description: "Agent Benchmark chat interface for bounded live travel search and price listing." },
-  t2_execution: { title: "Regulatory Framework | CV 1.1", description: "Claim-free working implementation framework mapping candidate CV 1.1 runtime controls for assessment against ISO/IEC 42001:2023." },
+  t2_execution: { title: "Execution Pass | Live AIIMS", description: "Live AIIMS view across Agentic Arena, the T-2 benchmark, Neon execution boundaries, governance measures, controlled change, and accountable ownership." },
 };
 
 function isKnownView(value) {
@@ -418,8 +441,8 @@ function Control({ name, desc, state, tone = "good" }) {
   return <div className="control-row"><div className={`control-icon ${tone}`}>{tone === "warn" ? "!" : tone === "neutral" ? "•" : "✓"}</div><div><div className="control-name">{name}</div><div className="control-desc">{desc}</div></div><div className="control-state">{state}</div></div>;
 }
 
-const UNDER_DEVELOPMENT_VIEWS = new Set(["t2_financial", "t2_logistics", "t2_aviation"]);
-const SITE_STATUS_NOTE = "Agentic Arena is functional. Financial Analyst, Logistics Analyst, and Aviation Assistant are under development and locked.";
+const UNDER_DEVELOPMENT_VIEWS = new Set([]);
+const SITE_STATUS_NOTE = "Agentic Arena is functional. Avia aviation customer service is now available.";
 
 function App() {
   const [view, setViewState] = useState(viewFromLocation);
@@ -518,7 +541,10 @@ function App() {
         <div><div className="brand-title">Agentic Arena</div><div className="brand-subtitle">{isAgentBenchmarkView ? "Agent Benchmark" : "CV 1.1 runtime enforcement"}</div></div>
       </a>
       <nav className="nav" aria-label="Primary navigation">
-        {NAV.map(([key, label, icon]) => <a key={key} href={UNDER_DEVELOPMENT_VIEWS.has(key) ? undefined : VIEW_ROUTES[key]} aria-disabled={UNDER_DEVELOPMENT_VIEWS.has(key) || undefined} tabIndex={UNDER_DEVELOPMENT_VIEWS.has(key) ? -1 : undefined} className={`nav-button nav-${key} ${view === key ? "active" : ""}`} onClick={(event) => { event.preventDefault(); if (!UNDER_DEVELOPMENT_VIEWS.has(key)) setView(key); }}><span className="nav-icon">{icon}</span><span>{label}{UNDER_DEVELOPMENT_VIEWS.has(key) && <small style={{ display: "block" }}>🔒 Under development</small>}</span></a>)}
+        {NAV_SECTIONS.map((section) => <div className="nav-section" key={section.label}>
+          <div className="nav-section-label">{section.label}</div>
+          {section.items.map(([key, label, icon]) => <a key={key} href={UNDER_DEVELOPMENT_VIEWS.has(key) ? undefined : VIEW_ROUTES[key]} aria-disabled={UNDER_DEVELOPMENT_VIEWS.has(key) || undefined} tabIndex={UNDER_DEVELOPMENT_VIEWS.has(key) ? -1 : undefined} className={`nav-button nav-${key} ${view === key ? "active" : ""}`} onClick={(event) => { event.preventDefault(); if (!UNDER_DEVELOPMENT_VIEWS.has(key)) setView(key); }}><span className="nav-icon">{icon}</span><span>{label}{UNDER_DEVELOPMENT_VIEWS.has(key) && <small style={{ display: "block" }}>🔒 Under development</small>}</span></a>)}
+        </div>)}
       </nav>
       <div className="sidebar-footer">{isAgentBenchmarkView ? <><strong>Agent Benchmark</strong><span>Five role-specific agent styles for domain testing and adversarial input.</span></> : <><strong>Engineering test posture</strong><span>Matched governed / ungoverned execution. Portfolio evidence only; no certification or legal compliance claim.</span></>}</div>
     </aside>
@@ -534,7 +560,7 @@ function App() {
       </header>
 
       <div className="notice page-notice" role="status">{SITE_STATUS_NOTE}</div>
-      {UNDER_DEVELOPMENT_VIEWS.has(view) && <section className="section card"><div className="eyebrow">🔒 Under development</div><h2>{title}</h2><p>This tab is locked while development is in progress.</p></section>}
+      
       {bootstrapError && <div className="notice error-notice page-notice">{bootstrapError}</div>}
       {view === "home" && <Home setView={setView} models={models} functions={functions} />}
       {view === "overview" && <Overview setView={setView} ready={ready} cv11={cv11} models={models} functions={functions} evidence={evidence} />}
@@ -833,103 +859,156 @@ function Home({ setView, models, functions }) {
 
 function Overview({ setView, ready, cv11, models, functions, evidence }) {
   const successfulPairs = evidence.filter((item) => item.governed?.completed && item.ungoverned?.completed).length;
+  const approvedModels = models.filter((model) => model.key !== "glm_5_3_prime").slice(0, 23).length;
+  const journeys = [
+    {
+      step: "01",
+      eyebrow: "TEST",
+      title: "Run the same job through two execution paths",
+      body: "The Runtime Testbed holds the model, task, data, and token ceiling constant, then compares governed execution with an ungoverned control path.",
+      view: "lab",
+      action: "Open Runtime Testbed",
+    },
+    {
+      step: "02",
+      eyebrow: "BENCHMARK",
+      title: "See role-specific agents at work",
+      body: "T-2 adds five focused agent experiences—coding, medical, financial, logistics, and aviation—so the platform can test more than one style of work.",
+      view: "holding",
+      action: "Explore Agent Benchmark",
+    },
+    {
+      step: "03",
+      eyebrow: "INSPECT",
+      title: "Follow performance and evidence",
+      body: "Performance, KPIs, the Runtime Logbook, and Stress Indicators turn each run into something that can be reviewed instead of a disappearing chat response.",
+      view: "enterprise",
+      action: "View Performance",
+    },
+    {
+      step: "04",
+      eyebrow: "GOVERN",
+      title: "Manage the system around the models",
+      body: "The AIIMS Execution Pass connects Agentic Arena and T-2 to shared Neon-backed change control, governance measures, ownership, and operational status.",
+      view: "t2_execution",
+      action: "Open AIIMS",
+    },
+  ];
+
   return <>
     <section className="hero project-hero">
       <div className="project-logo-panel"><img src="/agentic-arena-logo.svg" alt="Agentic Arena: Test, Govern, Deploy with Confidence" /></div>
-      <div className="eyebrow">Enterprise AI systems architecture</div>
-      <h2>Governed AI execution with bounded authority and operational evidence</h2>
-      <p><strong>Agentic Arena</strong> demonstrates an enterprise-oriented approach to implementing AI around existing systems, data, and business authority. <strong>CV 1.1 (Compliance Verification)</strong> is the open-source runtime-enforcement reference architecture used to apply deterministic policy, bounded functions, scoped data and tool access, fail-closed controls, and verifiable operational evidence around probabilistic AI execution.</p>
-      <p>The environment combines architecture, governance implementation, model integration, operational controls, and performance evidence in one working portfolio system. Governed and comparison paths use matched models, tasks, domains, and source data so the effect of runtime controls can be inspected without presenting the results as generalized research conclusions.</p>
-      <p><strong>Open-source repository:</strong> <a href="https://github.com/jwpoitevint1/Agentic-Arena-Opensource-" target="_blank" rel="noreferrer">github.com/jwpoitevint1/Agentic-Arena-Opensource-</a></p>
-      <p>This architecture is licensed under the Apache 2.0 license and is intended to be adapted to deployment-specific business, technical, regulatory, and operational requirements.</p>
+      <div className="eyebrow">Project guide</div>
+      <h2>A working website for testing what happens when AI gets a job—but not unlimited authority</h2>
+      <p><strong>Agentic Arena</strong> is an engineering testbed for governed AI execution. It combines a matched runtime experiment, the T-2 role-based benchmark, live operational evidence, and a central AIIMS so the behavior of the model and the behavior of the surrounding system can be examined together.</p>
+      <p>The point is not to crown a winning model. Because the comparison holds matched models, tasks, domains, and source data constant, the effect of runtime controls can be inspected without presenting the results as generalized research conclusions.</p>
+      <div className="hero-actions">
+        <a className="primary" href="/arena/" onClick={(event) => { event.preventDefault(); setView("lab"); }}>Run the Arena</a>
+        <a className="secondary" href="/holding/" onClick={(event) => { event.preventDefault(); setView("holding"); }}>Explore T-2</a>
+        <a className="ghost" href="/execution-pass/" onClick={(event) => { event.preventDefault(); setView("t2_execution"); }}>Open AIIMS</a>
+      </div>
     </section>
 
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">At a glance</div>
-          <div className="section-note">Enterprise AI architecture · runtime enforcement · governed integration · operational assurance.</div>
+          <div className="eyebrow">The whole site at a glance</div>
+          <div className="section-note">One test environment, two connected backends, and a shared governance record.</div>
         </div>
       </div>
       <div className="grid-4">
-        <Metric label="Domains" value="6" foot="Paired governed / ungoverned schemas" />
-        <Metric label="Functions" value={String(functions.length)} foot="Analyst · Modeler · Mixed Capability · Auditor · Advisor" />
-        <Metric label="Models" value={String(models.filter((model) => model.key !== "glm_5_3_prime").slice(0, 23).length)} foot="Approved UI registry" />
-        <Metric label="Comparisons" value={String(successfulPairs)} foot="Recorded matched execution evidence" />
+        <Metric label="Connected systems" value="2" foot="Agentic Arena + T-2" />
+        <Metric label="Business domains" value="6" foot="Paired governed / control data targets" />
+        <Metric label="Approved models" value={String(approvedModels)} foot="Curated runtime registry" />
+        <Metric label="Recorded comparisons" value={String(successfulPairs)} foot="Matched browser evidence" />
       </div>
     </section>
 
-    <section className="section grid-3">
-      <div className="card">
-        <div className="section-title">Bounded authority</div>
-        <p className="body-copy">The model does not choose its own role, permissions, tools, data target, or execution authority. Those controls are resolved outside the model.</p>
-      </div>
-      <div className="card">
-        <div className="section-title">Control validation</div>
-        <p className="body-copy">Matched execution paths provide a practical way to inspect how runtime controls affect behavior, tool use, performance, and evidence without changing the underlying business task.</p>
-      </div>
-      <div className="card">
-        <div className="section-title">Operational traceability</div>
-        <p className="body-copy">Runtime telemetry, policy decisions, integrity records, and execution history provide traceability for operational review, governance assessment, and control verification.</p>
-      </div>
-    </section>
-
-    <section className="section card">
-      <div className="eyebrow">Enterprise architecture principle</div>
-      <div className="section-title">Preserve systems of record while governing AI access</div>
-      <p className="body-copy">The six domain datasets are intentionally separated from the AI runtime. In this environment, they act as stand-ins for external operational systems while the AI accesses them only through bounded application and governance interfaces. CV 1.1 controls the bridge between the source-data plane and the AI execution plane rather than making the source system part of the AI itself.</p>
-      <p className="body-copy">That separation models an enterprise deployment in which systems such as ERP, maintenance, finance, logistics, or analytics platforms remain the systems of record. If the AI or its governance runtime fails closed, the underlying operational system does not have to fail with it. Deterministic automation, monitoring streams, and human workflows can remain available as continuity paths. Agentic Arena demonstrates this architectural separation; it is not a claim that the portfolio environment itself is a production-certified deployment.</p>
-    </section>
-
-    <section className="section card">
-      <div className="eyebrow">Execution model</div>
-      <div className="section-title">Event-driven, bounded agentic workflows</div>
-      <p className="body-copy">The workflows shown here are agentic but currently trigger-based. In an autonomous deployment, execution triggers could be tied to changes in input conditions—such as time or date, file updates, changes in system output, or streaming data crossing defined operating ranges. Those external events would initiate the bounded workflow; they would not expand the model's authority or bypass its runtime controls.</p>
+    <section className="section grid-3 project-system-grid">
+      <article className="card project-system-card">
+        <div className="eyebrow">CORE TESTBED</div>
+        <div className="section-title">Agentic Arena</div>
+        <p>Runs matched governed and comparison workloads across six domains. CV 1.1 and OPA keep runtime authority outside model output.</p>
+      </article>
+      <article className="card project-system-card">
+        <div className="eyebrow">ROLE BENCHMARK</div>
+        <div className="section-title">T-2 Agent Benchmark</div>
+        <p>Exercises five specialized agent styles while preserving their own contracts, evaluator boundaries, telemetry, and execution targets.</p>
+      </article>
+      <article className="card project-system-card">
+        <div className="eyebrow">MANAGEMENT LAYER</div>
+        <div className="section-title">AIIMS Execution Pass</div>
+        <p>Connects both backends to one Neon-backed view of change requests, governance measures, accountability, ownership, and live system state.</p>
+      </article>
     </section>
 
     <section className="section">
       <div className="section-header">
         <div>
-          <div className="eyebrow">Architecture</div>
-          <div className="section-title">Governed execution path</div>
-          <div className="section-note">Authority is server-derived and checked at each execution boundary.</div>
+          <div className="eyebrow">A useful path through the website</div>
+          <div className="section-title">Explore it in four moves</div>
+          <div className="section-note">Each section answers a different question about the same operating system.</div>
+        </div>
+      </div>
+      <div className="grid-2 project-journey-grid">
+        {journeys.map((item) => <article className="card project-journey-card" key={item.step}>
+          <div className="project-step">{item.step}</div>
+          <div>
+            <div className="eyebrow">{item.eyebrow}</div>
+            <div className="section-title">{item.title}</div>
+            <p>{item.body}</p>
+            <button className="text-button" type="button" onClick={() => setView(item.view)}>{item.action} →</button>
+          </div>
+        </article>)}
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Execution architecture</div>
+          <div className="section-title">The model is one step inside a larger control path</div>
+          <div className="section-note">Identity, authority, data, tools, output controls, and evidence remain system responsibilities.</div>
         </div>
       </div>
       <div className="card"><ExecutionFlow /></div>
     </section>
 
-    <section className="section">
-      <div className="section-header">
-        <div>
-          <div className="eyebrow">Business-domain coverage</div>
-          <div className="section-title">Cross-domain implementation environment</div>
-          <div className="section-note">Six representative business domains support governed and comparison execution across consistent underlying workloads.</div>
-        </div>
-        <span className="badge">6 paired systems</span>
-      </div>
-      <div className="grid-3">{DOMAINS.map((domain) => <DomainCard key={domain.id} domain={domain} onRun={() => setView("lab")} />)}</div>
-    </section>
-
     <section className="section grid-2">
-      <div className="card">
-        <div className="section-title">Technology and control stack</div>
-        <dl className="kv kv-roomy">
-          <dt>Application</dt><dd>FastAPI backend · React / Vite UI</dd>
-          <dt>Policy</dt><dd>CV 1.1 · OPA / Rego</dd>
-          <dt>Data</dt><dd>Paired PostgreSQL / Neon targets</dd>
-          <dt>Execution</dt><dd>Governed + ungoverned comparison paths</dd>
-          <dt>Tooling</dt><dd>Bounded MCP entities and server-derived routing</dd>
-          <dt>Egress</dt><dd>Domain-aware validation and redaction</dd>
-        </dl>
-      </div>
-      <div className="card">
-        <div className="card-title-row"><div className="section-title">Current platform status</div><StatusPill good={ready?.status === "ready" ? true : ready ? false : null} label={ready?.status || "Checking"} /></div>
+      <article className="card">
+        <div className="eyebrow">WHAT TO WATCH</div>
+        <div className="section-title">The controls are observable</div>
+        <p className="body-copy">Use the Runtime Logbook for recent executions, Stress Indicators for documented failure patterns, and Operational Assurance for current service and control reachability.</p>
+        <div className="hero-actions">
+          <button className="secondary small-button" type="button" onClick={() => setView("logbook")}>Runtime Logbook</button>
+          <button className="ghost small-button" type="button" onClick={() => setView("diagnostics")}>Operational Assurance</button>
+        </div>
+      </article>
+      <article className="card">
+        <div className="card-title-row">
+          <div>
+            <div className="eyebrow">LIVE POSTURE</div>
+            <div className="section-title">Current platform state</div>
+          </div>
+          <StatusPill good={ready?.status === "ready" ? true : ready ? false : null} label={ready?.status || "Checking"} />
+        </div>
         <dl className="kv kv-roomy">
           <dt>Database wiring</dt><dd>{ready ? (ready.databases_configured ? "Configured" : "Incomplete") : "Checking"}</dd>
           <dt>Model gateway</dt><dd>{ready ? (ready.openrouter_configured ? "Configured" : "Not configured") : "Checking"}</dd>
-          <dt>OPA</dt><dd>{ready ? (ready.cv11_opa_healthy ? "Healthy" : "Unavailable") : "Checking"}</dd>
+          <dt>OPA boundary</dt><dd>{ready ? (ready.cv11_opa_healthy ? "Healthy" : "Unavailable") : "Checking"}</dd>
           <dt>Governed failure</dt><dd>{cv11?.governed_failure_mode || "fail_closed"}</dd>
+          <dt>Bounded functions</dt><dd>{functions.length}</dd>
         </dl>
+      </article>
+    </section>
+
+    <section className="section card project-disclosure">
+      <div className="eyebrow">Scope and disclosure</div>
+      <div className="section-title">An operational portfolio, not a certification claim</div>
+      <p className="body-copy">Agentic Arena is a practical engineering environment for exploring governed AI behavior. Its regulatory pages are implementation and assessment mappings, not legal advice, formal scientific conclusions, or claims of certification. The open-source CV 1.1 architecture is available under Apache 2.0 and should be adapted to the intended use, organization, data, risk, and operating environment.</p>
+      <div className="hero-actions">
+        <a className="ghost" href="https://github.com/jwpoitevint1/Agentic-Arena-Opensource-" target="_blank" rel="noreferrer">View Open-Source CV 1.1</a>
+        <button className="secondary" type="button" onClick={() => setView("governance")}>See Governance Implementation</button>
       </div>
     </section>
   </>;
